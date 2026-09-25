@@ -1,19 +1,19 @@
+DirectoryIndex index.html index.php
+Options -Indexes
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
 
-    # 1. API dan Storage diteruskan ke Laravel
+    # 1. Arahkan API dan Storage ke backend Laravel
     RewriteRule ^api(/.*)?$ backend/public/index.php [L,QSA]
-    RewriteRule ^storage(/.*)?$ backend/public/storage$1 [L]
+    RewriteRule ^storage/(.*)$ backend/public/storage/$1 [L]
 
-    # 2. Sajikan file fisik nyata langsung (js, css, gambar, dll)
-    RewriteCond %{REQUEST_FILENAME} -f [OR]
-    RewriteCond %{REQUEST_FILENAME} -d
+    # 2. File statis nyata (.js, .css, gambar) disajikan langsung
+    RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]
 
-    # 3. Semua rute SPA React (seperti /login, /voting) diarahkan ke index.html
+    # 3. Semua rute lainnya diarahkan ke frontend React (SPA)
     RewriteRule ^index\.html$ - [L]
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule . /index.html [L]
+    RewriteRule ^.*$ /index.html [L]
 </IfModule>
