@@ -8,6 +8,7 @@ use App\Http\Resources\FinalistResource;
 use App\Models\Finalist;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -32,7 +33,11 @@ class FinalistController extends Controller
             $data['photo'] = $request->file('photo')->store('finalists', 'public');
         }
 
-        return new FinalistResource(Finalist::create($data)->load('category.event'));
+        $finalist = Finalist::create($data)->load('category');
+        Cache::forget("public.finalists.{$finalist->category_id}");
+        Cache::forget('public.categories');
+
+        return new FinalistResource($finalist);
     }
 
     public function show(Finalist $finalist): FinalistResource
@@ -53,8 +58,10 @@ class FinalistController extends Controller
         }
 
         $finalist->update($data);
+        Cache::forget("public.finalists.{$finalist->category_id}");
+        Cache::forget('public.categories');
 
-        return new FinalistResource($finalist->fresh()->load('category.event'));
+        return new FinalistResource($finalist->fresh()->load('category'));
     }
 
     public function destroy(Finalist $finalist): Response
@@ -63,7 +70,10 @@ class FinalistController extends Controller
             Storage::disk('public')->delete($finalist->photo);
         }
 
+        $categoryId = $finalist->category_id;
         $finalist->delete();
+        Cache::forget("public.finalists.{$categoryId}");
+        Cache::forget('public.categories');
 
         return response()->noContent();
     }

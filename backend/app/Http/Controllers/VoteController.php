@@ -34,6 +34,23 @@ class VoteController extends Controller
                 ]);
             }
 
+            $user = auth('sanctum')->user();
+
+            if ($user) {
+                $alreadyVotedUser = Vote::query()
+                    ->where('user_id', $user->id)
+                    ->where('type', 'free')
+                    ->where('status', 'confirmed')
+                    ->whereHas('finalist', fn ($query) => $query->where('category_id', $category->id))
+                    ->exists();
+
+                if ($alreadyVotedUser) {
+                    throw ValidationException::withMessages([
+                        'voter_contact' => 'Akun Anda sudah pernah memberikan suara untuk kategori ini.',
+                    ]);
+                }
+            }
+
             $alreadyVoted = Vote::query()
                 ->where('voter_contact', $request->string('voter_contact')->trim()->lower()->toString())
                 ->where('type', 'free')
@@ -48,6 +65,7 @@ class VoteController extends Controller
             }
 
             $vote = Vote::create([
+                'user_id' => $user?->id,
                 'finalist_id' => $finalist->id,
                 'voter_name' => $request->string('voter_name')->trim()->toString(),
                 'voter_contact' => $request->string('voter_contact')->trim()->lower()->toString(),

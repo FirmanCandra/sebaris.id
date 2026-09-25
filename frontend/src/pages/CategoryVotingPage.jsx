@@ -2,6 +2,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { api, ApiError, resolveStorageUrl } from '../api/client'
 import PublicHeader from '../components/PublicHeader'
+import GoogleSignInButton from '../components/GoogleSignInButton'
+import { useUserAuth } from '../auth/AuthProvider'
 import {
   IconChevronRight,
   IconTrophy,
@@ -18,6 +20,7 @@ import {
 
 export default function CategoryVotingPage() {
   const { categoryId } = useParams()
+  const { user, userToken, loginUserWithGoogle, loadUserVotes } = useUserAuth()
   const navigate = useNavigate()
   const [category, setCategory] = useState(null)
   const [finalists, setFinalists] = useState([])
@@ -99,6 +102,12 @@ export default function CategoryVotingPage() {
   function handleOpenVote(finalist) {
     setSelectedFinalist(finalist)
     setFieldErrors({})
+    if (user) {
+      setForm({
+        voter_name: user.name || '',
+        voter_contact: user.email || '',
+      })
+    }
     setIsVoteModalOpen(true)
   }
 
@@ -116,6 +125,7 @@ export default function CategoryVotingPage() {
     try {
       await api('/votes', {
         method: 'POST',
+        token: userToken || undefined,
         body: { ...form, finalist_id: selectedFinalist.id, type: 'free' },
       })
 
@@ -125,6 +135,10 @@ export default function CategoryVotingPage() {
         finalistName: selectedFinalist.name,
         contact: form.voter_contact,
       })
+
+      if (userToken) {
+        loadUserVotes()
+      }
 
       setForm({ voter_name: '', voter_contact: '' })
       setIsVoteModalOpen(false)
@@ -669,6 +683,59 @@ export default function CategoryVotingPage() {
                 </p>
               </div>
             </div>
+
+            {/* Google Voter Status or Quick Login */}
+            {user ? (
+              <div className="flex items-center gap-3 p-3 bg-[#F4F9EE] border border-[#D5E6C4] rounded-2xl text-xs">
+                {user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-8 h-8 rounded-full object-cover border border-[#70B325] flex-shrink-0"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-[#70B325] text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+                    {user.name?.charAt(0) || 'U'}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-[#E3F2D4] text-[#426E17] inline-block mb-0.5">
+                    Akun Google Terverifikasi
+                  </span>
+                  <span className="font-extrabold text-[#262A25] block truncate text-xs">
+                    {user.name}
+                  </span>
+                  <span className="text-[11px] text-gray-500 block truncate">
+                    {user.email}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="p-3 bg-[#F8FAF7] border border-dashed border-[#CADDB8] rounded-2xl text-center space-y-2">
+                <p className="text-[11px] text-gray-600 font-medium">
+                  Punya akun Google? Masuk untuk vote instan:
+                </p>
+                <div className="flex justify-center">
+                  <GoogleSignInButton
+                    onCredentialResponse={async (credential) => {
+                      try {
+                        const payload = await loginUserWithGoogle(credential)
+                        const u = payload.user?.data || payload.user
+                        setForm({
+                          voter_name: u.name || '',
+                          voter_contact: u.email || '',
+                        })
+                      } catch (e) {
+                        setFieldErrors({ general: e.message })
+                      }
+                    }}
+                    width={260}
+                    size="medium"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* General Error Alert */}
             {fieldErrors.general && (

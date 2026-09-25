@@ -2,14 +2,27 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import SebarisLogo from '../components/SebarisLogo'
-import { IconChevronRight, IconGoogle } from '../components/Icons'
+import { IconChevronRight, IconGoogle, IconCheck } from '../components/Icons'
 
 export default function LoginPage() {
-  const { login, loginWithGoogle } = useAuth()
+  const { login, register, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
-  const [email, setEmail] = useState('admin@sebaris.test')
-  const [password, setPassword] = useState('password')
+
+  // Tabs: 'login' | 'register'
+  const [authMode, setAuthMode] = useState('login')
+
+  // Login form state
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
+  // Register form state
+  const [regName, setRegName] = useState('')
+  const [regEmail, setRegEmail] = useState('')
+  const [regPassword, setRegPassword] = useState('')
+  const [regConfirmPassword, setRegConfirmPassword] = useState('')
+
   const [error, setError] = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
   const [saving, setSaving] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const googleBtnRef = useRef(null)
@@ -54,7 +67,7 @@ export default function LoginPage() {
     }, 200)
 
     return () => clearInterval(interval)
-  }, [googleClientId])
+  }, [googleClientId, authMode])
 
   async function handleGoogleResponse(response) {
     if (!response?.credential) {
@@ -65,24 +78,63 @@ export default function LoginPage() {
     setGoogleLoading(true)
     setError('')
     try {
-      await loginWithGoogle(response.credential)
-      navigate('/admin/categories')
+      const res = await loginWithGoogle(response.credential)
+      if (res?.redirect) {
+        navigate(res.redirect)
+      } else if (res?.role === 'admin' || res?.role === 'superadmin') {
+        navigate('/admin/categories')
+      } else {
+        navigate('/')
+      }
     } catch (err) {
-      setError(err.message || 'Login dengan Google gagal. Pastikan akun Anda memiliki akses.')
+      setError(err.message || 'Login dengan Google gagal. Silakan coba kembali.')
     } finally {
       setGoogleLoading(false)
     }
   }
 
-  async function submit(event) {
+  async function submitLogin(event) {
     event.preventDefault()
     setSaving(true)
     setError('')
     try {
-      await login({ email, password })
-      navigate('/admin/categories')
+      const res = await login({ email, password })
+      if (res?.redirect) {
+        navigate(res.redirect)
+      } else if (res?.role === 'admin' || res?.role === 'superadmin') {
+        navigate('/admin/categories')
+      } else {
+        navigate('/')
+      }
     } catch (requestError) {
       setError(requestError.message || 'Login gagal. Periksa kembali email dan kata sandi Anda.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function submitRegister(event) {
+    event.preventDefault()
+    if (regPassword !== regConfirmPassword) {
+      setError('Konfirmasi kata sandi tidak cocok. Harap periksa kembali.')
+      return
+    }
+
+    setSaving(true)
+    setError('')
+    try {
+      const res = await register({
+        name: regName,
+        email: regEmail,
+        password: regPassword,
+      })
+      if (res?.redirect) {
+        navigate(res.redirect)
+      } else {
+        navigate('/')
+      }
+    } catch (requestError) {
+      setError(requestError.message || 'Pendaftaran gagal. Pastikan email belum terdaftar.')
     } finally {
       setSaving(false)
     }
@@ -108,22 +160,56 @@ export default function LoginPage() {
         >
           <span>← Kembali ke Beranda</span>
         </Link>
-        <span className="text-xs text-gray-400 font-medium">Ruang Akses Terbatas</span>
+        <span className="text-xs text-gray-400 font-medium">sebaris.id</span>
       </div>
 
       {/* Main Login Card */}
-      <div className="w-full max-w-md bg-white border border-[#E5EADF] rounded-2xl p-8 shadow-xl space-y-6">
+      <div className="w-full max-w-md bg-white border border-[#E5EADF] rounded-3xl p-7 sm:p-8 shadow-xl space-y-5">
         {/* Brand Logo & Title */}
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-1.5">
           <div className="flex justify-center mb-1">
             <SebarisLogo size="md" />
           </div>
           <h1 className="text-2xl font-extrabold text-[#262A25] tracking-tight">
-            Masuk ke Ruang Admin
+            {authMode === 'login' ? 'Selamat Datang Kembali' : 'Buat Akun Pemilih Baru'}
           </h1>
-          <p className="text-xs text-gray-500 leading-relaxed">
-            Kelola sesi voting, kategori lomba, finalis, dan pantau perolehan suara secara langsung.
+          <p className="text-xs text-gray-500 leading-relaxed px-2">
+            {authMode === 'login'
+              ? 'Masuk untuk memberikan suara, mengelola sistem, atau melihat riwayat pemilihan.'
+              : 'Daftarkan diri Anda untuk memberikan suara pada event voting dan finalis favorit.'}
           </p>
+        </div>
+
+        {/* Tab Switcher: Masuk vs Daftar */}
+        <div className="flex bg-[#F4F6F2] p-1 rounded-xl">
+          <button
+            type="button"
+            onClick={() => {
+              setAuthMode('login')
+              setError('')
+            }}
+            className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+              authMode === 'login'
+                ? 'bg-white text-[#262A25] shadow-xs'
+                : 'text-gray-500 hover:text-gray-900'
+            }`}
+          >
+            Masuk Akun
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAuthMode('register')
+              setError('')
+            }}
+            className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+              authMode === 'register'
+                ? 'bg-white text-[#262A25] shadow-xs'
+                : 'text-gray-500 hover:text-gray-900'
+            }`}
+          >
+            Daftar Baru
+          </button>
         </div>
 
         {/* Error Alert */}
@@ -146,7 +232,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={handleFallbackGoogleClick}
-                className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs sm:text-sm rounded-xl border border-gray-300 shadow-sm transition-all hover:shadow active:scale-[0.99] cursor-pointer"
+                className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs sm:text-sm rounded-xl border border-gray-300 shadow-xs transition-all hover:shadow active:scale-[0.99] cursor-pointer"
               >
                 <IconGoogle className="w-5 h-5 flex-shrink-0" />
                 <span>Masuk dengan Google</span>
@@ -156,81 +242,158 @@ export default function LoginPage() {
 
           {googleLoading && (
             <p className="text-center text-xs text-[#70B325] font-semibold animate-pulse">
-              Memproses autentikasi Google...
+              Memproses akun Google & mengirim email notifikasi...
             </p>
           )}
 
           {/* Divider */}
-          <div className="relative flex py-2 items-center">
+          <div className="relative flex py-1.5 items-center">
             <div className="flex-grow border-t border-gray-200"></div>
-            <span className="flex-shrink mx-4 text-xs font-semibold text-gray-400">
-              atau gunakan email admin
+            <span className="flex-shrink mx-3 text-[11px] font-semibold text-gray-400">
+              atau dengan email & kata sandi
             </span>
             <div className="flex-grow border-t border-gray-200"></div>
           </div>
         </div>
 
-        {/* Login Form */}
-        <form onSubmit={submit} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-xs font-bold text-gray-700 mb-1">
-              Email Administrator
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@sebaris.test"
-              autoComplete="email"
-              className="form-input text-xs sm:text-sm"
-              required
-            />
-          </div>
+        {/* MODE 1: LOGIN FORM */}
+        {authMode === 'login' ? (
+          <form onSubmit={submitLogin} className="space-y-3.5">
+            <div>
+              <label htmlFor="login-email" className="block text-xs font-bold text-gray-700 mb-1">
+                Email 
+              </label>
+              <input
+                id="login-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="nama@domain.com"
+                autoComplete="email"
+                className="form-input text-xs sm:text-sm"
+                required
+              />
+            </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label htmlFor="password" className="block text-xs font-bold text-gray-700">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label htmlFor="login-password" className="block text-xs font-bold text-gray-700">
+                  Kata Sandi
+                </label>
+              </div>
+              <input
+                id="login-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                autoComplete="current-password"
+                className="form-input text-xs sm:text-sm"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={saving || googleLoading}
+              className="btn-primary w-full text-xs sm:text-sm font-bold shadow-md cursor-pointer mt-2"
+            >
+              {saving ? (
+                <span>Memverifikasi Akun...</span>
+              ) : (
+                <span className="flex items-center justify-center gap-1.5">
+                  <span>Masuk Sekarang</span>
+                  <IconChevronRight className="w-4 h-4" />
+                </span>
+              )}
+            </button>
+          </form>
+        ) : (
+          /* MODE 2: REGISTER FORM */
+          <form onSubmit={submitRegister} className="space-y-3.5">
+            <div>
+              <label htmlFor="reg-name" className="block text-xs font-bold text-gray-700 mb-1">
+                Nama Lengkap
+              </label>
+              <input
+                id="reg-name"
+                type="text"
+                value={regName}
+                onChange={(e) => setRegName(e.target.value)}
+                placeholder="Contoh: Budi Santoso"
+                autoComplete="name"
+                className="form-input text-xs sm:text-sm"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="reg-email" className="block text-xs font-bold text-gray-700 mb-1">
+                Alamat Email
+              </label>
+              <input
+                id="reg-email"
+                type="email"
+                value={regEmail}
+                onChange={(e) => setRegEmail(e.target.value)}
+                placeholder="nama@domain.com"
+                autoComplete="email"
+                className="form-input text-xs sm:text-sm"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="reg-password" className="block text-xs font-bold text-gray-700 mb-1">
                 Kata Sandi
               </label>
-              <span className="text-[11px] text-gray-400">Default: password</span>
+              <input
+                id="reg-password"
+                type="password"
+                value={regPassword}
+                onChange={(e) => setRegPassword(e.target.value)}
+                placeholder="Minimal 6 karakter"
+                autoComplete="new-password"
+                className="form-input text-xs sm:text-sm"
+                minLength={6}
+                required
+              />
             </div>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              autoComplete="current-password"
-              className="form-input text-xs sm:text-sm"
-              required
-            />
-          </div>
 
-          <button
-            type="submit"
-            disabled={saving || googleLoading}
-            className="btn-primary w-full text-sm font-bold shadow-md cursor-pointer mt-2"
-          >
-            {saving ? (
-              <span>Memeriksa Akses...</span>
-            ) : (
-              <span className="flex items-center justify-center gap-1.5">
-                <span>Masuk Sekarang</span>
-                <IconChevronRight className="w-4 h-4" />
-              </span>
-            )}
-          </button>
-        </form>
+            <div>
+              <label htmlFor="reg-confirm-password" className="block text-xs font-bold text-gray-700 mb-1">
+                Konfirmasi Kata Sandi
+              </label>
+              <input
+                id="reg-confirm-password"
+                type="password"
+                value={regConfirmPassword}
+                onChange={(e) => setRegConfirmPassword(e.target.value)}
+                placeholder="Ketik ulang kata sandi"
+                autoComplete="new-password"
+                className="form-input text-xs sm:text-sm"
+                minLength={6}
+                required
+              />
+            </div>
 
-        {/* Footer Notes */}
-        <div className="pt-4 border-t border-gray-100 text-center">
-          <p className="text-[11px] text-gray-400">
-            Platform E-Voting Sebaris.id dilindungi dengan enkripsi dan kontrol akses tingkat administrator.
-          </p>
-        </div>
+            <button
+              type="submit"
+              disabled={saving || googleLoading}
+              className="btn-primary w-full text-xs sm:text-sm font-bold shadow-md cursor-pointer mt-2"
+            >
+              {saving ? (
+                <span>Mendaftarkan Akun...</span>
+              ) : (
+                <span className="flex items-center justify-center gap-1.5">
+                  <IconCheck className="w-4 h-4" />
+                  <span>Daftar Akun Baru</span>
+                </span>
+              )}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   )
 }
-

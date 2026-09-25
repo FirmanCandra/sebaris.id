@@ -9,10 +9,8 @@ import {
   IconSearch,
   IconFlame,
   IconClock,
-  IconCalendar,
   IconCheckVote,
   IconChevronRight,
-  IconLocation,
   IconZap,
 } from '../components/Icons'
 import {
@@ -114,45 +112,6 @@ const RECENT_VOTINGS_DATA = [
     category: 'Komunitas',
     votes: '623 suara',
     IconComponent: ThumbnailCamera,
-  },
-]
-
-const RECOMMENDED_EVENTS_DATA = [
-  {
-    id: 201,
-    title: 'Seminar Kepemimpinan Pemuda',
-    date: '12',
-    monthYear: 'Okt 2025',
-    location: 'Aula Universitas Merdeka',
-    tags: ['Seminar', 'Kampus'],
-    bgGrad: 'from-amber-500 to-amber-700',
-  },
-  {
-    id: 202,
-    title: 'Festival Musik Pelajar',
-    date: '18',
-    monthYear: 'Okt 2025',
-    location: 'Lapangan Desa Maju',
-    tags: ['Festival', 'Komunitas'],
-    bgGrad: 'from-emerald-500 to-teal-700',
-  },
-  {
-    id: 203,
-    title: 'Workshop Desain Grafis',
-    date: '25',
-    monthYear: 'Okt 2025',
-    location: 'Gedung Kreatif Nusantara',
-    tags: ['Workshop', 'Organisasi'],
-    bgGrad: 'from-blue-500 to-indigo-700',
-  },
-  {
-    id: 204,
-    title: 'Turnamen Futsal Antar Kampus',
-    date: '02',
-    monthYear: 'Nov 2025',
-    location: 'GOR Wijaya Kusuma',
-    tags: ['Olahraga', 'Kampus'],
-    bgGrad: 'from-sky-500 to-blue-700',
   },
 ]
 
@@ -377,6 +336,8 @@ export default function PublicEventsPage() {
                           src={resolveStorageUrl(item.thumbnail)}
                           alt={item.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                          decoding="async"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                           }}
@@ -550,6 +511,8 @@ export default function PublicEventsPage() {
                       src={resolveStorageUrl(item.thumbnail)}
                       alt={item.title}
                       className="w-12 h-12 rounded-xl object-cover border border-[#E5EADF] flex-shrink-0"
+                      loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none'
                       }}
@@ -577,92 +540,6 @@ export default function PublicEventsPage() {
             })}
           </div>
         </section>
-
-        {/* Section 3: Event Rekomendasi */}
-        <section id="events-section" className="space-y-4 pt-4">
-          {/* Section Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center">
-                <IconCalendar className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#262A25]">
-                  Event Rekomendasi
-                </h2>
-                <p className="text-xs text-gray-500">
-                  Ikuti event menarik dan jangan sampai ketinggalan
-                </p>
-              </div>
-            </div>
-            <a
-              href="#events-section"
-              className="text-xs sm:text-sm font-bold text-[#70B325] hover:text-[#5F9A1E] flex items-center gap-1 no-underline"
-            >
-              <span>Lihat Semua</span>
-              <IconChevronRight className="w-4 h-4" />
-            </a>
-          </div>
-
-          {/* 4 Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {RECOMMENDED_EVENTS_DATA.map((event) => (
-              <article
-                key={event.id}
-                className="card-base p-4 bg-white border border-[#E5EADF] rounded-2xl flex flex-col justify-between space-y-3 hover:border-[#70B325] transition-all group"
-              >
-                <div className="flex items-start gap-3">
-                  {/* Date Badge Box */}
-                  <div className="w-13 h-14 rounded-xl bg-[#F4F9EE] border border-[#D5E6C4] flex flex-col items-center justify-center text-center flex-shrink-0">
-                    <span className="text-base font-extrabold text-[#70B325] leading-none">
-                      {event.date}
-                    </span>
-                    <span className="text-[10px] font-bold text-gray-600 uppercase mt-0.5">
-                      {event.monthYear}
-                    </span>
-                  </div>
-
-                  {/* Title & Location */}
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-extrabold text-xs sm:text-sm text-[#262A25] group-hover:text-[#70B325] transition-colors line-clamp-2">
-                      {event.title}
-                    </h3>
-                    <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-1 truncate">
-                      <IconLocation className="w-3 h-3 flex-shrink-0 text-gray-400" />
-                      <span className="truncate">{event.location}</span>
-                    </p>
-                  </div>
-                </div>
-
-                {/* Footer Tags & Round Arrow Button */}
-                <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    {event.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-[10px] font-semibold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const firstEvt = backendEvents[0]
-                      if (firstEvt) navigate(`/events/${firstEvt.id}`)
-                    }}
-                    className="w-7 h-7 rounded-full bg-[#F4F9EE] text-[#70B325] hover:bg-[#70B325] hover:text-white flex items-center justify-center transition-colors cursor-pointer border-none"
-                    aria-label={`Lihat detail ${event.title}`}
-                  >
-                    <IconChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
       </main>
 
       {/* Brand Footer */}
@@ -679,9 +556,6 @@ export default function PublicEventsPage() {
             <a href="/#voting-section" className="hover:text-[#70B325] transition-colors">
               Voting Aktif
             </a>
-            <a href="/#events-section" className="hover:text-[#70B325] transition-colors">
-              Event
-            </a>
             <button
               type="button"
               onClick={() => handleOpenCheckVoteModal()}
@@ -689,9 +563,6 @@ export default function PublicEventsPage() {
             >
               Cek Suara
             </button>
-            <Link to="/login" className="hover:text-[#70B325] transition-colors font-bold text-[#70B325]">
-              Ruang Admin
-            </Link>
           </div>
 
           <div className="text-xs text-gray-400 text-center md:text-right">

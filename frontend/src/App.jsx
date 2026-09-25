@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
+import GoogleOneTap from './components/GoogleOneTap'
 import ResourcePage from './components/ResourcePage'
 import AdminLayout from './layouts/AdminLayout'
 import LoginPage from './pages/LoginPage'
@@ -167,19 +168,21 @@ function ProtectedApp() {
 }
 
 function LoginRoute() {
-  const { token, ready } = useAuth()
-  if (!ready) return <p className="boot-state">Memeriksa sesi admin...</p>
-  return token ? <Navigate to="/admin/categories" replace /> : <LoginPage />
+  const { token, userToken, ready } = useAuth()
+  if (!ready) return <p className="boot-state">Memeriksa sesi...</p>
+  if (token) return <Navigate to="/admin/categories" replace />
+  if (userToken) return <Navigate to="/" replace />
+  return <LoginPage />
 }
 
 export default function App() {
   return (
     <AuthProvider>
+      <GoogleOneTap />
       <Routes>
         <Route path="/" element={<PublicEventsPage />} />
         <Route path="/categories/:categoryId" element={<CategoryVotingPage />} />
         <Route path="/voting/:categoryId" element={<CategoryVotingPage />} />
-        <Route path="/events/:eventId" element={<Navigate to="/" replace />} />
         <Route path="/login" element={<LoginRoute />} />
         <Route path="/admin" element={<ProtectedApp />}>
           <Route index element={<Navigate to="categories" replace />} />

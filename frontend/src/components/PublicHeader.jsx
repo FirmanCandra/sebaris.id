@@ -1,13 +1,16 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import SebarisLogo from './SebarisLogo'
-import { IconSearch, IconBell, IconUser, IconMenu, IconClose } from './Icons'
-import { useAuth } from '../auth/AuthProvider'
+import { IconSearch, IconBell, IconMenu, IconClose } from './Icons'
+import { useAuth, useUserAuth } from '../auth/AuthProvider'
+import UserAuthModal from './UserAuthModal'
 
 export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenCheckVote }) {
-  const { token, admin } = useAuth()
+  const { token } = useAuth()
+  const { user, userReady } = useUserAuth()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [userModalOpen, setUserModalOpen] = useState(false)
   const [headerSearch, setHeaderSearch] = useState(searchQuery)
 
   function handleSearchSubmit(e) {
@@ -72,13 +75,6 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
             Voting
           </a>
 
-          <a
-            href="/#events-section"
-            className="px-3 py-2 text-sm font-semibold text-[#262A25] hover:text-[#70B325] transition-colors"
-          >
-            Event
-          </a>
-
           <button
             type="button"
             onClick={handleCheckVoteClick}
@@ -123,30 +119,51 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
             <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#70B325]" />
           </button>
 
-          {/* User Account / Admin CTA */}
-          {token ? (
+          {/* Admin Dashboard CTA if admin logged in */}
+          {token && (
+            <Link
+              to="/admin/categories"
+              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#262A25] text-white text-xs font-bold hover:bg-black transition-colors no-underline"
+              title="Buka Dashboard Administrator"
+            >
+              <span>Dashboard Admin</span>
+            </Link>
+          )}
+
+          {/* User Account Button — skeleton while auth loads to prevent flash */}
+          {!userReady ? (
+            <div className="h-8 w-28 rounded-full bg-gray-100 animate-pulse" />
+          ) : user ? (
             <button
               type="button"
-              onClick={() => navigate('/admin/events')}
-              className="flex items-center gap-2 py-1.5 px-3 rounded-full bg-[#F4F9EE] border border-[#D5E6C4] hover:bg-[#EAF3DE] transition-colors"
+              onClick={() => setUserModalOpen(true)}
+              className="flex items-center gap-2 py-1.5 px-3 rounded-full bg-[#F4F9EE] border border-[#D5E6C4] hover:bg-[#EAF3DE] transition-colors cursor-pointer"
+              title="Buka profil pemilih & riwayat vote"
             >
-              <div className="w-7 h-7 rounded-full bg-[#70B325] text-white font-bold text-xs flex items-center justify-center">
-                {admin?.name ? admin.name.charAt(0).toUpperCase() : 'A'}
-              </div>
-              <span className="text-xs font-bold text-[#262A25] hidden sm:inline">
-                {admin?.name || 'Dashboard Admin'}
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  className="w-7 h-7 rounded-full object-cover border border-[#70B325]"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-[#70B325] text-white font-bold text-xs flex items-center justify-center">
+                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+              )}
+              <span className="text-xs font-bold text-[#262A25] hidden sm:inline max-w-[110px] truncate">
+                {user.name}
               </span>
             </button>
           ) : (
-            <Link
-              to="/login"
-              className="flex items-center gap-2 py-1.5 px-3 rounded-full hover:bg-gray-100 transition-colors text-xs font-bold text-[#262A25] no-underline"
+            <button
+              type="button"
+              onClick={() => navigate('/login')}
+              className="flex items-center gap-2 py-1.5 px-4 rounded-full bg-[#70B325] hover:bg-[#5c9420] text-white transition-all text-xs font-bold shadow-sm cursor-pointer"
             >
-              <div className="w-7 h-7 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center">
-                <IconUser className="w-4 h-4" />
-              </div>
-              <span className="hidden sm:inline">Akun Saya</span>
-            </Link>
+              <span>Masuk &amp; Daftar</span>
+            </button>
           )}
 
           {/* Mobile Menu Button */}
@@ -197,13 +214,6 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
           >
             Voting
           </a>
-          <a
-            href="/#events-section"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-lg font-medium text-sm text-[#262A25] hover:bg-gray-50"
-          >
-            Event
-          </a>
           <button
             type="button"
             onClick={handleCheckVoteClick}
@@ -211,17 +221,54 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
           >
             Cek Vote
           </button>
-          <div className="pt-2 border-t border-gray-100">
-            <Link
-              to="/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block w-full text-center py-2.5 rounded-lg bg-[#70B325] text-white font-bold text-sm no-underline"
-            >
-              {token ? 'Masuk ke Dashboard Admin' : 'Login Admin'}
-            </Link>
+
+          <div className="pt-2 border-t border-gray-100 space-y-2">
+            {user ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  setUserModalOpen(true)
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#D5E6C4] text-[#262A25] font-bold text-sm bg-[#F4F9EE]"
+              >
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.name} className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-[#70B325] text-white text-xs flex items-center justify-center font-bold">
+                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                )}
+                <span className="truncate max-w-[160px]">{user.name}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  navigate('/login')
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#70B325] text-white font-bold text-sm"
+              >
+                <span>Masuk &amp; Daftar</span>
+              </button>
+            )}
+
+            {token && (
+              <Link
+                to="/admin/categories"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block w-full text-center py-2.5 rounded-xl bg-[#262A25] text-white font-bold text-sm no-underline"
+              >
+                Dashboard Administrator
+              </Link>
+            )}
           </div>
         </div>
       )}
+
+      {/* User Login & History Modal */}
+      <UserAuthModal isOpen={userModalOpen} onClose={() => setUserModalOpen(false)} />
     </header>
   )
 }

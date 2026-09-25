@@ -27,6 +27,7 @@ export function resolveStorageUrl(pathOrUrl) {
   return `${BACKEND_URL}${clean}`
 }
 
+
 export async function api(path, { token, body, method = 'GET' } = {}) {
   const headers = { Accept: 'application/json' }
   const options = { method, headers }

@@ -8,6 +8,7 @@ use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -33,6 +34,7 @@ class CategoryController extends Controller
         }
 
         $category = Category::create($data);
+        Cache::forget('public.categories');
 
         return new CategoryResource($category->loadCount('finalists'));
     }
@@ -55,6 +57,7 @@ class CategoryController extends Controller
         }
 
         $category->update($data);
+        Cache::forget('public.categories');
 
         return new CategoryResource($category->fresh()->loadCount('finalists'));
     }
@@ -66,6 +69,7 @@ class CategoryController extends Controller
         }
 
         $category->delete();
+        Cache::forget('public.categories');
 
         return response()->noContent();
     }

@@ -11,6 +11,7 @@ class Vote extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'finalist_id',
         'voter_name',
         'voter_contact',
@@ -29,5 +30,10 @@ class Vote extends Model
     public function finalist(): BelongsTo
     {
         return $this->belongsTo(Finalist::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

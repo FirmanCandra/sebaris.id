@@ -5,18 +5,21 @@ namespace App\Http\Controllers;
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Cache;
 
 class PublicCategoryController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        return CategoryResource::collection(
-            Category::query()
+        $categories = Cache::remember('public.categories', 60, function () {
+            return Category::query()
                 ->where('status', 'active')
                 ->withCount('finalists')
                 ->latest()
-                ->get(),
-        );
+                ->get();
+        });
+
+        return CategoryResource::collection($categories);
     }
 
     public function show(string $idOrSlug): CategoryResource

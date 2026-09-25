@@ -60,20 +60,16 @@ class AuthController extends Controller
 
         $admin = Admin::query()->where('email', $email)->orWhere('google_id', $googleId)->first();
 
-        if ($admin) {
-            $admin->update([
-                'google_id' => $googleId,
-                'avatar' => $avatar ?? $admin->avatar,
-            ]);
-        } else {
-            $admin = Admin::create([
-                'name' => $name,
-                'email' => $email,
-                'google_id' => $googleId,
-                'avatar' => $avatar,
-                'role' => 'admin',
-            ]);
+        if (! $admin) {
+            return response()->json([
+                'message' => 'Akses ditolak: Akun Google ini tidak terdaftar sebagai administrator.',
+            ], 403);
         }
+
+        $admin->update([
+            'google_id' => $googleId,
+            'avatar' => $avatar ?? $admin->avatar,
+        ]);
 
         return response()->json([
             'token' => $admin->createToken('admin-spa')->plainTextToken,
