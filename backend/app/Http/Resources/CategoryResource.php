@@ -22,6 +22,7 @@ class CategoryResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'slug' => $this->slug ?? \Illuminate\Support\Str::slug($this->name),
             'thumbnail' => $thumbnailUrl,
             'thumbnail_url' => $thumbnailUrl,
             'thumbnail_path' => $this->thumbnail,

@@ -15,6 +15,7 @@ class Category extends Model
     protected $fillable = [
         'event_id',
         'name',
+        'slug',
         'thumbnail',
         'description',
         'organizer',
@@ -22,6 +23,22 @@ class Category extends Model
         'end_date',
         'status',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Category $category) {
+            if (empty($category->slug) && !empty($category->name)) {
+                $base = \Illuminate\Support\Str::slug($category->name);
+                $slug = $base;
+                $counter = 1;
+                while (static::where('slug', $slug)->where('id', '!=', $category->id ?? 0)->exists()) {
+                    $slug = "{$base}-{$counter}";
+                    $counter++;
+                }
+                $category->slug = $slug;
+            }
+        });
+    }
 
     protected function casts(): array
     {

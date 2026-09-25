@@ -178,6 +178,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<PublicEventsPage />} />
         <Route path="/categories/:categoryId" element={<CategoryVotingPage />} />
+        <Route path="/voting/:categoryId" element={<CategoryVotingPage />} />
         <Route path="/events/:eventId" element={<Navigate to="/" replace />} />
         <Route path="/login" element={<LoginRoute />} />
         <Route path="/admin" element={<ProtectedApp />}>

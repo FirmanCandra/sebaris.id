@@ -8,16 +8,30 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PublicFinalistController extends Controller
 {
-    public function index(Category $category): AnonymousResourceCollection
+    protected function resolveCategory(string $idOrSlug): Category
     {
-        abort_unless($category->status === 'active', 404);
+        return Category::query()
+            ->where('status', 'active')
+            ->where(function ($query) use ($idOrSlug) {
+                if (is_numeric($idOrSlug)) {
+                    $query->where('id', (int) $idOrSlug);
+                } else {
+                    $query->where('slug', $idOrSlug);
+                }
+            })
+            ->firstOrFail();
+    }
+
+    public function index(string $category): AnonymousResourceCollection
+    {
+        $cat = $this->resolveCategory($category);
 
         return FinalistResource::collection(
-            $category->finalists()->orderByDesc('vote_count')->orderBy('name')->get(),
+            $cat->finalists()->orderByDesc('vote_count')->orderBy('name')->get(),
         );
     }
 
-    public function leaderboard(Category $category): AnonymousResourceCollection
+    public function leaderboard(string $category): AnonymousResourceCollection
     {
         return $this->index($category);
     }

@@ -30,6 +30,17 @@ export function AuthProvider({ children }) {
     setToken(payload.token)
   }
 
+  async function loginWithGoogle(credential) {
+    const payload = await api('/admin/google-login', {
+      method: 'POST',
+      body: { credential },
+    })
+    localStorage.setItem('sebaris.admin.token', payload.token)
+    setAdmin(payload.admin.data)
+    setToken(payload.token)
+    return payload
+  }
+
   async function logout() {
     if (token) await api('/admin/logout', { method: 'POST', token })
     localStorage.removeItem('sebaris.admin.token')
@@ -37,7 +48,11 @@ export function AuthProvider({ children }) {
     setToken(null)
   }
 
-  return <AuthContext.Provider value={{ token, admin, ready, login, logout }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ token, admin, ready, login, loginWithGoogle, logout }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {

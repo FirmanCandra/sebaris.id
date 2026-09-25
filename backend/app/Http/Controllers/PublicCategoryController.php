@@ -19,9 +19,18 @@ class PublicCategoryController extends Controller
         );
     }
 
-    public function show(Category $category): CategoryResource
+    public function show(string $idOrSlug): CategoryResource
     {
-        abort_unless($category->status === 'active', 404);
+        $category = Category::query()
+            ->where('status', 'active')
+            ->where(function ($query) use ($idOrSlug) {
+                if (is_numeric($idOrSlug)) {
+                    $query->where('id', (int) $idOrSlug);
+                } else {
+                    $query->where('slug', $idOrSlug);
+                }
+            })
+            ->firstOrFail();
 
         return new CategoryResource($category->loadCount('finalists'));
     }

@@ -26,6 +26,61 @@ class AuthController extends Controller
         ]);
     }
 
+    public function googleLogin(Request $request): JsonResponse
+    {
+        $request->validate([
+            'credential' => ['required', 'string'],
+        ]);
+
+        $credential = $request->string('credential');
+
+        $response = \Illuminate\Support\Facades\Http::get('https://oauth2.googleapis.com/tokeninfo', [
+            'id_token' => $credential,
+        ]);
+
+        if (! $response->successful()) {
+            return response()->json(['message' => 'Token Google tidak valid atau telah kedaluwarsa.'], 422);
+        }
+
+        $payload = $response->json();
+        $googleId = $payload['sub'] ?? null;
+        $email = $payload['email'] ?? null;
+        $name = $payload['name'] ?? 'Admin Google';
+        $avatar = $payload['picture'] ?? null;
+        $aud = $payload['aud'] ?? null;
+
+        $expectedClientId = config('services.google.client_id');
+        if ($expectedClientId && $aud && $aud !== $expectedClientId) {
+            return response()->json(['message' => 'Token Google tidak sesuai dengan Client ID aplikasi ini.'], 422);
+        }
+
+        if (! $email) {
+            return response()->json(['message' => 'Email tidak dapat ditemukan dari akun Google.'], 422);
+        }
+
+        $admin = Admin::query()->where('email', $email)->orWhere('google_id', $googleId)->first();
+
+        if ($admin) {
+            $admin->update([
+                'google_id' => $googleId,
+                'avatar' => $avatar ?? $admin->avatar,
+            ]);
+        } else {
+            $admin = Admin::create([
+                'name' => $name,
+                'email' => $email,
+                'google_id' => $googleId,
+                'avatar' => $avatar,
+                'role' => 'admin',
+            ]);
+        }
+
+        return response()->json([
+            'token' => $admin->createToken('admin-spa')->plainTextToken,
+            'admin' => new AdminResource($admin),
+        ]);
+    }
+
     public function me(Request $request): AdminResource
     {
         return new AdminResource($request->user());

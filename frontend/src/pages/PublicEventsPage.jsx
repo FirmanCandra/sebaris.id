@@ -196,6 +196,7 @@ export default function PublicEventsPage() {
   const displayPopular = backendCategories.length > 0
     ? backendCategories.map((cat, idx) => ({
         id: cat.id,
+        slug: cat.slug || String(cat.id),
         title: cat.name,
         organizer: cat.organizer || 'Forum Genre / Panitia',
         daysLeft: cat.end_date ? `s/d ${cat.end_date}` : 'Sedang Berlangsung',
@@ -222,6 +223,7 @@ export default function PublicEventsPage() {
   const displayRecent = backendCategories.length > 0
     ? backendCategories.map((cat, idx) => ({
         id: cat.id,
+        slug: cat.slug || String(cat.id),
         title: cat.name,
         organizer: cat.organizer || 'Penyelenggara',
         daysLeft: cat.end_date ? `s/d ${cat.end_date}` : 'Buka',
@@ -394,7 +396,7 @@ export default function PublicEventsPage() {
                       <div>
                         <h3 className="font-extrabold text-sm sm:text-base text-[#262A25] group-hover:text-[#70B325] transition-colors line-clamp-2">
                           <Link
-                            to={`/categories/${item.id}`}
+                            to={`/voting/${item.slug || item.id}`}
                             className="no-underline text-inherit hover:text-[#70B325]"
                           >
                             {item.title}
@@ -443,7 +445,7 @@ export default function PublicEventsPage() {
 
                       {/* CTA Button */}
                       <Link
-                        to={`/categories/${item.id}`}
+                        to={`/voting/${item.slug || item.id}`}
                         className="w-full mt-2 py-2 px-3 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-bold text-xs sm:text-sm rounded-xl text-center no-underline flex items-center justify-center gap-1.5 transition-all shadow-xs"
                       >
                         <span>Vote Sekarang</span>
@@ -540,7 +542,7 @@ export default function PublicEventsPage() {
               return (
                 <Link
                   key={item.id}
-                  to={`/categories/${item.id}`}
+                  to={`/voting/${item.slug || item.id}`}
                   className="card-base p-4 bg-white border border-[#E5EADF] rounded-2xl flex items-center gap-3.5 hover:border-[#70B325] transition-all group no-underline text-inherit cursor-pointer"
                 >
                   {item.thumbnail ? (

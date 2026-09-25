@@ -109,9 +109,18 @@ export default function AdminLayout() {
 
           {/* Admin Profile & Logout */}
           <div className="flex items-center gap-2 pl-2 border-l border-gray-200 dark:border-gray-800">
-            <div className="w-8 h-8 rounded-full bg-[var(--brand-primary)] text-white font-bold text-xs flex items-center justify-center shadow-xs">
-              {admin?.name ? admin.name.charAt(0).toUpperCase() : 'A'}
-            </div>
+            {admin?.avatar ? (
+              <img
+                src={admin.avatar}
+                alt={admin.name || 'Admin'}
+                className="w-8 h-8 rounded-full object-cover border border-[var(--neutral-border)] shadow-xs"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-[var(--brand-primary)] text-white font-bold text-xs flex items-center justify-center shadow-xs">
+                {admin?.name ? admin.name.charAt(0).toUpperCase() : 'A'}
+              </div>
+            )}
             <div className="hidden md:block text-left">
               <span className="block text-xs font-bold leading-tight">
                 {admin?.name || 'Admin Sebaris'}

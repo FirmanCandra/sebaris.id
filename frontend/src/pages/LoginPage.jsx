@@ -1,16 +1,78 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import SebarisLogo from '../components/SebarisLogo'
-import { IconChevronRight } from '../components/Icons'
+import { IconChevronRight, IconGoogle } from '../components/Icons'
 
 export default function LoginPage() {
-  const { login } = useAuth()
+  const { login, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('admin@sebaris.test')
   const [password, setPassword] = useState('password')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
+  const googleBtnRef = useRef(null)
+
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+
+  // Initialize Google Identity Services
+  useEffect(() => {
+    if (!googleClientId) return
+
+    let attempts = 0
+    const interval = setInterval(() => {
+      attempts++
+      if (window.google?.accounts?.id) {
+        clearInterval(interval)
+        try {
+          window.google.accounts.id.initialize({
+            client_id: googleClientId,
+            callback: handleGoogleResponse,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+          })
+
+          if (googleBtnRef.current) {
+            googleBtnRef.current.innerHTML = ''
+            window.google.accounts.id.renderButton(googleBtnRef.current, {
+              type: 'standard',
+              theme: 'outline',
+              size: 'large',
+              width: 350,
+              text: 'continue_with',
+              shape: 'rectangular',
+              logo_alignment: 'left',
+            })
+          }
+        } catch (initErr) {
+          console.error('GSI Init Error:', initErr)
+        }
+      } else if (attempts > 30) {
+        clearInterval(interval)
+      }
+    }, 200)
+
+    return () => clearInterval(interval)
+  }, [googleClientId])
+
+  async function handleGoogleResponse(response) {
+    if (!response?.credential) {
+      setError('Gagal menerima kredensial otorisasi dari Google.')
+      return
+    }
+
+    setGoogleLoading(true)
+    setError('')
+    try {
+      await loginWithGoogle(response.credential)
+      navigate('/admin/categories')
+    } catch (err) {
+      setError(err.message || 'Login dengan Google gagal. Pastikan akun Anda memiliki akses.')
+    } finally {
+      setGoogleLoading(false)
+    }
+  }
 
   async function submit(event) {
     event.preventDefault()
@@ -18,11 +80,21 @@ export default function LoginPage() {
     setError('')
     try {
       await login({ email, password })
-      navigate('/admin/events')
+      navigate('/admin/categories')
     } catch (requestError) {
       setError(requestError.message || 'Login gagal. Periksa kembali email dan kata sandi Anda.')
     } finally {
       setSaving(false)
+    }
+  }
+
+  function handleFallbackGoogleClick() {
+    if (!googleClientId) {
+      setError('Google Client ID belum diatur. Silakan masukkan GOOGLE_CLIENT_ID pada file .env terlebih dahulu.')
+      return
+    }
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.prompt()
     }
   }
 
@@ -50,7 +122,7 @@ export default function LoginPage() {
             Masuk ke Ruang Admin
           </h1>
           <p className="text-xs text-gray-500 leading-relaxed">
-            Kelola event voting, kategori lomba, finalis, dan pantau perolehan suara secara langsung.
+            Kelola sesi voting, kategori lomba, finalis, dan pantau perolehan suara secara langsung.
           </p>
         </div>
 
@@ -60,6 +132,43 @@ export default function LoginPage() {
             {error}
           </div>
         )}
+
+        {/* Google Sign In Section */}
+        <div className="space-y-3">
+          <div className="flex justify-center">
+            {googleClientId ? (
+              <div
+                ref={googleBtnRef}
+                className="w-full flex justify-center min-h-[44px]"
+                id="googleSignInBtn"
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={handleFallbackGoogleClick}
+                className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs sm:text-sm rounded-xl border border-gray-300 shadow-sm transition-all hover:shadow active:scale-[0.99] cursor-pointer"
+              >
+                <IconGoogle className="w-5 h-5 flex-shrink-0" />
+                <span>Masuk dengan Google</span>
+              </button>
+            )}
+          </div>
+
+          {googleLoading && (
+            <p className="text-center text-xs text-[#70B325] font-semibold animate-pulse">
+              Memproses autentikasi Google...
+            </p>
+          )}
+
+          {/* Divider */}
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t border-gray-200"></div>
+            <span className="flex-shrink mx-4 text-xs font-semibold text-gray-400">
+              atau gunakan email admin
+            </span>
+            <div className="flex-grow border-t border-gray-200"></div>
+          </div>
+        </div>
 
         {/* Login Form */}
         <form onSubmit={submit} className="space-y-4">
@@ -100,7 +209,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || googleLoading}
             className="btn-primary w-full text-sm font-bold shadow-md cursor-pointer mt-2"
           >
             {saving ? (
@@ -124,3 +233,4 @@ export default function LoginPage() {
     </div>
   )
 }
+

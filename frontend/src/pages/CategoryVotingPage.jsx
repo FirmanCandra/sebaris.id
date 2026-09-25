@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { api, ApiError, resolveStorageUrl } from '../api/client'
 import PublicHeader from '../components/PublicHeader'
@@ -18,6 +18,7 @@ import {
 
 export default function CategoryVotingPage() {
   const { categoryId } = useParams()
+  const navigate = useNavigate()
   const [category, setCategory] = useState(null)
   const [finalists, setFinalists] = useState([])
   const [activeTab, setActiveTab] = useState('finalis') // 'finalis' | 'leaderboard' | 'deskripsi'
@@ -56,6 +57,27 @@ export default function CategoryVotingPage() {
     const interval = window.setInterval(loadData, 10000)
     return () => window.clearInterval(interval)
   }, [loadData])
+
+  // Update browser tab document.title to match the category / event name
+  useEffect(() => {
+    if (category?.name) {
+      document.title = `${category.name} — sebaris.id`
+    } else if (!loading) {
+      document.title = 'Voting Tidak Ditemukan — sebaris.id'
+    } else {
+      document.title = 'Memuat Voting... — sebaris.id'
+    }
+    return () => {
+      document.title = 'sebaris.id — Platform E-Voting & Event Online'
+    }
+  }, [category?.name, loading])
+
+  // Dynamically update the browser address bar to match the event's slug if loaded by ID
+  useEffect(() => {
+    if (category?.slug && categoryId !== category.slug) {
+      window.history.replaceState(null, '', `/categories/${category.slug}`)
+    }
+  }, [category?.slug, categoryId])
 
   // Total votes for percentage calculation
   const totalVotes = useMemo(
@@ -122,11 +144,19 @@ export default function CategoryVotingPage() {
   }
 
   const categoryTitle =
-    category?.name || 'Apresiasi Duta Genre Provinsi Jawa Timur 2026'
+    category?.name || (loading ? 'Memuat data voting...' : 'Kategori Voting')
 
   return (
     <div className="min-h-screen bg-[#F8FAF7] text-[#262A25] flex flex-col font-sans">
       <PublicHeader />
+
+      {/* Top Banner Bar (Kreen Connect Style header banner) */}
+      <div className="bg-[#123E2A] text-white py-2 px-4 text-center text-xs font-semibold tracking-wide border-b border-white/10 shadow-xs">
+        <span>
+          Sebaris Vote &bull; Your Trusted Voting Partner &bull; Dukung finalis favorit kamu di{' '}
+          <strong className="text-amber-300">{categoryTitle}</strong>
+        </span>
+      </div>
 
       {/* Top Breadcrumb & Category Bar */}
       <div className="bg-white border-b border-[#E8ECE4]">
@@ -326,8 +356,14 @@ export default function CategoryVotingPage() {
 
                         {/* Top Branding / Category Emblem */}
                         <div className="relative z-10 flex items-center justify-between">
-                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-black/40 backdrop-blur-xs border border-white/20 text-[10px] font-black tracking-wider text-amber-300 uppercase">
-                            <span>ADUGEN 2026</span>
+                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-black/40 backdrop-blur-xs border border-white/20 text-[10px] font-black tracking-wider text-amber-300 uppercase max-w-[200px] truncate">
+                            <span className="truncate">
+                              {category?.name
+                                ? category.name.length > 25
+                                  ? category.name.slice(0, 22) + '...'
+                                  : category.name
+                                : 'VOTING'}
+                            </span>
                           </div>
                           <span className="text-[11px] font-black text-amber-400 tracking-wider">
                             #{index + 1}
