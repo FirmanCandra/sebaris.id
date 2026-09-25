@@ -8,16 +8,17 @@ use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
 class CategoryController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = Category::query()->with('event')->withCount('finalists')->orderBy('name');
+        $query = Category::query()->withCount('finalists')->latest();
 
-        if ($request->filled('event_id')) {
-            $query->where('event_id', $request->integer('event_id'));
+        if ($request->filled('status')) {
+            $query->where('status', $request->string('status'));
         }
 
         return CategoryResource::collection($query->get());
@@ -25,23 +26,45 @@ class CategoryController extends Controller
 
     public function store(CategoryRequest $request): CategoryResource
     {
-        return new CategoryResource(Category::create($request->validated())->load('event'));
+        $data = $request->safe()->except('thumbnail');
+
+        if ($request->hasFile('thumbnail')) {
+            $data['thumbnail'] = $request->file('thumbnail')->store('categories', 'public');
+        }
+
+        $category = Category::create($data);
+
+        return new CategoryResource($category->loadCount('finalists'));
     }
 
     public function show(Category $category): CategoryResource
     {
-        return new CategoryResource($category->load('event')->loadCount('finalists'));
+        return new CategoryResource($category->loadCount('finalists'));
     }
 
     public function update(CategoryRequest $request, Category $category): CategoryResource
     {
-        $category->update($request->validated());
+        $data = $request->safe()->except('thumbnail');
 
-        return new CategoryResource($category->fresh()->load('event')->loadCount('finalists'));
+        if ($request->hasFile('thumbnail')) {
+            if ($category->thumbnail) {
+                Storage::disk('public')->delete($category->thumbnail);
+            }
+
+            $data['thumbnail'] = $request->file('thumbnail')->store('categories', 'public');
+        }
+
+        $category->update($data);
+
+        return new CategoryResource($category->fresh()->loadCount('finalists'));
     }
 
     public function destroy(Category $category): Response
     {
+        if ($category->thumbnail) {
+            Storage::disk('public')->delete($category->thumbnail);
+        }
+
         $category->delete();
 
         return response()->noContent();

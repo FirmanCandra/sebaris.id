@@ -15,7 +15,6 @@ import {
 import { api } from '../api/client'
 
 const NAV_LINKS = [
-  { to: '/admin/events', label: 'Event', icon: IconTrophy },
   { to: '/admin/categories', label: 'Kategori', icon: IconLayers },
   { to: '/admin/finalists', label: 'Finalis', icon: IconUsers },
 ]
@@ -27,7 +26,7 @@ export default function AdminLayout() {
     () => localStorage.getItem('sebaris.theme') || (document.documentElement.dataset.theme || 'light')
   )
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [counts, setCounts] = useState({ events: 0, categories: 0, finalists: 0 })
+  const [counts, setCounts] = useState({ categories: 0, finalists: 0 })
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
@@ -38,12 +37,10 @@ export default function AdminLayout() {
   useEffect(() => {
     if (!token) return
     Promise.allSettled([
-      api('/admin/events', { token }),
       api('/admin/categories', { token }),
       api('/admin/finalists', { token }),
-    ]).then(([resEvents, resCats, resFinalists]) => {
+    ]).then(([resCats, resFinalists]) => {
       setCounts({
-        events: resEvents.status === 'fulfilled' && resEvents.value?.data ? resEvents.value.data.length : 0,
         categories: resCats.status === 'fulfilled' && resCats.value?.data ? resCats.value.data.length : 0,
         finalists: resFinalists.status === 'fulfilled' && resFinalists.value?.data ? resFinalists.value.data.length : 0,
       })
@@ -73,7 +70,7 @@ export default function AdminLayout() {
           </button>
 
           {/* Logo */}
-          <Link to="/admin/events" className="flex items-center no-underline">
+          <Link to="/admin/categories" className="flex items-center no-underline">
             <SebarisLogo size="sm" variant={theme === 'dark' ? 'white' : 'default'} />
           </Link>
 

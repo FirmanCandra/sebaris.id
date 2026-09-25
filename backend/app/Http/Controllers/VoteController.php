@@ -17,11 +17,10 @@ class VoteController extends Controller
     {
         $vote = DB::transaction(function () use ($request) {
             $requestedFinalist = Finalist::query()
-                ->with('category.event')
+                ->with('category')
                 ->findOrFail($request->integer('finalist_id'));
 
             $category = Category::query()
-                ->with('event')
                 ->lockForUpdate()
                 ->findOrFail($requestedFinalist->category_id);
 
@@ -29,9 +28,9 @@ class VoteController extends Controller
                 ->lockForUpdate()
                 ->findOrFail($requestedFinalist->id);
 
-            if ($category->event->status !== 'active') {
+            if (($category->status ?? 'active') !== 'active') {
                 throw ValidationException::withMessages([
-                    'finalist_id' => 'Voting untuk event ini belum aktif.',
+                    'finalist_id' => 'Voting untuk kategori ini belum aktif.',
                 ]);
             }
 

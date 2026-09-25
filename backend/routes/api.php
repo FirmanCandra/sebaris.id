@@ -2,16 +2,14 @@
 
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\FinalistController;
-use App\Http\Controllers\PublicEventController;
 use App\Http\Controllers\PublicCategoryController;
 use App\Http\Controllers\PublicFinalistController;
 use App\Http\Controllers\VoteController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('events', [PublicEventController::class, 'index']);
-Route::get('events/{event}/categories', [PublicCategoryController::class, 'index']);
+Route::get('categories', [PublicCategoryController::class, 'index']);
+Route::get('categories/{category}', [PublicCategoryController::class, 'show']);
 Route::get('categories/{category}/finalists', [PublicFinalistController::class, 'index']);
 Route::get('categories/{category}/leaderboard', [PublicFinalistController::class, 'leaderboard']);
 Route::post('votes', [VoteController::class, 'store'])->middleware('throttle:5,1');
@@ -22,7 +20,6 @@ Route::prefix('admin')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', [AuthController::class, 'me']);
         Route::post('logout', [AuthController::class, 'logout']);
-        Route::apiResource('events', EventController::class);
         Route::apiResource('categories', CategoryController::class);
         Route::apiResource('finalists', FinalistController::class);
     });

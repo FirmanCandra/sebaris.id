@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { api } from '../api/client'
+import { api, resolveStorageUrl } from '../api/client'
 import PublicHeader from '../components/PublicHeader'
 import HeroIllustration from '../components/HeroIllustration'
 import CheckVoteModal from '../components/CheckVoteModal'
@@ -165,20 +165,20 @@ export default function PublicEventsPage() {
   const [checkVoteCode, setCheckVoteCode] = useState('')
   const [isCheckVoteModalOpen, setIsCheckVoteModalOpen] = useState(false)
   const [checkVoteModalQuery, setCheckVoteModalQuery] = useState('')
-  const [backendEvents, setBackendEvents] = useState([])
-  const [_loadingBackend, setLoadingBackend] = useState(true)
+  const [backendCategories, setBackendCategories] = useState([])
+  const [_loadingCategories, setLoadingCategories] = useState(true)
 
   useEffect(() => {
-    api('/events')
+    api('/categories')
       .then(({ data }) => {
         if (Array.isArray(data) && data.length > 0) {
-          setBackendEvents(data)
+          setBackendCategories(data)
         }
       })
       .catch(() => {
-        // Backend offline or empty: we gracefully maintain client resilience (C-4)
+        // Backend offline or empty: gracefully maintain client resilience
       })
-      .finally(() => setLoadingBackend(false))
+      .finally(() => setLoadingCategories(false))
   }, [])
 
   function handleCheckVoteSubmit(e) {
@@ -192,16 +192,52 @@ export default function PublicEventsPage() {
     setIsCheckVoteModalOpen(true)
   }
 
+  // Combine backend categories or fallbacks
+  const displayPopular = backendCategories.length > 0
+    ? backendCategories.map((cat, idx) => ({
+        id: cat.id,
+        title: cat.name,
+        organizer: cat.organizer || 'Forum Genre / Panitia',
+        daysLeft: cat.end_date ? `s/d ${cat.end_date}` : 'Sedang Berlangsung',
+        category: 'Komunitas',
+        votes: `${cat.finalists_count || 0} finalis`,
+        percentage: 60 + ((idx * 11) % 35),
+        thumbnail: cat.thumbnail_url || cat.thumbnail,
+        BannerComponent: [BannerSchool, BannerCampus, BannerFestival, BannerPoster][idx % 4],
+        avatars: ['SB', 'ID', 'VT'],
+        extraAvatars: cat.finalists_count > 3 ? cat.finalists_count - 3 : 0,
+      }))
+    : POPULAR_VOTINGS_DATA
+
   // Filter items based on active category and search query
-  const filteredPopular = POPULAR_VOTINGS_DATA.filter((item) => {
+  const filteredPopular = displayPopular.filter((item) => {
     const matchCat = activeCategory === 'Semua' || item.category === activeCategory
-    const matchSearch = !searchQuery.trim() || item.title.toLowerCase().includes(searchQuery.toLowerCase()) || item.organizer.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchSearch =
+      !searchQuery.trim() ||
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.organizer.toLowerCase().includes(searchQuery.toLowerCase())
     return matchCat && matchSearch
   })
 
-  const filteredRecent = RECENT_VOTINGS_DATA.filter((item) => {
+  const displayRecent = backendCategories.length > 0
+    ? backendCategories.map((cat, idx) => ({
+        id: cat.id,
+        title: cat.name,
+        organizer: cat.organizer || 'Penyelenggara',
+        daysLeft: cat.end_date ? `s/d ${cat.end_date}` : 'Buka',
+        category: 'Komunitas',
+        votes: `${cat.finalists_count || 0} finalis`,
+        thumbnail: cat.thumbnail_url || cat.thumbnail,
+        IconComponent: [ThumbnailEarth, ThumbnailTech, ThumbnailMusic, ThumbnailCamera][idx % 4],
+      }))
+    : RECENT_VOTINGS_DATA
+
+  const filteredRecent = displayRecent.filter((item) => {
     const matchCat = activeCategory === 'Semua' || item.category === activeCategory
-    const matchSearch = !searchQuery.trim() || item.title.toLowerCase().includes(searchQuery.toLowerCase()) || item.organizer.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchSearch =
+      !searchQuery.trim() ||
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.organizer.toLowerCase().includes(searchQuery.toLowerCase())
     return matchCat && matchSearch
   })
 
@@ -297,38 +333,6 @@ export default function PublicEventsPage() {
           ))}
         </section>
 
-        {/* Live Backend Events Notification (if admin has created database events) */}
-        {backendEvents.length > 0 && (
-          <section className="bg-[#F4F9EE] border border-[#D5E6C4] rounded-2xl p-5 mb-8">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#70B325] animate-pulse" />
-                <h2 className="text-base font-extrabold text-[#262A25]">
-                  Event Aktif dari Database ({backendEvents.length})
-                </h2>
-              </div>
-              <span className="text-xs font-semibold text-[#558223]">Sinkron dengan API</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {backendEvents.map((evt) => (
-                <Link
-                  key={evt.id}
-                  to={`/events/${evt.id}`}
-                  className="bg-white p-3.5 rounded-xl border border-[#E5EADF] hover:border-[#70B325] transition-all no-underline block"
-                >
-                  <span className="text-xs font-bold text-[#70B325] uppercase tracking-wide">
-                    {evt.status === 'active' ? 'Buka' : evt.status}
-                  </span>
-                  <h3 className="text-sm font-bold text-[#262A25] mt-1 line-clamp-1">{evt.name}</h3>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {evt.start_date} - {evt.end_date}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-
         {/* Section 1: Voting Terpopuler & Cek Vote Kamu */}
         <section id="voting-section" className="space-y-4">
           {/* Section Header */}
@@ -362,11 +366,22 @@ export default function PublicEventsPage() {
                 return (
                   <article
                     key={item.id}
-                    className="card-base flex flex-col overflow-hidden group bg-white border border-[#E5EADF] rounded-2xl"
+                    className="card-base flex flex-col overflow-hidden group bg-white border border-[#E5EADF] rounded-2xl hover:border-[#70B325] transition-all"
                   >
-                    {/* Banner Illustration */}
-                    <div className="h-38 w-full relative overflow-hidden bg-gray-100">
-                      <Banner />
+                    {/* Banner Illustration or Uploaded Thumbnail */}
+                    <div className="h-44 w-full relative overflow-hidden bg-gray-100 flex items-center justify-center">
+                      {item.thumbnail ? (
+                        <img
+                          src={resolveStorageUrl(item.thumbnail)}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
+                        />
+                      ) : (
+                        <Banner />
+                      )}
                       {/* Status Badge */}
                       <span className="absolute top-3 left-3 status-pill bg-white/90 backdrop-blur-xs border border-white/60 shadow-xs">
                         <span className="status-dot" />
@@ -378,7 +393,12 @@ export default function PublicEventsPage() {
                     <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                       <div>
                         <h3 className="font-extrabold text-sm sm:text-base text-[#262A25] group-hover:text-[#70B325] transition-colors line-clamp-2">
-                          {item.title}
+                          <Link
+                            to={`/categories/${item.id}`}
+                            className="no-underline text-inherit hover:text-[#70B325]"
+                          >
+                            {item.title}
+                          </Link>
                         </h3>
                         <p className="text-xs text-gray-500 mt-1 flex items-center gap-1.5">
                           <span>{item.organizer}</span>
@@ -408,7 +428,7 @@ export default function PublicEventsPage() {
                           </div>
                           {/* Vote Count */}
                           <span className="text-xs font-bold text-gray-700">
-                            {item.votes} <span className="font-normal text-gray-500">suara</span>
+                            {item.votes}
                           </span>
                         </div>
 
@@ -423,8 +443,8 @@ export default function PublicEventsPage() {
 
                       {/* CTA Button */}
                       <Link
-                        to={backendEvents.length > 0 ? `/events/${backendEvents[0].id}` : `/categories/1`}
-                        className="w-full mt-2 py-2 px-3 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-bold text-xs sm:text-sm rounded-xl text-center no-underline flex items-center justify-center gap-1.5 transition-all"
+                        to={`/categories/${item.id}`}
+                        className="w-full mt-2 py-2 px-3 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-bold text-xs sm:text-sm rounded-xl text-center no-underline flex items-center justify-center gap-1.5 transition-all shadow-xs"
                       >
                         <span>Vote Sekarang</span>
                         <IconChevronRight className="w-3.5 h-3.5" />
@@ -518,11 +538,23 @@ export default function PublicEventsPage() {
             {filteredRecent.map((item) => {
               const IconComp = item.IconComponent
               return (
-                <article
+                <Link
                   key={item.id}
-                  className="card-base p-4 bg-white border border-[#E5EADF] rounded-2xl flex items-center gap-3.5 hover:border-[#70B325] transition-all group"
+                  to={`/categories/${item.id}`}
+                  className="card-base p-4 bg-white border border-[#E5EADF] rounded-2xl flex items-center gap-3.5 hover:border-[#70B325] transition-all group no-underline text-inherit cursor-pointer"
                 >
-                  <IconComp className="w-12 h-12" />
+                  {item.thumbnail ? (
+                    <img
+                      src={resolveStorageUrl(item.thumbnail)}
+                      alt={item.title}
+                      className="w-12 h-12 rounded-xl object-cover border border-[#E5EADF] flex-shrink-0"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                      }}
+                    />
+                  ) : (
+                    <IconComp className="w-12 h-12 flex-shrink-0" />
+                  )}
                   <div className="min-w-0 flex-1">
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#558223] bg-[#F2F8EC] px-2 py-0.5 rounded-full mb-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#70B325]" />
@@ -538,7 +570,7 @@ export default function PublicEventsPage() {
                       {item.votes}
                     </p>
                   </div>
-                </article>
+                </Link>
               )
             })}
           </div>

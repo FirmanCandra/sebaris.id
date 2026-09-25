@@ -10,7 +10,7 @@ class PublicFinalistController extends Controller
 {
     public function index(Category $category): AnonymousResourceCollection
     {
-        abort_unless($category->event()->where('status', 'active')->exists(), 404);
+        abort_unless($category->status === 'active', 404);
 
         return FinalistResource::collection(
             $category->finalists()->orderByDesc('vote_count')->orderBy('name')->get(),

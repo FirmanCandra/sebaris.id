@@ -3,17 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\CategoryResource;
-use App\Models\Event;
+use App\Models\Category;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PublicCategoryController extends Controller
 {
-    public function index(Event $event): AnonymousResourceCollection
+    public function index(): AnonymousResourceCollection
     {
-        abort_unless($event->status === 'active', 404);
-
         return CategoryResource::collection(
-            $event->categories()->withCount('finalists')->orderBy('name')->get(),
+            Category::query()
+                ->where('status', 'active')
+                ->withCount('finalists')
+                ->latest()
+                ->get(),
         );
+    }
+
+    public function show(Category $category): CategoryResource
+    {
+        abort_unless($category->status === 'active', 404);
+
+        return new CategoryResource($category->loadCount('finalists'));
     }
 }

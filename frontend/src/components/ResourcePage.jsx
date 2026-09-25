@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { api, ApiError } from '../api/client'
+import { api, ApiError, resolveStorageUrl } from '../api/client'
 import { useAuth } from '../auth/AuthProvider'
 import {
   IconPlus,
@@ -63,12 +63,26 @@ function FormField({ field, value, onChange, options }) {
   }
 
   if (field.type === 'file') {
+    const previewUrl =
+      value instanceof File
+        ? URL.createObjectURL(value)
+        : typeof value === 'string' && value
+        ? resolveStorageUrl(value)
+        : null
+
     return (
       <div className="space-y-1.5">
         <label htmlFor={id} className="block text-xs font-bold text-gray-700 dark:text-gray-300">
           {field.label}
         </label>
         <div className="flex items-center gap-3">
+          {previewUrl && (
+            <img
+              src={previewUrl}
+              alt="Pratinjau Foto"
+              className="w-12 h-12 rounded-xl object-cover border border-[var(--neutral-border)] flex-shrink-0"
+            />
+          )}
           <input
             id={id}
             type="file"
@@ -120,9 +134,8 @@ export default function ResourcePage({
 
   // Aggregated KPI Stats
   const [kpiStats, setKpiStats] = useState({
-    eventsCount: 0,
-    activeEvents: 0,
     categoriesCount: 0,
+    activeCategories: 0,
     finalistsCount: 0,
     totalVotes: 0,
   })
@@ -137,23 +150,20 @@ export default function ResourcePage({
       setItems(response.data)
 
       // Fetch global KPI stats concurrently for top cards
-      const [allEvents, allCats, allFinalists] = await Promise.allSettled([
-        api('/admin/events', { token }),
+      const [allCats, allFinalists] = await Promise.allSettled([
         api('/admin/categories', { token }),
         api('/admin/finalists', { token }),
       ])
 
-      const evData = allEvents.status === 'fulfilled' ? allEvents.value?.data || [] : []
       const catData = allCats.status === 'fulfilled' ? allCats.value?.data || [] : []
       const finData = allFinalists.status === 'fulfilled' ? allFinalists.value?.data || [] : []
 
       const votesSum = finData.reduce((acc, f) => acc + (f.vote_count || 0), 0)
-      const activeEv = evData.filter((e) => e.status === 'active').length
+      const activeCats = catData.filter((c) => c.status === 'active').length
 
       setKpiStats({
-        eventsCount: evData.length,
-        activeEvents: activeEv,
         categoriesCount: catData.length,
+        activeCategories: activeCats,
         finalistsCount: finData.length,
         totalVotes: votesSum,
       })
@@ -281,42 +291,27 @@ export default function ResourcePage({
     <div className="max-w-7xl mx-auto space-y-6">
       {/* 4 Real-Data KPI Summary Cards (per Q2 preference) */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4" aria-label="Ringkasan Statistik">
-        {/* Metric 1: Total Event */}
+        {/* Metric 1: Total Kategori Voting */}
         <div className="card-base p-4 bg-[var(--neutral-surface)] flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">
-              Total Event
+              Kategori Voting
             </span>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-black text-[var(--neutral-text-main)]">
-                {kpiStats.eventsCount}
+                {kpiStats.categoriesCount}
               </span>
               <span className="text-[10px] font-bold text-[#70B325] bg-[#F2F9EC] px-2 py-0.5 rounded-full">
-                {kpiStats.activeEvents} aktif
+                {kpiStats.activeCategories} aktif
               </span>
             </div>
           </div>
           <div className="w-10 h-10 rounded-xl bg-[#F2F9EC] text-[#70B325] flex items-center justify-center flex-shrink-0">
-            <IconTrophy className="w-5 h-5" />
-          </div>
-        </div>
-
-        {/* Metric 2: Total Kategori */}
-        <div className="card-base p-4 bg-[var(--neutral-surface)] flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">
-              Kategori Terdaftar
-            </span>
-            <span className="text-2xl font-black text-[var(--neutral-text-main)] block">
-              {kpiStats.categoriesCount}
-            </span>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
             <IconLayers className="w-5 h-5" />
           </div>
         </div>
 
-        {/* Metric 3: Total Finalis */}
+        {/* Metric 2: Total Finalis */}
         <div className="card-base p-4 bg-[var(--neutral-surface)] flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">
@@ -331,7 +326,7 @@ export default function ResourcePage({
           </div>
         </div>
 
-        {/* Metric 4: Total Suara Masuk */}
+        {/* Metric 3: Total Suara Masuk */}
         <div className="card-base p-4 bg-[var(--neutral-surface)] flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">
@@ -343,6 +338,23 @@ export default function ResourcePage({
           </div>
           <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center flex-shrink-0">
             <IconFlame className="w-5 h-5" />
+          </div>
+        </div>
+
+        {/* Metric 4: Rata-rata Suara / Kategori */}
+        <div className="card-base p-4 bg-[var(--neutral-surface)] flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">
+              Rata-rata Partisipasi
+            </span>
+            <span className="text-2xl font-black text-[var(--neutral-text-main)] block">
+              {kpiStats.categoriesCount > 0
+                ? Math.round(kpiStats.totalVotes / kpiStats.categoriesCount).toLocaleString('id-ID')
+                : 0}
+            </span>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+            <IconTrophy className="w-5 h-5" />
           </div>
         </div>
       </section>
@@ -482,14 +494,20 @@ export default function ResourcePage({
                           )
                         }
 
-                        if (column.key === 'name' && item.photo) {
+                        if (column.key === 'name' && (item.photo || item.photo_url)) {
+                          const photoSrc = resolveStorageUrl(item.photo_url || item.photo)
                           cellContent = (
                             <div className="flex items-center gap-3">
-                              <img
-                                src={item.photo}
-                                alt={item.name}
-                                className="w-9 h-9 rounded-lg object-cover border border-gray-200"
-                              />
+                              {photoSrc && (
+                                <img
+                                  src={photoSrc}
+                                  alt={item.name}
+                                  className="w-10 h-10 rounded-xl object-cover border border-gray-200 dark:border-gray-700 flex-shrink-0"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none'
+                                  }}
+                                />
+                              )}
                               <span className="font-bold text-gray-900 dark:text-white">
                                 {item.name}
                               </span>

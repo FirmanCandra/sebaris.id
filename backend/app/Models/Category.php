@@ -15,7 +15,21 @@ class Category extends Model
     protected $fillable = [
         'event_id',
         'name',
+        'thumbnail',
+        'description',
+        'organizer',
+        'start_date',
+        'end_date',
+        'status',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'start_date' => 'date',
+            'end_date' => 'date',
+        ];
+    }
 
     public function event(): BelongsTo
     {
