@@ -24,96 +24,9 @@ import {
   ThumbnailCamera,
 } from '../components/CardIllustrations'
 
-// Initial fallback/reference items from the mockup
-const POPULAR_VOTINGS_DATA = [
-  {
-    id: 1,
-    title: 'Pemilihan Ketua OSIS SMA Nusantara 1',
-    organizer: 'SMA Nusantara 1',
-    daysLeft: '3 hari lagi',
-    category: 'Sekolah',
-    votes: '2.843',
-    percentage: 56,
-    BannerComponent: BannerSchool,
-    avatars: ['AN', 'BM', 'CR'],
-    extraAvatars: 1,
-  },
-  {
-    id: 2,
-    title: 'Ketua BEM Universitas Merdeka 2025',
-    organizer: 'Universitas Merdeka',
-    daysLeft: '5 hari lagi',
-    category: 'Kampus',
-    votes: '5.120',
-    percentage: 68,
-    BannerComponent: BannerCampus,
-    avatars: ['FR', 'DY', 'AL'],
-    extraAvatars: 2,
-  },
-  {
-    id: 3,
-    title: 'Favorit Stand UMKM Festival Desa Maju',
-    organizer: 'Desa Maju',
-    daysLeft: '2 hari lagi',
-    category: 'Komunitas',
-    votes: '1.372',
-    percentage: 42,
-    BannerComponent: BannerFestival,
-    avatars: ['KT', 'ST', 'WN'],
-    extraAvatars: 1,
-  },
-  {
-    id: 4,
-    title: 'Desain Poster Terbaik HUT RI ke-80',
-    organizer: 'Karang Taruna Suka Maju',
-    daysLeft: '6 hari lagi',
-    category: 'Organisasi',
-    votes: '892',
-    percentage: 37,
-    BannerComponent: BannerPoster,
-    avatars: ['RT', 'BL', 'HN'],
-    extraAvatars: 1,
-  },
-]
-
-const RECENT_VOTINGS_DATA = [
-  {
-    id: 101,
-    title: 'Pemilihan Logo Komunitas Peduli Bumi',
-    organizer: 'Komunitas Peduli Bumi',
-    daysLeft: '4 hari lagi',
-    category: 'Komunitas',
-    votes: '934 suara',
-    IconComponent: ThumbnailEarth,
-  },
-  {
-    id: 102,
-    title: 'Lomba Inovasi Mahasiswa Teknologi 2025',
-    organizer: 'Politeknik Harapan',
-    daysLeft: '5 hari lagi',
-    category: 'Kampus',
-    votes: '1.892 suara',
-    IconComponent: ThumbnailTech,
-  },
-  {
-    id: 103,
-    title: 'Vote Lagu Favorit Acara Kampus',
-    organizer: 'BEM Politeknik',
-    daysLeft: '3 hari lagi',
-    category: 'Kampus',
-    votes: '1.457 suara',
-    IconComponent: ThumbnailMusic,
-  },
-  {
-    id: 104,
-    title: 'Foto Terbaik Alam Indonesia',
-    organizer: 'Komunitas Fotografi',
-    daysLeft: '6 hari lagi',
-    category: 'Komunitas',
-    votes: '623 suara',
-    IconComponent: ThumbnailCamera,
-  },
-]
+// Fallback arrays when no events are published yet
+const POPULAR_VOTINGS_DATA = []
+const RECENT_VOTINGS_DATA = []
 
 const CATEGORIES = ['Semua', 'Sekolah', 'Kampus', 'Organisasi', 'Komunitas']
 
@@ -322,13 +235,24 @@ export default function PublicEventsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Voting Cards Grid (8 cols on lg) */}
             <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {filteredPopular.map((item) => {
-                const Banner = item.BannerComponent
-                return (
-                  <article
-                    key={item.id}
-                    className="card-base flex flex-col overflow-hidden group bg-white border border-[#E5EADF] rounded-2xl hover:border-[#70B325] transition-all"
-                  >
+              {filteredPopular.length === 0 ? (
+                <div className="sm:col-span-2 py-16 px-6 text-center bg-white border border-[#E5EADF] rounded-2xl flex flex-col items-center justify-center">
+                  <div className="w-14 h-14 rounded-2xl bg-[#F2F8EC] text-[#70B325] flex items-center justify-center mb-3">
+                    <IconFlame className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-base font-extrabold text-[#262A25]">Belum Ada Voting Aktif</h3>
+                  <p className="text-xs text-gray-500 mt-1 max-w-sm">
+                    Saat ini belum ada event voting yang sedang dibuka. Kunjungi kembali dalam beberapa saat atau buat event dari dashboard admin.
+                  </p>
+                </div>
+              ) : (
+                filteredPopular.map((item) => {
+                  const Banner = item.BannerComponent
+                  return (
+                    <article
+                      key={item.id}
+                      className="card-base flex flex-col overflow-hidden group bg-white border border-[#E5EADF] rounded-2xl hover:border-[#70B325] transition-all"
+                    >
                     {/* Banner Illustration or Uploaded Thumbnail */}
                     <div className="h-44 w-full relative overflow-hidden bg-gray-100 flex items-center justify-center">
                       {item.thumbnail ? (
@@ -415,7 +339,7 @@ export default function PublicEventsPage() {
                     </div>
                   </article>
                 )
-              })}
+              }))}
             </div>
 
             {/* Right Column: Cek Vote Kamu Card (4 cols on lg) */}
@@ -496,49 +420,55 @@ export default function PublicEventsPage() {
             </a>
           </div>
 
-          {/* 4 Compact Horizontal Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {filteredRecent.map((item) => {
-              const IconComp = item.IconComponent
-              return (
-                <Link
-                  key={item.id}
-                  to={`/voting/${item.slug || item.id}`}
-                  className="card-base p-4 bg-white border border-[#E5EADF] rounded-2xl flex items-center gap-3.5 hover:border-[#70B325] transition-all group no-underline text-inherit cursor-pointer"
-                >
-                  {item.thumbnail ? (
-                    <img
-                      src={resolveStorageUrl(item.thumbnail)}
-                      alt={item.title}
-                      className="w-12 h-12 rounded-xl object-cover border border-[#E5EADF] flex-shrink-0"
-                      loading="lazy"
-                      decoding="async"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none'
-                      }}
-                    />
-                  ) : (
-                    <IconComp className="w-12 h-12 flex-shrink-0" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#558223] bg-[#F2F8EC] px-2 py-0.5 rounded-full mb-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#70B325]" />
-                      Sedang Berlangsung
-                    </span>
-                    <h3 className="font-extrabold text-xs sm:text-sm text-[#262A25] group-hover:text-[#70B325] transition-colors truncate">
-                      {item.title}
-                    </h3>
-                    <p className="text-[11px] text-gray-500 mt-0.5 truncate">
-                      {item.organizer} • {item.daysLeft}
-                    </p>
-                    <p className="text-[11px] font-bold text-gray-700 mt-1">
-                      {item.votes}
-                    </p>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
+          {/* 4 Compact Horizontal Cards Grid or Empty State */}
+          {filteredRecent.length === 0 ? (
+            <div className="py-8 px-6 text-center bg-white border border-[#E5EADF] rounded-2xl">
+              <p className="text-xs text-gray-500 font-medium">Belum ada voting terbaru saat ini.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {filteredRecent.map((item) => {
+                const IconComp = item.IconComponent
+                return (
+                  <Link
+                    key={item.id}
+                    to={`/voting/${item.slug || item.id}`}
+                    className="card-base p-4 bg-white border border-[#E5EADF] rounded-2xl flex items-center gap-3.5 hover:border-[#70B325] transition-all group no-underline text-inherit cursor-pointer"
+                  >
+                    {item.thumbnail ? (
+                      <img
+                        src={resolveStorageUrl(item.thumbnail)}
+                        alt={item.title}
+                        className="w-12 h-12 rounded-xl object-cover border border-[#E5EADF] flex-shrink-0"
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                    ) : (
+                      <IconComp className="w-12 h-12 flex-shrink-0" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#558223] bg-[#F2F8EC] px-2 py-0.5 rounded-full mb-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#70B325]" />
+                        Sedang Berlangsung
+                      </span>
+                      <h3 className="font-extrabold text-xs sm:text-sm text-[#262A25] group-hover:text-[#70B325] transition-colors truncate">
+                        {item.title}
+                      </h3>
+                      <p className="text-[11px] text-gray-500 mt-0.5 truncate">
+                        {item.organizer} • {item.daysLeft}
+                      </p>
+                      <p className="text-[11px] font-bold text-gray-700 mt-1">
+                        {item.votes}
+                      </p>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
         </section>
       </main>
 

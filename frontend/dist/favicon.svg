@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <style>
+    :root {
+      --mark-solid: #70B325;
+      --mark-stroke: #262A25;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --mark-solid: #D0FE15;
+        --mark-stroke: #D0FE15;
+      }
+    }
+  </style>
+  <!-- Left solid facet -->
+  <path d="M15 38L39 24V64L15 78V38Z" fill="var(--mark-solid)" />
+  <!-- Top diamond facet -->
+  <path d="M39 24L63 10L87 24L63 38L39 24Z" stroke="var(--mark-stroke)" stroke-width="5.5" stroke-linejoin="round" />
+  <!-- Right facet outline -->
+  <path d="M63 38V78L87 64V24" stroke="var(--mark-stroke)" stroke-width="5.5" stroke-linejoin="round" />
+  <!-- Front lower connector outline -->
+  <path d="M15 78L39 92V64" stroke="var(--mark-stroke)" stroke-width="5.5" stroke-linejoin="round" />
+  <!-- Bottom connector outline -->
+  <path d="M39 92L63 78" stroke="var(--mark-stroke)" stroke-width="5.5" stroke-linejoin="round" />
+  <!-- Top notch -->
+  <path d="M39 24V13L51 6V17" stroke="var(--mark-stroke)" stroke-width="5" stroke-linejoin="round" />
+</svg>
