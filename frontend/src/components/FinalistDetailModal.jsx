@@ -1,5 +1,15 @@
 import { useState, useMemo, useEffect } from 'react'
-import { IconClose, IconZap, IconTrophy } from './Icons'
+import {
+  IconClose,
+  IconZap,
+  IconTrophy,
+  IconWhatsApp,
+  IconCopy,
+  IconChat,
+  IconInstagram,
+  IconChevronLeft,
+  IconChevronRight,
+} from './Icons'
 import { api, resolveStorageUrl } from '../api/client'
 
 export default function FinalistDetailModal({
@@ -85,9 +95,9 @@ export default function FinalistDetailModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-xs animate-fadeIn overflow-y-auto"
     >
-      <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-gray-100 relative my-auto">
+      <div className="bg-white dark:bg-[#151C14] text-[#262A25] dark:text-gray-100 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-gray-100 dark:border-white/10 relative my-auto transition-colors">
         {/* Close Button */}
         <button
           type="button"
@@ -103,7 +113,7 @@ export default function FinalistDetailModal({
 
           {/* Rank Badge */}
           <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-black/50 backdrop-blur-xs border border-white/20 text-amber-300 font-black text-xs">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/50 backdrop-blur-xs border border-white/20 text-amber-300 font-black text-xs">
               <IconTrophy className="w-3.5 h-3.5" />
               <span>Peringkat #{rank}</span>
             </span>
@@ -124,10 +134,10 @@ export default function FinalistDetailModal({
               <button
                 type="button"
                 onClick={prevPhoto}
-                className="absolute -left-10 sm:-left-12 p-1.5 rounded-full bg-black/50 hover:bg-black/80 text-white transition-all cursor-pointer z-10"
+                className="absolute -left-10 sm:-left-12 p-2 rounded-full bg-black/50 hover:bg-black/80 text-white transition-all cursor-pointer z-10"
                 aria-label="Foto sebelumnya"
               >
-                ◀
+                <IconChevronLeft className="w-4 h-4 text-white" />
               </button>
             )}
 
@@ -150,10 +160,10 @@ export default function FinalistDetailModal({
               <button
                 type="button"
                 onClick={nextPhoto}
-                className="absolute -right-10 sm:-right-12 p-1.5 rounded-full bg-black/50 hover:bg-black/80 text-white transition-all cursor-pointer z-10"
+                className="absolute -right-10 sm:-right-12 p-2 rounded-full bg-black/50 hover:bg-black/80 text-white transition-all cursor-pointer z-10"
                 aria-label="Foto selanjutnya"
               >
-                ▶
+                <IconChevronRight className="w-4 h-4 text-white" />
               </button>
             )}
           </div>
@@ -161,7 +171,7 @@ export default function FinalistDetailModal({
 
         {/* Thumbnail Selector Strip if multiple photos */}
         {allPhotos.length > 1 && (
-          <div className="flex items-center justify-center gap-2 p-2 bg-gray-100 border-b border-gray-200 overflow-x-auto">
+          <div className="flex items-center justify-center gap-2 p-2 bg-gray-100 dark:bg-white/5 border-b border-gray-200 dark:border-white/10 overflow-x-auto">
             {allPhotos.map((photo, idx) => (
               <button
                 key={photo}
@@ -187,28 +197,28 @@ export default function FinalistDetailModal({
         <div className="p-6 sm:p-7 space-y-5">
           {/* Identity & Category */}
           <div className="space-y-1">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#70B325] block">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#70B325] dark:text-[#8FE032] block">
               {category?.name || 'Ajang Voting'}
             </span>
-            <h2 className="text-xl sm:text-2xl font-black text-[#262A25]">
+            <h2 className="text-xl sm:text-2xl font-black text-[#262A25] dark:text-white">
               {finalist.name}
             </h2>
-            <p className="text-xs font-semibold text-gray-500">
+            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
               {category?.organizer ? `Penyelenggara: ${category.organizer}` : 'Kandidat Resmi'}
             </p>
           </div>
 
           {/* Live Vote Stats Bar */}
-          <div className="p-4 bg-[#F8FAF7] border border-[#E5EADF] rounded-2xl space-y-2">
+          <div className="p-4 bg-[#F8FAF7] dark:bg-white/5 border border-[#E5EADF] dark:border-white/10 rounded-2xl space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-extrabold text-[#262A25]">
+              <span className="font-extrabold text-[#262A25] dark:text-white">
                 {finalist.vote_count.toLocaleString('id-ID')} Suara Sah
               </span>
-              <span className="font-black text-[#70B325]">
+              <span className="font-black text-[#70B325] dark:text-[#8FE032]">
                 {percentage}% dari total suara
               </span>
             </div>
-            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-gray-200 dark:bg-white/10 h-2 rounded-full overflow-hidden">
               <div
                 className="bg-[#70B325] h-full rounded-full transition-all duration-500"
                 style={{ width: `${percentage}%` }}
@@ -218,27 +228,28 @@ export default function FinalistDetailModal({
 
           {/* Biography / Advocacy / Description */}
           <div className="space-y-2">
-            <h4 className="text-xs font-black uppercase tracking-wider text-gray-700">
+            <h4 className="text-xs font-black uppercase tracking-wider text-gray-700 dark:text-gray-300">
               Profil & Advokasi Finalis
             </h4>
-            <div className="text-xs sm:text-sm text-gray-600 leading-relaxed max-h-36 overflow-y-auto whitespace-pre-line pr-2 border-l-2 border-[#70B325] pl-3 bg-gray-50/70 py-2 rounded-r-xl">
+            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed max-h-36 overflow-y-auto whitespace-pre-line pr-2 border-l-2 border-[#70B325] pl-3 bg-gray-50/70 dark:bg-white/5 py-2 rounded-r-xl">
               {finalist.bio || finalist.description ||
                 `${finalist.name} adalah salah satu kandidat perwakilan terbaik yang siap memberikan kontribusi nyata. Berikan dukungan terbaikmu agar terpilih sebagai pemenang favorit.`}
             </div>
           </div>
 
           {/* Social Share Strip & Instagram */}
-          <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100">
+          <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 dark:border-white/10">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-gray-500">Dukungan:</span>
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400">Dukungan:</span>
               {finalist.social_ig && (
                 <a
                   href={`https://instagram.com/${finalist.social_ig.replace('@', '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-2.5 py-1 bg-gradient-to-r from-pink-500 to-rose-600 text-white rounded-lg text-xs font-bold no-underline inline-flex items-center gap-1 hover:opacity-90"
+                  className="px-2.5 py-1 bg-gradient-to-r from-pink-500 to-rose-600 text-white rounded-lg text-xs font-bold no-underline inline-flex items-center gap-1.5 hover:opacity-90"
                 >
-                  <span>📷 @{finalist.social_ig.replace('@', '')}</span>
+                  <IconInstagram className="w-3.5 h-3.5" />
+                  <span>@{finalist.social_ig.replace('@', '')}</span>
                 </a>
               )}
             </div>
@@ -246,26 +257,29 @@ export default function FinalistDetailModal({
               <button
                 type="button"
                 onClick={handleShareWhatsApp}
-                className="px-3 py-1.5 bg-[#25D366] hover:bg-[#20BE5C] text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                className="px-3 py-1.5 bg-[#25D366] hover:bg-[#20BE5C] text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
               >
-                <span>💬 WhatsApp</span>
+                <IconWhatsApp className="w-3.5 h-3.5" />
+                <span>WhatsApp</span>
               </button>
               <button
                 type="button"
                 onClick={handleCopyLink}
-                className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                className="px-3 py-1.5 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 text-gray-700 dark:text-gray-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
               >
-                {copied ? 'Tersalin!' : '🔗 Salin Link'}
+                <IconCopy className="w-3.5 h-3.5" />
+                <span>{copied ? 'Tersalin!' : 'Salin Link'}</span>
               </button>
             </div>
           </div>
 
           {/* Wall of Support / Pesan & Doa Pendukung */}
-          <div className="space-y-2.5 pt-3 border-t border-gray-100">
+          <div className="space-y-2.5 pt-3 border-t border-gray-100 dark:border-white/10">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-black uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
-                <span>💬 Pesan & Doa Pendukung</span>
-                <span className="text-[10px] font-bold px-2 py-0.2 rounded-full bg-[#EAF5DE] text-[#4F7E1D]">
+              <h4 className="text-xs font-black uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                <IconChat className="w-4 h-4 text-[#70B325] dark:text-[#8FE032]" />
+                <span>Pesan & Doa Pendukung</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EAF5DE] dark:bg-[#70B325]/20 text-[#4F7E1D] dark:text-[#8FE032]">
                   {messages.length}
                 </span>
               </h4>
@@ -279,8 +293,8 @@ export default function FinalistDetailModal({
                 Memuat pesan dukungan...
               </div>
             ) : messages.length === 0 ? (
-              <div className="p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200 text-center space-y-1">
-                <p className="text-xs font-bold text-gray-700">
+              <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-dashed border-gray-200 dark:border-white/10 text-center space-y-1">
+                <p className="text-xs font-bold text-gray-700 dark:text-gray-200">
                   Belum ada pesan untuk {finalist.name.split(' ')[0]}
                 </p>
                 <p className="text-[11px] text-gray-400">
@@ -292,27 +306,27 @@ export default function FinalistDetailModal({
                 {messages.map((item) => (
                   <div
                     key={item.id}
-                    className="p-3 bg-gray-50 hover:bg-[#F9FAF8] rounded-xl border border-gray-200/80 transition-colors space-y-1 text-left"
+                    className="p-3 bg-gray-50 dark:bg-white/5 hover:bg-[#F9FAF8] dark:hover:bg-white/10 rounded-xl border border-gray-200/80 dark:border-white/10 transition-colors space-y-1 text-left"
                   >
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-5 h-5 rounded-full bg-[var(--brand-primary-light)] text-[var(--brand-primary)] font-black text-[10px] flex items-center justify-center flex-shrink-0">
+                        <div className="w-5 h-5 rounded-full bg-[#70B325]/20 text-[#70B325] dark:text-[#8FE032] font-black text-[10px] flex items-center justify-center flex-shrink-0">
                           {item.voter_name ? item.voter_name.charAt(0).toUpperCase() : 'P'}
                         </div>
-                        <strong className="text-gray-800 text-xs font-bold truncate max-w-[140px]">
+                        <strong className="text-gray-800 dark:text-gray-100 text-xs font-bold truncate max-w-[140px]">
                           {item.voter_name}
                         </strong>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <span className="text-[10px] font-black text-[#558223] bg-[#EAF5DE] px-2 py-0.5 rounded-full">
-                          ⚡ {item.vote_amount} Suara
+                        <span className="text-[10px] font-black text-[#558223] dark:text-[#8FE032] bg-[#EAF5DE] dark:bg-[#70B325]/20 px-2 py-0.5 rounded-full">
+                          {item.vote_amount} Suara
                         </span>
                         <span className="text-[10px] text-gray-400">
                           {item.time_ago}
                         </span>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-600 pl-7 italic leading-relaxed">
+                    <p className="text-xs text-gray-600 dark:text-gray-300 pl-7 italic leading-relaxed">
                       &quot;{item.message}&quot;
                     </p>
                   </div>
@@ -330,7 +344,7 @@ export default function FinalistDetailModal({
                 onClose()
                 if (onOpenVote) onOpenVote(finalist)
               }}
-              className="w-full py-3.5 px-4 bg-[#70B325] hover:bg-[#5F9A1E] disabled:bg-gray-300 text-white font-black text-sm rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+              className="w-full py-3.5 px-4 bg-[#70B325] hover:bg-[#5F9A1E] disabled:bg-gray-300 dark:disabled:bg-gray-800 text-white font-black text-sm rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
             >
               <IconZap className="w-5 h-5 text-white" />
               <span>

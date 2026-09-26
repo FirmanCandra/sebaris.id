@@ -254,10 +254,19 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
         </div>
       </div>
 
-      {/* MOBILE RESPONSIVE DRAWER / DROPDOWN PANEL */}
+      {/* MOBILE RESPONSIVE DRAWER / DROPDOWN PANEL (Fixed overlay to prevent jitter and layout thrashing) */}
       {mobileMenuOpen && (
-        <div className="md:hidden max-w-7xl mx-auto px-2.5 sm:px-4 pb-4 animate-fadeIn pointer-events-auto">
-          <div className="mt-2 rounded-3xl backdrop-blur-2xl bg-white/85 dark:bg-[#121612]/85 border border-white/60 dark:border-white/10 p-5 shadow-2xl space-y-4">
+        <>
+          {/* Backdrop overlay */}
+          <div
+            onClick={() => setMobileMenuOpen(false)}
+            className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-xs pointer-events-auto transition-opacity"
+            aria-hidden="true"
+          />
+
+          {/* Floating Mobile Card */}
+          <div className="md:hidden fixed top-20 inset-x-3 sm:inset-x-6 z-50 pointer-events-auto animate-fadeIn">
+            <div className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#151C14]/95 border border-white/60 dark:border-white/15 p-5 shadow-2xl space-y-4 max-h-[82vh] overflow-y-auto">
             
             {/* Quick Search */}
             <form onSubmit={handleSearchSubmit}>
@@ -363,7 +372,8 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
             </div>
           </div>
         </div>
-      )}
+      </>
+    )}
 
       {/* User Login & History Modal */}
       <UserAuthModal isOpen={userModalOpen} onClose={() => setUserModalOpen(false)} />

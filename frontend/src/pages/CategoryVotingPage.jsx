@@ -16,6 +16,11 @@ import {
   IconClose,
   IconCheckVote,
   IconTrophy,
+  IconWhatsApp,
+  IconLink,
+  IconCopy,
+  IconLock,
+  IconChat,
 } from '../components/Icons'
 
 export default function CategoryVotingPage() {
@@ -209,8 +214,9 @@ export default function CategoryVotingPage() {
                 )}
 
                 {category?.allow_free_vote !== false && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-400/20 border border-amber-300/30 text-amber-300 text-[11px] font-extrabold">
-                    ⚡ 1x Vote Gratis
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-400/20 border border-amber-300/30 text-amber-300 text-[11px] font-extrabold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                    <span>1x Vote Gratis</span>
                   </span>
                 )}
               </div>
@@ -286,86 +292,92 @@ export default function CategoryVotingPage() {
         </div>
       </section>
 
-      {/* STICKY NAVIGATION TABS (KreenConnect Dense Navigation Bar) */}
-      <nav
-        aria-label="Tab Ajang Pemilihan"
-        className="bg-white dark:bg-[#161B15] border-b border-[#E5EADF] dark:border-[#2C3529] sticky top-20 z-30 shadow-xs transition-colors"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-start sm:justify-start gap-4 sm:gap-8 overflow-x-auto scrollbar-none">
-            
-            <button
-              type="button"
-              onClick={() => setActiveTab('finalis')}
-              className={`py-3.5 font-extrabold text-xs sm:text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+      {/* STICKY NAVIGATION TABS (Centered Lonjong Floating Capsule) */}
+      <div className="sticky top-16 sm:top-20 z-30 w-full px-3 sm:px-6 pointer-events-none transition-all duration-300 flex justify-center py-2">
+        <nav
+          aria-label="Tab Ajang Pemilihan"
+          className="pointer-events-auto rounded-full backdrop-blur-xl bg-white/85 dark:bg-[#151C14]/90 border border-white/80 dark:border-white/15 p-1 sm:p-1.5 shadow-xl shadow-black/5 dark:shadow-black/35 flex items-center justify-center gap-1 sm:gap-2 max-w-full overflow-x-auto scrollbar-none transition-all"
+        >
+          <button
+            type="button"
+            onClick={() => setActiveTab('finalis')}
+            className={`px-3 sm:px-4 py-2 rounded-full font-extrabold text-xs sm:text-sm transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              activeTab === 'finalis'
+                ? 'bg-[#70B325] text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-[#70B325] dark:hover:text-[#8FE032] hover:bg-black/5 dark:hover:bg-white/5'
+            }`}
+          >
+            <span>Daftar Finalis</span>
+            <span
+              className={`text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full font-bold ${
                 activeTab === 'finalis'
-                  ? 'border-[#70B325] text-[#70B325] dark:text-[#86C839]'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  ? 'bg-white/25 text-white'
+                  : 'bg-black/5 dark:bg-white/10 text-gray-600 dark:text-gray-400'
               }`}
             >
-              <span>Daftar Finalis</span>
-              <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
-                activeTab === 'finalis'
-                  ? 'bg-[#EBF6E2] text-[#4F7E1D] dark:bg-white/10 dark:text-[#86C839]'
-                  : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400'
-              }`}>
-                {finalists.length}
+              {finalists.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('leaderboard')}
+            className={`px-3 sm:px-4 py-2 rounded-full font-extrabold text-xs sm:text-sm transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              activeTab === 'leaderboard'
+                ? 'bg-[#70B325] text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-[#70B325] dark:hover:text-[#8FE032] hover:bg-black/5 dark:hover:bg-white/5'
+            }`}
+          >
+            <span>Peringkat &amp; Perolehan</span>
+            {isFrozen && (
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider ${
+                  activeTab === 'leaderboard'
+                    ? 'bg-white/25 text-white'
+                    : 'bg-sky-500/20 text-sky-700 dark:text-sky-300'
+                }`}
+              >
+                Rahasia
               </span>
-            </button>
+            )}
+          </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveTab('leaderboard')}
-              className={`py-3.5 font-extrabold text-xs sm:text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                activeTab === 'leaderboard'
-                  ? 'border-[#70B325] text-[#70B325] dark:text-[#86C839]'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              <span>Peringkat &amp; Perolehan</span>
-              {isFrozen && (
-                <span className="text-[10px] bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full font-black">
-                  ❄️ Freeze
-                </span>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('dukungan')}
-              className={`py-3.5 font-extrabold text-xs sm:text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                activeTab === 'dukungan'
-                  ? 'border-[#70B325] text-[#70B325] dark:text-[#86C839]'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              <span>Pesan Pendukung</span>
-              {messages.length > 0 && (
-                <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
+          <button
+            type="button"
+            onClick={() => setActiveTab('dukungan')}
+            className={`px-3 sm:px-4 py-2 rounded-full font-extrabold text-xs sm:text-sm transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              activeTab === 'dukungan'
+                ? 'bg-[#70B325] text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-[#70B325] dark:hover:text-[#8FE032] hover:bg-black/5 dark:hover:bg-white/5'
+            }`}
+          >
+            <span>Pesan Pendukung</span>
+            {messages.length > 0 && (
+              <span
+                className={`text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full font-bold ${
                   activeTab === 'dukungan'
-                    ? 'bg-[#EBF6E2] text-[#4F7E1D] dark:bg-white/10 dark:text-[#86C839]'
-                    : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400'
-                }`}>
-                  {messages.length}
-                </span>
-              )}
-            </button>
+                    ? 'bg-white/25 text-white'
+                    : 'bg-black/5 dark:bg-white/10 text-gray-600 dark:text-gray-400'
+                }`}
+              >
+                {messages.length}
+              </span>
+            )}
+          </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveTab('deskripsi')}
-              className={`py-3.5 font-extrabold text-xs sm:text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === 'deskripsi'
-                  ? 'border-[#70B325] text-[#70B325] dark:text-[#86C839]'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              Ketentuan &amp; Regulasi
-            </button>
-
-          </div>
-        </div>
-      </nav>
+          <button
+            type="button"
+            onClick={() => setActiveTab('deskripsi')}
+            className={`px-3 sm:px-4 py-2 rounded-full font-extrabold text-xs sm:text-sm transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'deskripsi'
+                ? 'bg-[#70B325] text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-[#70B325] dark:hover:text-[#8FE032] hover:bg-black/5 dark:hover:bg-white/5'
+            }`}
+          >
+            Ketentuan &amp; Regulasi
+          </button>
+        </nav>
+      </div>
 
       {/* MAIN CONTENT AREA */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full space-y-6">
@@ -374,8 +386,8 @@ export default function CategoryVotingPage() {
         {isFrozen && (
           <div className="bg-gradient-to-r from-blue-900 to-sky-900 text-white rounded-2xl p-4 sm:p-5 border border-sky-400/30 shadow-sm animate-fadeIn">
             <div className="flex items-start sm:items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl flex-shrink-0">
-                ❄️
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                <IconLock className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
@@ -405,8 +417,9 @@ export default function CategoryVotingPage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#70B325] opacity-75" />
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#70B325]" />
               </span>
-              <span className="text-[11px] font-black uppercase tracking-wider text-[#558223] dark:text-[#86C839] flex-shrink-0">
-                💬 Dukungan Baru:
+              <span className="inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-[#558223] dark:text-[#86C839] flex-shrink-0">
+                <IconChat className="w-3.5 h-3.5" />
+                <span>Dukungan Baru:</span>
               </span>
               <p className="text-xs text-gray-700 dark:text-gray-300 truncate">
                 <strong className="text-gray-900 dark:text-white">{messages[0].voter_name}</strong>{' '}
@@ -541,16 +554,16 @@ export default function CategoryVotingPage() {
                         {/* Top Right: Real-time Rank Badge */}
                         <div className="absolute top-3 right-3 z-10">
                           {index === 0 ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-950 font-black text-xs shadow-md border border-amber-300">
-                              🥇 Juara 1
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-black text-xs shadow-md border border-amber-300">
+                              Juara 1
                             </span>
                           ) : index === 1 ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-200 text-slate-800 font-black text-xs shadow-md border border-slate-300">
-                              🥈 Peringkat 2
+                              Peringkat 2
                             </span>
                           ) : index === 2 ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-700 text-white font-black text-xs shadow-md border border-amber-600">
-                              🥉 Peringkat 3
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-800 text-white font-black text-xs shadow-md border border-amber-700">
+                              Peringkat 3
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-gray-200 font-bold text-[11px]">
@@ -591,7 +604,7 @@ export default function CategoryVotingPage() {
                         <div className="space-y-1.5 pt-1 border-t border-gray-100 dark:border-white/10">
                           <div className="flex items-center justify-between text-xs">
                             <span className="font-extrabold text-[#262A25] dark:text-white">
-                              {isFrozen ? '🔒 Suara Terkunci' : `${finalist.vote_count.toLocaleString('id-ID')} suara`}
+                              {isFrozen ? 'Suara Terkunci' : `${finalist.vote_count.toLocaleString('id-ID')} suara`}
                             </span>
                             <span className="font-bold text-[#70B325] dark:text-[#86C839] bg-[#F2F8EC] dark:bg-white/5 px-2 py-0.5 rounded-md text-[11px]">
                               {isFrozen ? 'Dirahasiakan' : `${percentage}% suara`}
@@ -634,23 +647,24 @@ export default function CategoryVotingPage() {
                               onClick={() => setSelectedFinalistForDetail(finalist)}
                               className="flex-1 py-1.5 text-[11px] font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 rounded-lg transition-colors cursor-pointer text-center"
                             >
-                              Lihat Bio 👤
+                              Lihat Bio
                             </button>
                             <button
                               type="button"
                               onClick={() => handleShareWhatsApp(finalist)}
-                              className="px-2.5 py-1.5 text-[11px] font-bold text-[#1F8A43] bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/50 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                              className="px-2.5 py-1.5 text-[11px] font-bold text-[#1F8A43] dark:text-[#8FE032] bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/50 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                               title="Bagikan ke WhatsApp"
                             >
-                              <span>💬 WA</span>
+                              <IconWhatsApp className="w-3.5 h-3.5" />
+                              <span>WA</span>
                             </button>
                             <button
                               type="button"
                               onClick={() => handleCopyLink(finalist)}
-                              className="px-2.5 py-1.5 text-[11px] font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/15 rounded-lg transition-colors cursor-pointer"
+                              className="px-2.5 py-1.5 text-[11px] font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/15 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
                               title="Salin Link Voting Finalis"
                             >
-                              {copiedId === finalist.id ? '✓' : '🔗'}
+                              {copiedId === finalist.id ? '✓' : <IconLink className="w-3.5 h-3.5" />}
                             </button>
                           </div>
 
@@ -674,7 +688,7 @@ export default function CategoryVotingPage() {
               <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 {isFrozen ? (
                   <span className="text-sky-700 dark:text-sky-300 font-bold">
-                    ❄️ Angka perolehan suara disembunyikan sementara oleh panitia
+                    Angka perolehan suara disembunyikan sementara oleh panitia
                   </span>
                 ) : (
                   <>
@@ -699,7 +713,7 @@ export default function CategoryVotingPage() {
                     : index === 1
                     ? 'bg-slate-300 text-slate-800 font-black shadow-xs'
                     : index === 2
-                    ? 'bg-amber-700 text-white font-black shadow-xs'
+                    ? 'bg-amber-800 text-white font-black shadow-xs'
                     : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 font-bold'
 
                 return (
@@ -709,9 +723,9 @@ export default function CategoryVotingPage() {
                   >
                     {/* Rank Number / Medal */}
                     <div
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs flex-shrink-0 ${rankColor}`}
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black flex-shrink-0 ${rankColor}`}
                     >
-                      {isFrozen ? '?' : index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
+                      {isFrozen ? '?' : index + 1}
                     </div>
 
                     {/* Candidate Photo */}
@@ -747,7 +761,7 @@ export default function CategoryVotingPage() {
                         </div>
                         <div className="text-right">
                           <span className="font-extrabold text-sm text-[#70B325] dark:text-[#86C839] block">
-                            {isFrozen ? '🔒 Dirahasiakan' : finalist.vote_count.toLocaleString('id-ID')}
+                            {isFrozen ? 'Dirahasiakan' : finalist.vote_count.toLocaleString('id-ID')}
                           </span>
                           <span className="text-[10px] text-gray-400 font-semibold block">
                             {isFrozen ? 'Freeze Mode' : `${percentage}% suara`}
