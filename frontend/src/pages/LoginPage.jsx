@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import SebarisLogo from '../components/SebarisLogo'
 import { IconChevronRight, IconGoogle, IconCheck } from '../components/Icons'
@@ -7,9 +6,19 @@ import { IconChevronRight, IconGoogle, IconCheck } from '../components/Icons'
 export default function LoginPage() {
   const { login, register, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   // Tabs: 'login' | 'register'
-  const [authMode, setAuthMode] = useState('login')
+  const [authMode, setAuthMode] = useState(() =>
+    searchParams.get('tab') === 'register' ? 'register' : 'login'
+  )
+
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab === 'register' || tab === 'login') {
+      setAuthMode(tab)
+    }
+  }, [searchParams])
 
   // Login form state
   const [email, setEmail] = useState('')

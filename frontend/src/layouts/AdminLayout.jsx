@@ -22,19 +22,14 @@ const NAV_LINKS = [
   { to: '/admin/admins', label: 'Admin & Tim', icon: IconUsers },
 ]
 
+import { useTheme } from '../context/ThemeProvider'
+
 export default function AdminLayout() {
   const { admin, logout, token } = useAuth()
   const location = useLocation()
-  const [theme, setTheme] = useState(
-    () => localStorage.getItem('sebaris.theme') || (document.documentElement.dataset.theme || 'light')
-  )
+  const { theme, toggleTheme } = useTheme()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [counts, setCounts] = useState({ categories: 0, finalists: 0 })
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme
-    localStorage.setItem('sebaris.theme', theme)
-  }, [theme])
 
   // Fetch count badges for sidebar
   useEffect(() => {
@@ -49,10 +44,6 @@ export default function AdminLayout() {
       })
     })
   }, [token, location.pathname])
-
-  function toggleTheme() {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
-  }
 
   // Current page title from location
   const currentNav = NAV_LINKS.find((item) => location.pathname.startsWith(item.to)) || NAV_LINKS[0]
