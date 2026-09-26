@@ -211,13 +211,19 @@ class UserAuthController extends Controller
             'data' => $votes->map(function ($vote) {
                 return [
                     'id' => $vote->id,
+                    'reference_id' => $vote->reference_id,
                     'finalist_name' => $vote->finalist?->name,
                     'category_name' => $vote->finalist?->category?->name,
                     'category_slug' => $vote->finalist?->category?->slug,
+                    'category_id' => $vote->finalist?->category?->id,
                     'voter_name' => $vote->voter_name,
                     'voter_contact' => $vote->voter_contact,
                     'vote_amount' => $vote->vote_amount,
+                    'total_price' => $vote->total_price,
+                    'payment_method' => $vote->payment_method,
+                    'type' => $vote->type,
                     'status' => $vote->status,
+                    'paid_at' => $vote->paid_at ? $vote->paid_at->toIso8601String() : null,
                     'created_at' => $vote->created_at?->format('d M Y, H:i'),
                 ];
             }),

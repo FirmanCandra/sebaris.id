@@ -42,12 +42,12 @@ export default function EReceiptModal({ isOpen, onClose, data }) {
       aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn overflow-y-auto"
     >
-      <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-gray-100 relative my-auto print:shadow-none print:border-none print:m-0 print:p-0">
+      <div className="bg-white dark:bg-[#151C14] text-[#262A25] dark:text-gray-100 rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-gray-100 dark:border-white/10 relative my-auto print:bg-white print:text-black print:shadow-none print:border-none print:m-0 print:p-0 transition-colors">
         {/* Close Button (hidden on print) */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors print:hidden"
+          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors print:hidden cursor-pointer"
         >
           <IconClose className="w-5 h-5" />
         </button>
@@ -55,92 +55,92 @@ export default function EReceiptModal({ isOpen, onClose, data }) {
         {/* Printable Ticket Receipt Container */}
         <div id="printable-receipt" className="space-y-5">
           {/* Header Branding */}
-          <div className="text-center pb-4 border-b border-dashed border-gray-200">
+          <div className="text-center pb-4 border-b border-dashed border-gray-200 dark:border-white/10 print:border-gray-200">
             <div className="flex justify-center mb-2">
               <SebarisLogo className="h-8 w-auto" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#70B325] bg-[#F2F9EC] px-3 py-1 rounded-full border border-[#D3E8C3] inline-block">
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#70B325] dark:text-[#8FE032] bg-[#F2F9EC] dark:bg-[#70B325]/15 px-3 py-1 rounded-full border border-[#D3E8C3] dark:border-[#70B325]/30 inline-block">
               Bukti Resmi E-Voting
             </span>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">
               Dokumen Sah Pemungutan Suara Digital
             </p>
           </div>
 
           {/* Success Badge & Reference ID */}
-          <div className="bg-[#F4F9EE] border border-[#CADDB8] rounded-2xl p-4 text-center space-y-1 relative overflow-hidden">
+          <div className="bg-[#F4F9EE] dark:bg-[#70B325]/10 border border-[#CADDB8] dark:border-[#70B325]/20 rounded-2xl p-4 text-center space-y-1 relative overflow-hidden">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#70B325] text-white text-xs font-black shadow-xs mb-1">
               <IconCheck className="w-3.5 h-3.5 stroke-3" />
               <span>SUARA TERVERIFIKASI & SAH</span>
             </div>
             <div className="flex items-center justify-center gap-2">
-              <span className="font-mono text-sm sm:text-base font-black text-[#262A25] tracking-wider">
+              <span className="font-mono text-sm sm:text-base font-black text-[#262A25] dark:text-white tracking-wider">
                 {referenceId}
               </span>
               <button
                 type="button"
                 onClick={handleCopyReference}
-                className="text-[10px] font-bold text-[#70B325] hover:underline print:hidden cursor-pointer"
+                className="text-[10px] font-bold text-[#70B325] dark:text-[#8FE032] hover:underline print:hidden cursor-pointer"
               >
                 {copied ? 'Tersalin!' : 'Salin'}
               </button>
             </div>
-            <span className="text-[10px] text-gray-500 block">
+            <span className="text-[10px] text-gray-500 dark:text-gray-400 block">
               Waktu Transaksi: {timestamp} WIB
             </span>
           </div>
 
           {/* Ticket Information Table */}
           <div className="space-y-3 text-xs">
-            <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <div className="flex justify-between items-center py-1.5 border-b border-gray-100 dark:border-white/10 print:border-gray-100">
               <span className="text-gray-400 font-semibold">Ajang / Kategori</span>
-              <span className="font-bold text-gray-800 text-right max-w-[200px] truncate">
+              <span className="font-bold text-gray-800 dark:text-white text-right max-w-[200px] truncate">
                 {categoryName}
               </span>
             </div>
 
-            <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <div className="flex justify-between items-center py-1.5 border-b border-gray-100 dark:border-white/10 print:border-gray-100">
               <span className="text-gray-400 font-semibold">Kandidat Pilihan</span>
-              <span className="font-black text-[#70B325] text-right text-sm">
+              <span className="font-black text-[#70B325] dark:text-[#8FE032] text-right text-sm">
                 {finalistName}
               </span>
             </div>
 
-            <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <div className="flex justify-between items-center py-1.5 border-b border-gray-100 dark:border-white/10 print:border-gray-100">
               <span className="text-gray-400 font-semibold">Nama Pemilih</span>
-              <span className="font-bold text-gray-800">{voterName}</span>
+              <span className="font-bold text-gray-800 dark:text-gray-200">{voterName}</span>
             </div>
 
-            <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <div className="flex justify-between items-center py-1.5 border-b border-gray-100 dark:border-white/10 print:border-gray-100">
               <span className="text-gray-400 font-semibold">Kontak Terverifikasi</span>
-              <span className="font-mono font-bold text-gray-700">{contact}</span>
+              <span className="font-mono font-bold text-gray-700 dark:text-gray-300">{contact}</span>
             </div>
 
-            <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <div className="flex justify-between items-center py-1.5 border-b border-gray-100 dark:border-white/10 print:border-gray-100">
               <span className="text-gray-400 font-semibold">Jumlah Suara</span>
-              <span className="font-black text-[#262A25] text-sm bg-gray-100 px-2 py-0.5 rounded-md">
+              <span className="font-black text-[#262A25] dark:text-white text-sm bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded-md">
                 +{voteAmount} Suara
               </span>
             </div>
 
-            <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <div className="flex justify-between items-center py-1.5 border-b border-gray-100 dark:border-white/10 print:border-gray-100">
               <span className="text-gray-400 font-semibold">Metode Pembayaran</span>
-              <span className="font-bold text-gray-700">{paymentMethod}</span>
+              <span className="font-bold text-gray-700 dark:text-gray-300">{paymentMethod}</span>
             </div>
 
-            <div className="flex justify-between items-center py-2 bg-gray-50 px-3 rounded-xl">
-              <span className="text-gray-700 font-black">Total Pembayaran</span>
-              <span className="font-black text-sm text-[#70B325]">{totalPrice}</span>
+            <div className="flex justify-between items-center py-2 bg-gray-50 dark:bg-white/5 px-3 rounded-xl">
+              <span className="text-gray-700 dark:text-gray-300 font-black">Total Pembayaran</span>
+              <span className="font-black text-sm text-[#70B325] dark:text-[#8FE032]">{totalPrice}</span>
             </div>
           </div>
 
           {/* Verification QR Emblem */}
-          <div className="pt-2 flex items-center justify-center gap-3 text-center border-t border-dashed border-gray-200">
+          <div className="pt-2 flex items-center justify-center gap-3 text-center border-t border-dashed border-gray-200 dark:border-white/10 print:border-gray-200">
             <div className="w-10 h-10 rounded-xl bg-[#123E2A] text-white flex items-center justify-center flex-shrink-0 shadow-xs">
               <IconCheckVote className="w-6 h-6 text-amber-300" />
             </div>
             <div className="text-left">
-              <span className="text-[11px] font-black text-gray-800 block">
+              <span className="text-[11px] font-black text-gray-800 dark:text-gray-200 block">
                 Audited & Encrypted by Sebaris Engine
               </span>
               <span className="text-[9px] text-gray-400 block">
@@ -151,13 +151,13 @@ export default function EReceiptModal({ isOpen, onClose, data }) {
         </div>
 
         {/* Action Buttons (hidden on print) */}
-        <div className="mt-6 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center gap-2 print:hidden">
+        <div className="mt-6 pt-4 border-t border-gray-100 dark:border-white/10 flex flex-col sm:flex-row items-center gap-2 print:hidden">
           <button
             type="button"
             onClick={handlePrint}
-            className="w-full sm:flex-1 h-11 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full sm:flex-1 h-11 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 text-gray-800 dark:text-white font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
-            <span>🖨️ Cetak / Simpan PDF</span>
+            <span>Cetak / Simpan PDF</span>
           </button>
 
           <button
@@ -165,7 +165,7 @@ export default function EReceiptModal({ isOpen, onClose, data }) {
             onClick={handleShareWhatsApp}
             className="w-full sm:flex-1 h-11 bg-[#25D366] hover:bg-[#20BE5C] text-white font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer"
           >
-            <span>💬 Bagikan WA</span>
+            <span>Bagikan ke WhatsApp</span>
           </button>
         </div>
       </div>
