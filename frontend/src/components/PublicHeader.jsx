@@ -72,7 +72,8 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
   }
 
   return (
-    <header className="sticky top-0 sm:top-3 z-50 w-full px-2.5 sm:px-6 lg:px-8 pointer-events-none transition-all duration-300">
+    <>
+      <header className="sticky top-0 sm:top-3 z-50 w-full px-2.5 sm:px-6 lg:px-8 pointer-events-none transition-all duration-300">
       <div
         className={`max-w-7xl mx-auto pointer-events-auto h-16 sm:h-18 px-5 sm:px-8 rounded-full flex items-center justify-between gap-4 transition-all duration-300 backdrop-blur-xl backdrop-saturate-150 ${
           isOverHero
@@ -375,8 +376,10 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
       </>
     )}
 
+      </header>
+
       {/* User Login & History Modal */}
       <UserAuthModal isOpen={userModalOpen} onClose={() => setUserModalOpen(false)} />
-    </header>
+    </>
   )
 }

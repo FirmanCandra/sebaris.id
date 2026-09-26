@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { IconClose, IconCheck, IconCheckVote } from './Icons'
 import { resolveStorageUrl } from '../api/client'
 import SebarisLogo from './SebarisLogo'
@@ -36,13 +37,17 @@ export default function EReceiptModal({ isOpen, onClose, data }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn overflow-y-auto"
+      onClick={onClose}
+      className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fadeIn overflow-y-auto pointer-events-auto cursor-pointer"
     >
-      <div className="bg-white dark:bg-[#151C14] text-[#262A25] dark:text-gray-100 rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-gray-100 dark:border-white/10 relative my-auto print:bg-white print:text-black print:shadow-none print:border-none print:m-0 print:p-0 transition-colors">
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white dark:bg-[#151C14] text-[#262A25] dark:text-gray-100 rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-gray-100 dark:border-white/10 relative my-auto print:bg-white print:text-black print:shadow-none print:border-none print:m-0 print:p-0 transition-colors pointer-events-auto cursor-default"
+      >
         {/* Close Button (hidden on print) */}
         <button
           type="button"
@@ -169,6 +174,7 @@ export default function EReceiptModal({ isOpen, onClose, data }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

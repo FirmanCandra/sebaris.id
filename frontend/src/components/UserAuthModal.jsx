@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { useUserAuth } from '../auth/AuthProvider'
 import GoogleSignInButton from './GoogleSignInButton'
@@ -28,17 +29,17 @@ export default function UserAuthModal({ isOpen, onClose }) {
     }
   }
 
-  return (
+  return createPortal(
     <>
       <div
         onClick={onClose}
-        className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
+        className="fixed inset-0 z-[9999] bg-black/60 dark:bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn pointer-events-auto cursor-pointer"
         role="dialog"
         aria-modal="true"
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="bg-white dark:bg-[#151C14] text-[#262A25] dark:text-gray-100 rounded-3xl max-w-md w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-gray-100 dark:border-white/10 relative max-h-[90vh] overflow-y-auto transition-colors"
+          className="bg-white dark:bg-[#151C14] text-[#262A25] dark:text-gray-100 rounded-3xl max-w-md w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-gray-100 dark:border-white/10 relative max-h-[90vh] overflow-y-auto transition-colors pointer-events-auto cursor-default"
         >
           {/* Close Button */}
           <button
@@ -264,9 +265,13 @@ export default function UserAuthModal({ isOpen, onClose }) {
               <div className="pt-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-between gap-3">
                 <button
                   type="button"
-                  onClick={() => {
-                    logoutUser()
-                    onClose()
+                  onClick={async (e) => {
+                    e.stopPropagation()
+                    try {
+                      await logoutUser()
+                    } finally {
+                      onClose()
+                    }
                   }}
                   className="px-4 py-2 rounded-xl text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
                 >
@@ -274,7 +279,10 @@ export default function UserAuthModal({ isOpen, onClose }) {
                 </button>
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onClose()
+                  }}
                   className="px-5 py-2 rounded-xl text-xs font-bold bg-[#70B325] hover:bg-[#5F9A1E] text-white transition-colors cursor-pointer shadow-xs"
                 >
                   Selesai
@@ -293,6 +301,7 @@ export default function UserAuthModal({ isOpen, onClose }) {
           data={selectedReceipt}
         />
       )}
-    </>
+    </>,
+    document.body
   )
 }
