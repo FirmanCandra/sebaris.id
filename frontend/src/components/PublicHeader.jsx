@@ -74,12 +74,12 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
   return (
     <header className="sticky top-0 sm:top-3 z-50 w-full px-2.5 sm:px-6 lg:px-8 pointer-events-none transition-all duration-300">
       <div
-        className={`max-w-7xl mx-auto pointer-events-auto h-16 sm:h-18 px-4 sm:px-6 lg:px-8 rounded-full flex items-center justify-between gap-3 sm:gap-4 transition-all duration-300 ${
+        className={`max-w-7xl mx-auto pointer-events-auto h-16 sm:h-18 px-5 sm:px-8 rounded-full flex items-center justify-between gap-4 transition-all duration-300 backdrop-blur-xl backdrop-saturate-150 ${
           isOverHero
-            ? 'backdrop-blur-xl bg-black/35 border border-white/20 text-white shadow-lg'
+            ? 'bg-black/30 border border-white/20 text-white shadow-xl shadow-black/20'
             : theme === 'dark'
-            ? 'backdrop-blur-2xl bg-[#121612]/90 border border-[#2C3529] text-white shadow-2xl shadow-black/40'
-            : 'backdrop-blur-2xl bg-white/90 border border-[#E5EADF] text-gray-800 shadow-xl shadow-gray-200/50'
+            ? 'bg-[#0E140E]/60 border border-white/15 text-white shadow-2xl shadow-black/40'
+            : 'bg-white/55 border border-white/80 dark:border-white/10 text-gray-900 shadow-xl shadow-gray-900/5'
         }`}
       >
         
@@ -95,25 +95,21 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
           />
         </Link>
 
-        {/* 2. NAVBAR TENGAH OVAL / CAPSULE TANPA BULATAN DI MENU */}
+        {/* 2. MENU TENGAH LANGSUNG TANPA KAPSUL / BULATAN (Clean Text Spanning) */}
         <nav
           aria-label="Navigasi Utama"
-          className={`hidden md:inline-flex items-center gap-1 sm:gap-2 px-4 py-1.5 rounded-full backdrop-blur-md transition-all ${
-            isOverHero || theme === 'dark'
-              ? 'bg-white/10 border border-white/15 text-white'
-              : 'bg-black/5 border border-black/10 text-gray-800'
-          }`}
+          className="hidden md:flex items-center gap-7 lg:gap-9 text-xs sm:text-sm font-semibold tracking-wide transition-all"
         >
           <NavLink
             to="/"
             end
             className={({ isActive }) =>
-              `px-3 py-1 text-xs lg:text-sm transition-colors ${
+              `transition-colors duration-200 ${
                 isActive
-                  ? 'text-[#70B325] dark:text-[#8FE032] font-extrabold'
+                  ? 'text-[#70B325] dark:text-[#8FE032] font-black'
                   : isOverHero || theme === 'dark'
                   ? 'text-white/80 hover:text-white font-medium'
-                  : 'text-gray-600 hover:text-[#70B325] font-medium'
+                  : 'text-gray-700 hover:text-[#70B325] font-medium'
               }`
             }
           >
@@ -123,10 +119,10 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
           <a
             href="/#voting-section"
             onClick={handleVoteClick}
-            className={`px-3 py-1 text-xs lg:text-sm font-medium transition-colors ${
+            className={`transition-colors duration-200 ${
               isOverHero || theme === 'dark'
-                ? 'text-white/80 hover:text-white'
-                : 'text-gray-600 hover:text-[#70B325]'
+                ? 'text-white/80 hover:text-white font-medium'
+                : 'text-gray-700 hover:text-[#70B325] font-medium'
             }`}
           >
             Vote
@@ -135,10 +131,10 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
           <button
             type="button"
             onClick={handleCheckVoteClick}
-            className={`px-3 py-1 text-xs lg:text-sm font-medium transition-colors cursor-pointer ${
+            className={`transition-colors duration-200 cursor-pointer ${
               isOverHero || theme === 'dark'
-                ? 'text-white/80 hover:text-white'
-                : 'text-gray-600 hover:text-[#70B325]'
+                ? 'text-white/80 hover:text-white font-medium'
+                : 'text-gray-700 hover:text-[#70B325] font-medium'
             }`}
           >
             Cek Vote
@@ -261,7 +257,7 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
       {/* MOBILE RESPONSIVE DRAWER / DROPDOWN PANEL */}
       {mobileMenuOpen && (
         <div className="md:hidden max-w-7xl mx-auto px-2.5 sm:px-4 pb-4 animate-fadeIn pointer-events-auto">
-          <div className="mt-2 rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#1A2019]/95 border border-[#E5EADF] dark:border-[#2C3529] p-5 shadow-2xl space-y-4">
+          <div className="mt-2 rounded-3xl backdrop-blur-2xl bg-white/85 dark:bg-[#121612]/85 border border-white/60 dark:border-white/10 p-5 shadow-2xl space-y-4">
             
             {/* Quick Search */}
             <form onSubmit={handleSearchSubmit}>
