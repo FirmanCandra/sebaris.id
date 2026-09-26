@@ -72,16 +72,16 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
   }
 
   return (
-    <header
-      className={`sticky top-0 z-50 transition-all duration-300 ${
-        isOverHero
-          ? 'bg-transparent border-b border-transparent'
-          : theme === 'dark'
-          ? 'backdrop-blur-xl bg-[#121612]/90 border-b border-[#2C3529] shadow-sm'
-          : 'backdrop-blur-xl bg-white/90 border-b border-[#E5EADF] shadow-sm'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+    <header className="sticky top-0 sm:top-3 z-50 w-full px-2.5 sm:px-6 lg:px-8 pointer-events-none transition-all duration-300">
+      <div
+        className={`max-w-7xl mx-auto pointer-events-auto h-16 sm:h-18 px-4 sm:px-6 lg:px-8 rounded-full flex items-center justify-between gap-3 sm:gap-4 transition-all duration-300 ${
+          isOverHero
+            ? 'backdrop-blur-xl bg-black/35 border border-white/20 text-white shadow-lg'
+            : theme === 'dark'
+            ? 'backdrop-blur-2xl bg-[#121612]/90 border border-[#2C3529] text-white shadow-2xl shadow-black/40'
+            : 'backdrop-blur-2xl bg-white/90 border border-[#E5EADF] text-gray-800 shadow-xl shadow-gray-200/50'
+        }`}
+      >
         
         {/* 1. LOGO KIRI SENDIRI */}
         <Link
@@ -95,12 +95,12 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
           />
         </Link>
 
-        {/* 2. NAVBAR TENGAH OVAL / CAPSULE DENGAN BACKGROUND BLUR (Sesuai Referensi Foto) */}
+        {/* 2. NAVBAR TENGAH OVAL / CAPSULE TANPA BULATAN DI MENU */}
         <nav
           aria-label="Navigasi Utama"
-          className={`hidden md:inline-flex items-center gap-1.5 lg:gap-2 px-5 py-2 rounded-full backdrop-blur-xl transition-all shadow-2xs ${
+          className={`hidden md:inline-flex items-center gap-1 sm:gap-2 px-4 py-1.5 rounded-full backdrop-blur-md transition-all ${
             isOverHero || theme === 'dark'
-              ? 'bg-white/10 border border-white/20 text-white'
+              ? 'bg-white/10 border border-white/15 text-white'
               : 'bg-black/5 border border-black/10 text-gray-800'
           }`}
         >
@@ -108,12 +108,12 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
             to="/"
             end
             className={({ isActive }) =>
-              `px-4 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all ${
+              `px-3 py-1 text-xs lg:text-sm transition-colors ${
                 isActive
-                  ? 'text-white bg-[#70B325] shadow-xs'
+                  ? 'text-[#70B325] dark:text-[#8FE032] font-extrabold'
                   : isOverHero || theme === 'dark'
-                  ? 'text-white/85 hover:text-white hover:bg-white/10'
-                  : 'text-gray-700 hover:text-[#70B325] hover:bg-black/5'
+                  ? 'text-white/80 hover:text-white font-medium'
+                  : 'text-gray-600 hover:text-[#70B325] font-medium'
               }`
             }
           >
@@ -123,10 +123,10 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
           <a
             href="/#voting-section"
             onClick={handleVoteClick}
-            className={`px-4 py-1.5 rounded-full text-xs lg:text-sm font-semibold transition-all ${
+            className={`px-3 py-1 text-xs lg:text-sm font-medium transition-colors ${
               isOverHero || theme === 'dark'
-                ? 'text-white/85 hover:text-white hover:bg-white/10'
-                : 'text-gray-700 hover:text-[#70B325] hover:bg-black/5'
+                ? 'text-white/80 hover:text-white'
+                : 'text-gray-600 hover:text-[#70B325]'
             }`}
           >
             Vote
@@ -135,10 +135,10 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
           <button
             type="button"
             onClick={handleCheckVoteClick}
-            className={`px-4 py-1.5 rounded-full text-xs lg:text-sm font-semibold transition-all cursor-pointer ${
+            className={`px-3 py-1 text-xs lg:text-sm font-medium transition-colors cursor-pointer ${
               isOverHero || theme === 'dark'
-                ? 'text-white/85 hover:text-white hover:bg-white/10'
-                : 'text-gray-700 hover:text-[#70B325] hover:bg-black/5'
+                ? 'text-white/80 hover:text-white'
+                : 'text-gray-600 hover:text-[#70B325]'
             }`}
           >
             Cek Vote
@@ -260,8 +260,8 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
 
       {/* MOBILE RESPONSIVE DRAWER / DROPDOWN PANEL */}
       {mobileMenuOpen && (
-        <div className="md:hidden max-w-7xl mx-auto px-4 pb-4 animate-fadeIn">
-          <div className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#1A2019]/95 border border-[#E5EADF] dark:border-[#2C3529] p-5 shadow-2xl space-y-4">
+        <div className="md:hidden max-w-7xl mx-auto px-2.5 sm:px-4 pb-4 animate-fadeIn pointer-events-auto">
+          <div className="mt-2 rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#1A2019]/95 border border-[#E5EADF] dark:border-[#2C3529] p-5 shadow-2xl space-y-4">
             
             {/* Quick Search */}
             <form onSubmit={handleSearchSubmit}>
@@ -282,7 +282,7 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
               </div>
             </form>
 
-            {/* Navigasi Mobile Oval Style */}
+            {/* Navigasi Mobile */}
             <div className="space-y-1.5">
               <NavLink
                 to="/"
@@ -291,7 +291,7 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
                 className={({ isActive }) =>
                   `flex items-center px-4 py-3 rounded-2xl font-bold text-sm transition-all ${
                     isActive
-                      ? 'bg-[#70B325] text-white shadow-xs'
+                      ? 'text-[#70B325] dark:text-[#8FE032] bg-[#70B325]/10 font-extrabold'
                       : 'text-[#262A25] dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5'
                   }`
                 }

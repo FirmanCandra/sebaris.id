@@ -163,11 +163,11 @@ export default function CategoryVotingPage() {
       <PublicHeader />
 
       {/* TOP OFFICIAL EVENT HERO BANNER (KreenConnect Pageant & Competition Stage) */}
-      <section className="relative bg-gradient-to-br from-[#123E2A] via-[#102D1F] to-[#0A1D14] text-white border-b border-[#2C3529] overflow-hidden">
+      <section className="relative bg-gradient-to-br from-[#123E2A] via-[#102D1F] to-[#0A1D14] text-white border-b border-[#2C3529] overflow-hidden -mt-16 sm:-mt-20 pt-20 sm:pt-24 pb-6 sm:pb-8">
         {/* Subtle background glow */}
         <div className="absolute inset-0 bg-radial from-emerald-500/10 via-transparent to-transparent pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 relative z-10 space-y-5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 relative z-10 space-y-5">
           
           {/* Breadcrumb Row */}
           <nav className="flex items-center gap-2 text-xs font-semibold text-gray-300/80 truncate">
