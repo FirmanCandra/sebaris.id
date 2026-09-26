@@ -10,7 +10,7 @@ import { resolveStorageUrl } from './api/client'
 
 const categories = {
   title: 'Kategori Voting',
-  description: 'Kelola sesi voting, thumbnail poster, penyelenggara, periode, dan status pemilihan.',
+  description: 'Kelola sesi voting, thumbnail poster, tarif per vote, freeze leaderboard, dan export laporan.',
   endpoint: '/admin/categories',
   fields: [
     { name: 'thumbnail', label: 'Poster / Thumbnail Voting', type: 'file' },
@@ -25,6 +25,25 @@ const categories = {
       options: [
         { value: 'active', label: 'Aktif (Bisa Di-vote)' },
         { value: 'inactive', label: 'Nonaktif / Selesai' },
+      ],
+    },
+    { name: 'price_per_vote', label: 'Harga per Suara Berbayar (Rp)', type: 'number' },
+    {
+      name: 'allow_free_vote',
+      label: 'Sediakan 1x Vote Gratis?',
+      type: 'select',
+      options: [
+        { value: 1, label: 'Ya, Sediakan 1x Vote Gratis per Kontak' },
+        { value: 0, label: 'Tidak, Wajib Vote Berbayar (Pure Paid)' },
+      ],
+    },
+    {
+      name: 'freeze_leaderboard',
+      label: 'Bekukan Leaderboard (Freeze Mode)?',
+      type: 'select',
+      options: [
+        { value: 0, label: 'Buka Publik (Real-time Terbuka)' },
+        { value: 1, label: 'Bekukan / Sembunyikan Perolehan Suara (Freeze ❄️)' },
       ],
     },
     { name: 'description', label: 'Deskripsi Voting', type: 'textarea' },
@@ -74,6 +93,35 @@ const categories = {
     },
     { key: 'finalists_count', label: 'Jumlah Finalis' },
     {
+      key: 'pricing',
+      label: 'Tarif & Mode',
+      render: (item) => (
+        <div className="text-xs">
+          <span className="font-extrabold text-[#70B325] block">
+            Rp {(item.price_per_vote || 1000).toLocaleString('id-ID')} / suara
+          </span>
+          <span className="text-[10px] text-gray-400 block font-semibold">
+            {item.allow_free_vote ? '✓ Ada Vote Gratis' : '⭐ Full Berbayar'}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'freeze_leaderboard',
+      label: 'Freeze Mode',
+      render: (item) => (
+        <span
+          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
+            item.freeze_leaderboard
+              ? 'bg-sky-100 text-sky-800 border border-sky-300 font-extrabold'
+              : 'bg-gray-100 text-gray-600'
+          }`}
+        >
+          {item.freeze_leaderboard ? '❄️ Dibekukan' : '🔓 Terbuka'}
+        </span>
+      ),
+    },
+    {
       key: 'status',
       label: 'Status',
       render: (item) => (
@@ -91,6 +139,23 @@ const categories = {
           />
           {item.status === 'active' ? 'Aktif' : 'Nonaktif'}
         </span>
+      ),
+    },
+    {
+      key: 'export',
+      label: 'Laporan',
+      render: (item) => (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            window.open(`/api/admin/categories/${item.id}/export`, '_blank')
+          }}
+          className="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#F4F9EE] hover:bg-[#70B325] text-[#558223] hover:text-white border border-[#D5E6C4] transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
+          title="Unduh rekap suara dan data transaksi ke Excel (CSV)"
+        >
+          <span>📥 Unduh CSV</span>
+        </button>
       ),
     },
   ],

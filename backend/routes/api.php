@@ -18,7 +18,12 @@ Route::get('categories/{category}/leaderboard', [PublicFinalistController::class
 Route::get('voting/{category}', [PublicCategoryController::class, 'show']);
 Route::get('voting/{category}/finalists', [PublicFinalistController::class, 'index']);
 Route::get('voting/{category}/leaderboard', [PublicFinalistController::class, 'leaderboard']);
-Route::post('votes', [VoteController::class, 'store'])->middleware('throttle:15,1');
+
+// Votes, Payments, Check, and Verification
+Route::post('votes', [VoteController::class, 'store'])->middleware('throttle:30,1');
+Route::post('votes/{referenceId}/simulate-pay', [VoteController::class, 'simulatePay']);
+Route::get('votes/{referenceId}/status', [VoteController::class, 'checkStatus']);
+Route::get('votes/check', [VoteController::class, 'checkVotes']);
 
 // Unified Global Authentication (Email & Password, Registration, Google OAuth)
 Route::prefix('auth')->group(function () {
@@ -40,7 +45,10 @@ Route::prefix('admin')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', [AuthController::class, 'me']);
         Route::post('logout', [AuthController::class, 'logout']);
+        Route::post('categories/{category}/freeze', [CategoryController::class, 'toggleFreeze']);
+        Route::get('categories/{category}/export', [VoteController::class, 'exportCsv']);
         Route::apiResource('categories', CategoryController::class);
         Route::apiResource('finalists', FinalistController::class);
     });
 });
+

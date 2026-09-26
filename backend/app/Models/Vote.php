@@ -11,19 +11,25 @@ class Vote extends Model
     use HasFactory;
 
     protected $fillable = [
+        'reference_id',
         'user_id',
         'finalist_id',
         'voter_name',
         'voter_contact',
         'vote_amount',
+        'total_price',
         'type',
+        'payment_method',
         'status',
+        'paid_at',
     ];
 
     protected function casts(): array
     {
         return [
             'vote_amount' => 'integer',
+            'total_price' => 'integer',
+            'paid_at' => 'datetime',
         ];
     }
 

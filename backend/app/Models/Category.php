@@ -22,6 +22,9 @@ class Category extends Model
         'start_date',
         'end_date',
         'status',
+        'price_per_vote',
+        'allow_free_vote',
+        'freeze_leaderboard',
     ];
 
     protected static function booted(): void
@@ -45,6 +48,9 @@ class Category extends Model
         return [
             'start_date' => 'date',
             'end_date' => 'date',
+            'price_per_vote' => 'integer',
+            'allow_free_vote' => 'boolean',
+            'freeze_leaderboard' => 'boolean',
         ];
     }
 

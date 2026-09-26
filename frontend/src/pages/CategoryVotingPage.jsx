@@ -1,41 +1,41 @@
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { api, ApiError, resolveStorageUrl } from '../api/client'
+import { api, resolveStorageUrl } from '../api/client'
 import PublicHeader from '../components/PublicHeader'
-import GoogleSignInButton from '../components/GoogleSignInButton'
-import { useUserAuth } from '../auth/AuthProvider'
+import VotingCountdown from '../components/VotingCountdown'
+import CommercialVoteModal from '../components/CommercialVoteModal'
+import FinalistDetailModal from '../components/FinalistDetailModal'
+import EReceiptModal from '../components/EReceiptModal'
 import {
   IconChevronRight,
-  IconTrophy,
-  IconCheck,
   IconClock,
   IconUsers,
   IconSearch,
   IconCalendar,
   IconZap,
   IconClose,
-  IconFlame,
   IconCheckVote,
 } from '../components/Icons'
 
 export default function CategoryVotingPage() {
   const { categoryId } = useParams()
-  const { user, userToken, loginUserWithGoogle, loadUserVotes } = useUserAuth()
-  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+
   const [category, setCategory] = useState(null)
   const [finalists, setFinalists] = useState([])
   const [activeTab, setActiveTab] = useState('finalis') // 'finalis' | 'leaderboard' | 'deskripsi'
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedFinalist, setSelectedFinalist] = useState(null)
-  const [isVoteModalOpen, setIsVoteModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [notice, setNotice] = useState(null)
-  const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({ voter_name: '', voter_contact: '' })
-  const [fieldErrors, setFieldErrors] = useState({})
+  const [isVotingExpired, setIsVotingExpired] = useState(false)
 
-  // Fetch category info and leaderboard
+  // Modals state
+  const [selectedFinalistForVote, setSelectedFinalistForVote] = useState(null)
+  const [selectedFinalistForDetail, setSelectedFinalistForDetail] = useState(null)
+  const [eReceiptData, setEReceiptData] = useState(null)
+  const [copiedId, setCopiedId] = useState(null)
+
+  // Fetch category info and finalists
   const loadData = useCallback(async () => {
     try {
       const [catRes, finRes] = await Promise.all([
@@ -61,21 +61,34 @@ export default function CategoryVotingPage() {
     return () => window.clearInterval(interval)
   }, [loadData])
 
-  // Update browser tab document.title to match the category / event name
+  // Handle URL param: ?finalist=123 (direct candidate deep link)
+  useEffect(() => {
+    const finalistParam = searchParams.get('finalist')
+    if (finalistParam && finalists.length > 0) {
+      const found = finalists.find(
+        (f) => String(f.id) === String(finalistParam)
+      )
+      if (found) {
+        setSelectedFinalistForDetail(found)
+      }
+    }
+  }, [searchParams, finalists])
+
+  // Update browser tab document.title
   useEffect(() => {
     if (category?.name) {
-      document.title = `${category.name} — sebaris.id`
+      document.title = `${category.name} — Sebaris | Platform E-Voting`
     } else if (!loading) {
-      document.title = 'Voting Tidak Ditemukan — sebaris.id'
+      document.title = 'Voting Tidak Ditemukan — Sebaris | Platform E-Voting'
     } else {
-      document.title = 'Memuat Voting... — sebaris.id'
+      document.title = 'Memuat Voting... — Sebaris | Platform E-Voting'
     }
     return () => {
-      document.title = 'sebaris.id — Platform E-Voting & Event Online'
+      document.title = 'Sebaris | Platform E-Voting'
     }
   }, [category?.name, loading])
 
-  // Dynamically update the browser address bar to match the event's slug if loaded by ID
+  // Dynamically update the browser address bar to match slug
   useEffect(() => {
     if (category?.slug && categoryId !== category.slug) {
       window.history.replaceState(null, '', `/categories/${category.slug}`)
@@ -99,66 +112,24 @@ export default function CategoryVotingPage() {
     )
   }, [finalists, searchQuery])
 
-  function handleOpenVote(finalist) {
-    setSelectedFinalist(finalist)
-    setFieldErrors({})
-    if (user) {
-      setForm({
-        voter_name: user.name || '',
-        voter_contact: user.email || '',
-      })
-    }
-    setIsVoteModalOpen(true)
+  // Share candidate helpers
+  function handleShareWhatsApp(finalist) {
+    const directUrl = `${window.location.origin}/categories/${category?.slug || categoryId}?finalist=${finalist.id}`
+    const text = `Halo! Yuk dukung kandidat *${finalist.name}* di ajang *${category?.name || 'Voting'}* melalui sebaris.id! 🌟\n\nKlik link ini untuk beri vote secara langsung:\n${directUrl}`
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
   }
 
-  function handleCloseVote() {
-    setIsVoteModalOpen(false)
-    setFieldErrors({})
-  }
-
-  async function handleVoteSubmit(event) {
-    event.preventDefault()
-    if (!selectedFinalist) return
-    setSaving(true)
-    setFieldErrors({})
-
-    try {
-      await api('/votes', {
-        method: 'POST',
-        token: userToken || undefined,
-        body: { ...form, finalist_id: selectedFinalist.id, type: 'free' },
-      })
-
-      const receipt = `SVT-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`
-      setNotice({
-        receipt,
-        finalistName: selectedFinalist.name,
-        contact: form.voter_contact,
-      })
-
-      if (userToken) {
-        loadUserVotes()
-      }
-
-      setForm({ voter_name: '', voter_contact: '' })
-      setIsVoteModalOpen(false)
-      await loadData()
-    } catch (requestError) {
-      if (requestError instanceof ApiError) {
-        setFieldErrors(requestError.errors || {})
-        if (requestError.message) {
-          setFieldErrors((prev) => ({ ...prev, general: requestError.message }))
-        }
-      } else {
-        setFieldErrors({ general: requestError.message })
-      }
-    } finally {
-      setSaving(false)
-    }
+  function handleCopyLink(finalist) {
+    const directUrl = `${window.location.origin}/categories/${category?.slug || categoryId}?finalist=${finalist.id}`
+    navigator.clipboard.writeText(directUrl)
+    setCopiedId(finalist.id)
+    setTimeout(() => setCopiedId(null), 2000)
   }
 
   const categoryTitle =
     category?.name || (loading ? 'Memuat data voting...' : 'Kategori Voting')
+
+  const isFrozen = Boolean(category?.freeze_leaderboard)
 
   return (
     <div className="min-h-screen bg-[#F8FAF7] text-[#262A25] flex flex-col font-sans">
@@ -167,12 +138,12 @@ export default function CategoryVotingPage() {
       {/* Top Banner Bar (Kreen Connect Style header banner) */}
       <div className="bg-[#123E2A] text-white py-2 px-4 text-center text-xs font-semibold tracking-wide border-b border-white/10 shadow-xs">
         <span>
-          Sebaris Vote &bull; Your Trusted Voting Partner &bull; Dukung finalis favorit kamu di{' '}
+          Sebaris Vote &bull; Your Trusted E-Voting Partner &bull; Dukung finalis favorit kamu di{' '}
           <strong className="text-amber-300">{categoryTitle}</strong>
         </span>
       </div>
 
-      {/* Top Breadcrumb & Category Bar */}
+      {/* Top Breadcrumb & Live Update Indicator */}
       <div className="bg-white border-b border-[#E8ECE4]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
           <nav className="flex items-center gap-2 text-xs font-semibold text-gray-500 truncate">
@@ -210,13 +181,18 @@ export default function CategoryVotingPage() {
             <button
               type="button"
               onClick={() => setActiveTab('leaderboard')}
-              className={`py-3.5 font-bold text-sm sm:text-base border-b-2 transition-all cursor-pointer ${
+              className={`py-3.5 font-bold text-sm sm:text-base border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'leaderboard'
                   ? 'border-[#70B325] text-[#70B325]'
                   : 'border-transparent text-gray-500 hover:text-gray-800'
               }`}
             >
-              Perolehan Suara
+              <span>Perolehan Suara</span>
+              {isFrozen && (
+                <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-black">
+                  ❄️ Freeze
+                </span>
+              )}
             </button>
             <button
               type="button"
@@ -227,51 +203,43 @@ export default function CategoryVotingPage() {
                   : 'border-transparent text-gray-500 hover:text-gray-800'
               }`}
             >
-              Deskripsi
+              Deskripsi & Ketentuan
             </button>
           </div>
         </div>
       </nav>
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 flex-1 w-full space-y-6">
-        {/* Success Notice Notification */}
-        {notice && (
-          <div className="bg-[#F2F9EC] border-2 border-[#70B325] rounded-2xl p-5 shadow-sm animate-fadeIn">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-full bg-[#70B325] text-white flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <IconCheck className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-base font-extrabold text-[#262A25]">
-                    Vote Berhasil Dicatat!
-                  </h3>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-0.5">
-                    Terima kasih telah memberikan suara untuk{' '}
-                    <strong className="text-[#70B325]">{notice.finalistName}</strong>. Suara kamu telah sah dan terhitung.
-                  </p>
-                  <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <span className="font-mono text-xs font-bold bg-white px-3 py-1.5 rounded-lg border border-[#D0E2C1] text-gray-800">
-                      ID Transaksi: {notice.receipt}
-                    </span>
-                    <Link
-                      to="/"
-                      className="text-xs font-bold text-[#70B325] hover:underline"
-                    >
-                      Cek di menu Cek Vote →
-                    </Link>
-                  </div>
-                </div>
-              </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full space-y-6">
+        {/* COUNTDOWN TIMER COMPONENT (PRIORITAS 1) */}
+        {category?.end_date && (
+          <VotingCountdown
+            endDate={category.end_date}
+            status={category.status}
+            onExpire={(expired) => setIsVotingExpired(expired)}
+          />
+        )}
 
-              <button
-                type="button"
-                onClick={() => setNotice(null)}
-                className="text-gray-400 hover:text-gray-600 text-xs font-bold px-2 py-1 cursor-pointer"
-              >
-                Tutup
-              </button>
+        {/* FREEZE NOTIFICATION BANNER (PRIORITAS 3) */}
+        {isFrozen && (
+          <div className="bg-gradient-to-r from-blue-900 to-sky-900 text-white rounded-2xl p-4 sm:p-5 border border-sky-400/30 shadow-sm animate-fadeIn">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl flex-shrink-0">
+                ❄️
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-sky-300">
+                    Leaderboard Freeze Active
+                  </span>
+                </div>
+                <h3 className="text-sm sm:text-base font-extrabold text-white">
+                  Perolehan Suara Sementara Dirahasiakan oleh Panitia
+                </h3>
+                <p className="text-xs text-sky-100/80 mt-0.5">
+                  Untuk menjaga kejutan juara di malam puncak pengumuman, perolehan angka disembunyikan. Anda tetap dapat memberikan suara dukungan!
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -364,7 +332,11 @@ export default function CategoryVotingPage() {
                       className="card-base flex flex-col overflow-hidden bg-white border border-[#E5EADF] rounded-2xl shadow-sm hover:border-[#70B325] hover:shadow-md transition-all group"
                     >
                       {/* Vertical Poster Container (Deep green branding like Kreen Screenshot) */}
-                      <div className="relative aspect-[3/4] w-full overflow-hidden bg-gradient-to-b from-[#133E2B] via-[#0E2F20] to-[#0A1F16] flex flex-col justify-between p-4">
+                      <div
+                        onClick={() => setSelectedFinalistForDetail(finalist)}
+                        className="relative aspect-[3/4] w-full overflow-hidden bg-gradient-to-b from-[#133E2B] via-[#0E2F20] to-[#0A1F16] flex flex-col justify-between p-4 cursor-pointer"
+                        title="Klik untuk lihat profil lengkap finalis"
+                      >
                         {/* Subtle decorative background glow */}
                         <div className="absolute inset-0 bg-radial from-emerald-500/15 via-transparent to-transparent pointer-events-none" />
 
@@ -391,7 +363,7 @@ export default function CategoryVotingPage() {
                           </span>
                         </div>
 
-                        {/* Candidate Portrait Photo or Clean Monogram */}
+                        {/* Candidate Portrait Photo */}
                         <div className="relative z-10 my-auto flex items-center justify-center">
                           {photoSrc ? (
                             <img
@@ -414,7 +386,7 @@ export default function CategoryVotingPage() {
                           )}
                         </div>
 
-                        {/* Bottom Nameplate (Gold/Amber banner as seen in reference) */}
+                        {/* Bottom Nameplate */}
                         <div className="relative z-10 pt-2 border-t border-white/10 flex items-end justify-between">
                           <div className="min-w-0 pr-2">
                             <h3 className="text-base sm:text-lg font-black uppercase text-amber-300 tracking-wide truncate">
@@ -425,7 +397,6 @@ export default function CategoryVotingPage() {
                             </p>
                           </div>
 
-                          {/* QR Code / Verify Badge */}
                           <div className="w-9 h-9 rounded-lg bg-white p-1 flex-shrink-0 flex items-center justify-center shadow-xs">
                             <IconCheckVote className="w-6 h-6 text-[#133E2B]" />
                           </div>
@@ -436,30 +407,66 @@ export default function CategoryVotingPage() {
                       <div className="p-4 bg-white space-y-3">
                         <div className="flex items-center justify-between text-xs">
                           <span className="font-extrabold text-[#262A25]">
-                            {finalist.vote_count.toLocaleString('id-ID')} suara
+                            {isFrozen ? '🔒 Suara Terkunci' : `${finalist.vote_count.toLocaleString('id-ID')} suara`}
                           </span>
                           <span className="font-bold text-[#70B325]">
-                            {percentage}% suara
+                            {isFrozen ? 'Dirahasiakan' : `${percentage}% suara`}
                           </span>
                         </div>
 
                         {/* Progress Bar */}
                         <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
                           <div
-                            className="bg-[#70B325] h-full rounded-full transition-all duration-500"
-                            style={{ width: `${percentage}%` }}
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              isFrozen ? 'bg-sky-400 w-full opacity-40' : 'bg-[#70B325]'
+                            }`}
+                            style={{ width: isFrozen ? '100%' : `${percentage}%` }}
                           />
                         </div>
 
-                        {/* Vote Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleOpenVote(finalist)}
-                          className="w-full py-2.5 px-4 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
-                        >
-                          <IconZap className="w-4 h-4 text-white" />
-                          <span>Beri Vote ({finalist.name.split(' ')[0]})</span>
-                        </button>
+                        {/* Card Buttons: Vote & Share */}
+                        <div className="space-y-2 pt-1">
+                          <button
+                            type="button"
+                            disabled={isVotingExpired}
+                            onClick={() => setSelectedFinalistForVote(finalist)}
+                            className="w-full py-2.5 px-4 bg-[#70B325] hover:bg-[#5F9A1E] disabled:bg-gray-300 text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+                          >
+                            <IconZap className="w-4 h-4 text-white" />
+                            <span>
+                              {isVotingExpired
+                                ? 'Voting Ditutup'
+                                : `Beri Vote (${finalist.name.split(' ')[0]})`}
+                            </span>
+                          </button>
+
+                          {/* Quick Actions (Share to WA, Copy link, Bio popup) */}
+                          <div className="flex items-center gap-1.5 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedFinalistForDetail(finalist)}
+                              className="flex-1 py-1.5 text-[11px] font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
+                            >
+                              Lihat Bio 👤
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleShareWhatsApp(finalist)}
+                              className="px-2.5 py-1.5 text-[11px] font-bold text-[#1F8A43] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                              title="Bagikan ke WhatsApp"
+                            >
+                              <span>💬 WA</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleCopyLink(finalist)}
+                              className="px-2.5 py-1.5 text-[11px] font-bold text-gray-500 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors cursor-pointer"
+                              title="Salin Link"
+                            >
+                              {copiedId === finalist.id ? '✓' : '🔗'}
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </article>
                   )
@@ -474,13 +481,21 @@ export default function CategoryVotingPage() {
           <section className="space-y-6 max-w-3xl mx-auto">
             <div className="text-center space-y-1">
               <h2 className="text-xl sm:text-2xl font-extrabold text-[#262A25]">
-                Peringkat & Perolehan Suara Sementara
+                Peringkat & Perolehan Suara
               </h2>
               <p className="text-xs sm:text-sm text-gray-500">
-                Total Suara Masuk:{' '}
-                <strong className="text-gray-900">
-                  {totalVotes.toLocaleString('id-ID')} suara
-                </strong>
+                {isFrozen ? (
+                  <span className="text-sky-700 font-bold">
+                    ❄️ Angka perolehan suara disembunyikan sementara oleh panitia
+                  </span>
+                ) : (
+                  <>
+                    Total Suara Masuk:{' '}
+                    <strong className="text-gray-900">
+                      {totalVotes.toLocaleString('id-ID')} suara
+                    </strong>
+                  </>
+                )}
               </p>
             </div>
 
@@ -508,7 +523,7 @@ export default function CategoryVotingPage() {
                     <div
                       className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs flex-shrink-0 ${rankColor}`}
                     >
-                      {index + 1}
+                      {isFrozen ? '?' : index + 1}
                     </div>
 
                     {/* Candidate Photo */}
@@ -516,7 +531,8 @@ export default function CategoryVotingPage() {
                       <img
                         src={resolveStorageUrl(finalist.photo_url || finalist.photo)}
                         alt={finalist.name}
-                        className="w-12 h-12 rounded-xl object-cover border border-gray-200 flex-shrink-0"
+                        onClick={() => setSelectedFinalistForDetail(finalist)}
+                        className="w-12 h-12 rounded-xl object-cover border border-gray-200 flex-shrink-0 cursor-pointer"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none'
                         }}
@@ -531,7 +547,10 @@ export default function CategoryVotingPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
                         <div>
-                          <h3 className="font-extrabold text-sm text-[#262A25] truncate">
+                          <h3
+                            onClick={() => setSelectedFinalistForDetail(finalist)}
+                            className="font-extrabold text-sm text-[#262A25] truncate cursor-pointer hover:text-[#70B325]"
+                          >
                             {finalist.name}
                           </h3>
                           <span className="text-xs text-gray-500 block truncate">
@@ -540,27 +559,30 @@ export default function CategoryVotingPage() {
                         </div>
                         <div className="text-right">
                           <span className="font-extrabold text-sm text-[#70B325] block">
-                            {finalist.vote_count.toLocaleString('id-ID')}
+                            {isFrozen ? '🔒 Dirahasiakan' : finalist.vote_count.toLocaleString('id-ID')}
                           </span>
                           <span className="text-[10px] text-gray-400 font-semibold block">
-                            {percentage}% suara
+                            {isFrozen ? 'Freeze Mode' : `${percentage}% suara`}
                           </span>
                         </div>
                       </div>
 
                       <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
                         <div
-                          className="bg-[#70B325] h-full rounded-full transition-all duration-500"
-                          style={{ width: `${percentage}%` }}
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            isFrozen ? 'bg-sky-300 w-full opacity-40' : 'bg-[#70B325]'
+                          }`}
+                          style={{ width: isFrozen ? '100%' : `${percentage}%` }}
                         />
                       </div>
                     </div>
 
-                    {/* Quick Vote Button */}
+                    {/* Quick Action Button */}
                     <button
                       type="button"
-                      onClick={() => handleOpenVote(finalist)}
-                      className="px-3 py-1.5 bg-[#F2F9EC] hover:bg-[#70B325] text-[#558223] hover:text-white font-bold text-xs rounded-xl transition-all flex-shrink-0 cursor-pointer"
+                      disabled={isVotingExpired}
+                      onClick={() => setSelectedFinalistForVote(finalist)}
+                      className="px-3 py-1.5 bg-[#F2F9EC] hover:bg-[#70B325] disabled:bg-gray-100 text-[#558223] hover:text-white disabled:text-gray-400 font-bold text-xs rounded-xl transition-all flex-shrink-0 cursor-pointer"
                     >
                       Vote
                     </button>
@@ -601,10 +623,11 @@ export default function CategoryVotingPage() {
               </div>
               <div className="space-y-1">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">
-                  Metode Pemilihan
+                  Metode Pemilihan & Tarif
                 </span>
                 <p className="text-sm font-bold text-[#70B325]">
-                  E-Voting Online (1 Kontak = 1 Suara Sah)
+                  E-Voting Online (Gratis 1x & Paket Suara Berbayar Rp{' '}
+                  {(category?.price_per_vote || 1000).toLocaleString('id-ID')}/suara)
                 </p>
               </div>
             </div>
@@ -621,202 +644,66 @@ export default function CategoryVotingPage() {
 
             <div className="bg-[#F8FAF7] rounded-xl p-4 border border-[#E5EADF] space-y-2">
               <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                Ketentuan Pemberian Suara
+                Ketentuan & Alur Voting Resmi
               </h4>
               <ul className="text-xs text-gray-600 space-y-1.5 list-disc pl-4">
-                <li>Setiap pengguna hanya dapat memberikan 1 suara gratis per kontak WhatsApp/Email.</li>
-                <li>Setiap suara yang masuk akan mendapatkan bukti ID Transaksi resmi SVT.</li>
-                <li>Hasil perolehan suara diperbarui secara real-time dan terbuka untuk publik.</li>
+                <li>
+                  {category?.allow_free_vote !== false
+                    ? 'Tersedia 1 suara gratis per kontak WhatsApp/Email atau akun Google terverifikasi.'
+                    : 'Ajang ini sepenuhnya menggunakan sistem paket vote berbayar.'}
+                </li>
+                <li>
+                  Untuk menambah dukungan, Anda dapat membeli paket suara tambahan via QRIS Dinamis dan Virtual Account Bank.
+                </li>
+                <li>
+                  Setiap transaksi akan menerbitkan Bukti Resmi E-Receipt ber-ID unik yang dapat diunduh dan dicetak.
+                </li>
+                <li>
+                  Perolehan suara diperbarui secara real-time dan diproteksi anti kecurangan.
+                </li>
               </ul>
             </div>
           </section>
         )}
       </main>
 
-      {/* VOTE SUBMISSION MODAL / DRAWER */}
-      {isVoteModalOpen && selectedFinalist && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fadeIn"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-5 shadow-2xl border border-gray-100 relative"
-          >
-            {/* Close Button */}
-            <button
-              type="button"
-              onClick={handleCloseVote}
-              className="absolute top-5 right-5 p-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            >
-              <IconClose className="w-5 h-5" />
-            </button>
+      {/* POP-UP 1: COMMERCIAL VOTE MODAL (PRIORITAS 1) */}
+      {selectedFinalistForVote && (
+        <CommercialVoteModal
+          isOpen={true}
+          onClose={() => setSelectedFinalistForVote(null)}
+          finalist={selectedFinalistForVote}
+          category={category}
+          onVoteSuccess={(receipt) => {
+            setEReceiptData(receipt)
+            loadData()
+          }}
+        />
+      )}
 
-            {/* Candidate Header */}
-            <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
-              {selectedFinalist.photo_url || selectedFinalist.photo ? (
-                <img
-                  src={resolveStorageUrl(
-                    selectedFinalist.photo_url || selectedFinalist.photo
-                  )}
-                  alt={selectedFinalist.name}
-                  className="w-16 h-16 rounded-2xl object-cover border-2 border-[#70B325] flex-shrink-0"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                  }}
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-2xl bg-[#E9F3DF] text-[#558223] font-black text-xl flex items-center justify-center flex-shrink-0">
-                  {selectedFinalist.name.slice(0, 2).toUpperCase()}
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <span className="text-[10px] font-extrabold text-[#70B325] uppercase tracking-wider block">
-                  Kandidat Pilihanmu
-                </span>
-                <h3 className="text-base sm:text-lg font-extrabold text-[#262A25] truncate">
-                  {selectedFinalist.name}
-                </h3>
-                <p className="text-xs text-gray-500 truncate">
-                  {selectedFinalist.description || 'Finalis Terpilih'}
-                </p>
-              </div>
-            </div>
+      {/* POP-UP 2: FINALIST DETAIL PROFILE (PRIORITAS 2) */}
+      {selectedFinalistForDetail && (
+        <FinalistDetailModal
+          isOpen={true}
+          onClose={() => setSelectedFinalistForDetail(null)}
+          finalist={selectedFinalistForDetail}
+          category={category}
+          totalVotes={totalVotes}
+          rank={
+            finalists.findIndex((f) => f.id === selectedFinalistForDetail.id) + 1 || 1
+          }
+          isVotingExpired={isVotingExpired}
+          onOpenVote={(finalist) => setSelectedFinalistForVote(finalist)}
+        />
+      )}
 
-            {/* Google Voter Status or Quick Login */}
-            {user ? (
-              <div className="flex items-center gap-3 p-3 bg-[#F4F9EE] border border-[#D5E6C4] rounded-2xl text-xs">
-                {user.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="w-8 h-8 rounded-full object-cover border border-[#70B325] flex-shrink-0"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-[#70B325] text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
-                    {user.name?.charAt(0) || 'U'}
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-[#E3F2D4] text-[#426E17] inline-block mb-0.5">
-                    Akun Google Terverifikasi
-                  </span>
-                  <span className="font-extrabold text-[#262A25] block truncate text-xs">
-                    {user.name}
-                  </span>
-                  <span className="text-[11px] text-gray-500 block truncate">
-                    {user.email}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div className="p-3 bg-[#F8FAF7] border border-dashed border-[#CADDB8] rounded-2xl text-center space-y-2">
-                <p className="text-[11px] text-gray-600 font-medium">
-                  Punya akun Google? Masuk untuk vote instan:
-                </p>
-                <div className="flex justify-center">
-                  <GoogleSignInButton
-                    onCredentialResponse={async (credential) => {
-                      try {
-                        const payload = await loginUserWithGoogle(credential)
-                        const u = payload.user?.data || payload.user
-                        setForm({
-                          voter_name: u.name || '',
-                          voter_contact: u.email || '',
-                        })
-                      } catch (e) {
-                        setFieldErrors({ general: e.message })
-                      }
-                    }}
-                    width={260}
-                    size="medium"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* General Error Alert */}
-            {fieldErrors.general && (
-              <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-xs font-bold">
-                {fieldErrors.general}
-              </div>
-            )}
-
-            {/* Form */}
-            <form onSubmit={handleVoteSubmit} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-gray-700">
-                  Nama Lengkap Pemilih
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.voter_name}
-                  onChange={(e) =>
-                    setForm({ ...form, voter_name: e.target.value })
-                  }
-                  placeholder="Masukkan nama lengkap kamu"
-                  className="w-full h-11 px-3.5 text-xs sm:text-sm bg-[#F8FAF7] border border-[#CADDB8] rounded-xl text-[#262A25] focus:outline-none focus:border-[#70B325]"
-                />
-                {fieldErrors.voter_name && (
-                  <p className="text-[11px] text-red-600 font-semibold">
-                    {fieldErrors.voter_name[0] || fieldErrors.voter_name}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-gray-700">
-                  Nomor WhatsApp atau Email
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.voter_contact}
-                  onChange={(e) =>
-                    setForm({ ...form, voter_contact: e.target.value })
-                  }
-                  placeholder="Contoh: 08123456789 atau email@domain.com"
-                  className="w-full h-11 px-3.5 text-xs sm:text-sm bg-[#F8FAF7] border border-[#CADDB8] rounded-xl text-[#262A25] focus:outline-none focus:border-[#70B325]"
-                />
-                {fieldErrors.voter_contact && (
-                  <p className="text-[11px] text-red-600 font-semibold">
-                    {fieldErrors.voter_contact[0] || fieldErrors.voter_contact}
-                  </p>
-                )}
-                <p className="text-[10px] text-gray-400">
-                  Digunakan untuk verifikasi 1 suara unik dan bukti ID Transaksi.
-                </p>
-              </div>
-
-              <div className="pt-2 flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleCloseVote}
-                  className="flex-1 h-11 border border-gray-200 hover:bg-gray-50 text-gray-600 font-bold text-xs rounded-xl cursor-pointer"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 h-11 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  {saving ? (
-                    <span>Mencatat Vote...</span>
-                  ) : (
-                    <>
-                      <IconCheck className="w-4 h-4" />
-                      <span>Konfirmasi Vote</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* POP-UP 3: OFFICIAL E-RECEIPT MODAL (PRIORITAS 2) */}
+      {eReceiptData && (
+        <EReceiptModal
+          isOpen={true}
+          onClose={() => setEReceiptData(null)}
+          data={eReceiptData}
+        />
       )}
     </div>
   )

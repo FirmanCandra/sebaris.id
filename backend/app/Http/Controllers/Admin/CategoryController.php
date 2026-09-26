@@ -73,4 +73,15 @@ class CategoryController extends Controller
 
         return response()->noContent();
     }
+
+    public function toggleFreeze(Category $category): CategoryResource
+    {
+        $category->update([
+            'freeze_leaderboard' => !$category->freeze_leaderboard,
+        ]);
+        Cache::forget('public.categories');
+        Cache::forget("public.finalists.{$category->id}");
+
+        return new CategoryResource($category->fresh()->loadCount('finalists'));
+    }
 }
