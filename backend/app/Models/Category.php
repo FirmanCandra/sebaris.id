@@ -23,6 +23,7 @@ class Category extends Model
         'end_date',
         'status',
         'price_per_vote',
+        'vote_packages',
         'allow_free_vote',
         'freeze_leaderboard',
     ];
@@ -46,11 +47,12 @@ class Category extends Model
     protected function casts(): array
     {
         return [
-            'start_date' => 'date',
-            'end_date' => 'date',
-            'price_per_vote' => 'integer',
-            'allow_free_vote' => 'boolean',
+            'start_date'       => 'date',
+            'end_date'         => 'date',
+            'price_per_vote'   => 'integer',
+            'allow_free_vote'  => 'boolean',
             'freeze_leaderboard' => 'boolean',
+            'vote_packages'    => 'array',
         ];
     }
 

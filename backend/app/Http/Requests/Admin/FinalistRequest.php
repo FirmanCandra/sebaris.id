@@ -14,10 +14,14 @@ class FinalistRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category_id' => ['required', 'integer', 'exists:categories,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'photo' => ['nullable', 'image', 'max:2048'],
-            'description' => ['nullable', 'string'],
+            'category_id'  => ['required', 'integer', 'exists:categories,id'],
+            'name'         => ['required', 'string', 'max:255'],
+            'photo'        => ['nullable', 'image', 'max:2048'],
+            'bio'          => ['nullable', 'string', 'max:500'],
+            'social_ig'    => ['nullable', 'string', 'max:100'],
+            'description'  => ['nullable', 'string'],
+            'extra_photos' => ['nullable'],
+            'extra_photos.*'=> ['nullable', 'image', 'max:3072'],
         ];
     }
 }

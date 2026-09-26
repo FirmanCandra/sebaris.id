@@ -20,18 +20,30 @@ class FinalistResource extends JsonResource
             }
         }
 
+        $extraPhotos = [];
+        foreach (($this->extra_photos ?? []) as $path) {
+            if ($path) {
+                $extraPhotos[] = filter_var($path, FILTER_VALIDATE_URL)
+                    ? $path
+                    : rtrim($request->getSchemeAndHttpHost(), '/') . '/storage/' . ltrim($path, '/');
+            }
+        }
+
         return [
-            'id' => $this->id,
-            'category_id' => $this->category_id,
-            'name' => $this->name,
-            'photo' => $photoUrl,
-            'photo_url' => $photoUrl,
-            'photo_path' => $this->photo,
-            'description' => $this->description,
-            'vote_count' => $this->vote_count,
-            'category' => new CategoryResource($this->whenLoaded('category')),
-            'created_at' => $this->created_at?->toISOString(),
-            'updated_at' => $this->updated_at?->toISOString(),
+            'id'           => $this->id,
+            'category_id'  => $this->category_id,
+            'name'         => $this->name,
+            'photo'        => $photoUrl,
+            'photo_url'    => $photoUrl,
+            'photo_path'   => $this->photo,
+            'extra_photos' => $extraPhotos,
+            'bio'          => $this->bio,
+            'social_ig'    => $this->social_ig,
+            'description'  => $this->description,
+            'vote_count'   => $this->vote_count,
+            'category'     => new CategoryResource($this->whenLoaded('category')),
+            'created_at'   => $this->created_at?->toISOString(),
+            'updated_at'   => $this->updated_at?->toISOString(),
         ];
     }
 }

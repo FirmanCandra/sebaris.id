@@ -33,6 +33,7 @@ class CategoryResource extends JsonResource
             'status' => $this->status ?? 'active',
             'price_per_vote' => $this->price_per_vote ?? 1000,
             'allow_free_vote' => (bool) ($this->allow_free_vote ?? true),
+            'vote_packages'   => $this->vote_packages ?? [],
             'freeze_leaderboard' => (bool) ($this->freeze_leaderboard ?? false),
             'finalists_count' => $this->whenCounted('finalists'),
             'created_at' => $this->created_at?->toISOString(),

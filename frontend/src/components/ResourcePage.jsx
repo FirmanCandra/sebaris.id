@@ -95,6 +95,29 @@ function FormField({ field, value, onChange, options }) {
     )
   }
 
+  if (field.type === 'files') {
+    return (
+      <div className="space-y-1.5">
+        <label htmlFor={id} className="block text-xs font-bold text-gray-700 dark:text-gray-300">
+          {field.label}
+        </label>
+        <input
+          id={id}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(event) => onChange(field.name, Array.from(event.target.files || []))}
+          className="form-input text-xs file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-[var(--brand-primary-light)] file:text-[var(--brand-primary)] hover:file:bg-[var(--brand-primary)] hover:file:text-white file:transition-colors"
+        />
+        {Array.isArray(value) && value.length > 0 && (
+          <p className="text-[11px] text-gray-500 font-semibold">
+            {value.length} foto baru dipilih untuk diunggah
+          </p>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-1.5">
       <label htmlFor={id} className="block text-xs font-bold text-gray-700 dark:text-gray-300">
@@ -119,6 +142,7 @@ export default function ResourcePage({
   fields,
   columns,
   options = EMPTY_OPTIONS,
+  extraActions,
 }) {
   const { token } = useAuth()
   const [items, setItems] = useState([])
@@ -226,15 +250,22 @@ export default function ResourcePage({
     setFieldErrors({})
 
     try {
-      const hasFile = fields.some(
-        (field) => field.type === 'file' && values[field.name] instanceof File
-      )
+      const hasFile = fields.some((field) => {
+        const val = values[field.name]
+        return (
+          (field.type === 'file' && val instanceof File) ||
+          (field.type === 'files' && Array.isArray(val) && val.some((f) => f instanceof File))
+        )
+      })
+
       const normalized = Object.fromEntries(
         Object.entries(values)
-          .filter(
-            ([key, value]) =>
-              fields.find((field) => field.name === key)?.type !== 'file' || value instanceof File
-          )
+          .filter(([key, value]) => {
+            const f = fields.find((field) => field.name === key)
+            if (f?.type === 'file') return value instanceof File
+            if (f?.type === 'files') return Array.isArray(value) && value.some((f) => f instanceof File)
+            return true
+          })
           .map(([key, value]) => [
             key,
             ['event_id', 'category_id'].includes(key) && value ? Number(value) : value,
@@ -243,7 +274,15 @@ export default function ResourcePage({
 
       const body = hasFile
         ? Object.entries(normalized).reduce((form, [key, value]) => {
-            if (value !== '' && value !== null) form.append(key, value)
+            if (Array.isArray(value)) {
+              value.forEach((v) => {
+                if (v instanceof File) {
+                  form.append(`${key}[]`, v)
+                }
+              })
+            } else if (value !== '' && value !== null) {
+              form.append(key, value)
+            }
             return form
           }, new FormData())
         : normalized
@@ -525,6 +564,7 @@ export default function ResourcePage({
                       {/* Row Actions */}
                       <td className="text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
+                          {extraActions && extraActions(item, { load, beginEdit })}
                           <button
                             type="button"
                             onClick={() => beginEdit(item)}

@@ -19,6 +19,7 @@ const NAV_LINKS = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: IconBarChart },
   { to: '/admin/categories', label: 'Kategori', icon: IconLayers },
   { to: '/admin/finalists', label: 'Finalis', icon: IconUsers },
+  { to: '/admin/admins', label: 'Admin & Tim', icon: IconUsers },
 ]
 
 export default function AdminLayout() {

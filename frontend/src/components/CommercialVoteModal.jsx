@@ -10,8 +10,8 @@ import {
   IconCheckVote,
 } from './Icons'
 
-// Common Kreen-style Voting Packages
-const PACKAGES = [
+// Common fallback voting packages if category does not define custom packages
+const DEFAULT_PACKAGES = [
   { amount: 2, price: 10000, label: '2 Suara', popular: false },
   { amount: 5, price: 25000, label: '5 Suara', popular: false },
   { amount: 10, price: 50000, label: '10 Suara', popular: true },
@@ -36,10 +36,17 @@ export default function CommercialVoteModal({
 }) {
   const { user, userToken, loginUserWithGoogle, loadUserVotes } = useUserAuth()
 
+  // Dynamic vote packages from category or fallback to defaults
+  const activePackages = Array.isArray(category?.vote_packages) && category.vote_packages.length > 0
+    ? category.vote_packages
+    : DEFAULT_PACKAGES
+
+  const defaultPackageAmount = activePackages.find(p => p.popular)?.amount || activePackages[0]?.amount || 10
+
   // Steps: 'select' -> 'payment'
   const [step, setStep] = useState('select')
   const [voteMode, setVoteMode] = useState(category?.allow_free_vote === false ? 'paid' : 'free')
-  const [selectedPackage, setSelectedPackage] = useState(10) // default 10 votes
+  const [selectedPackage, setSelectedPackage] = useState(defaultPackageAmount)
   const [customAmount, setCustomAmount] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('qris')
 
@@ -63,6 +70,8 @@ export default function CommercialVoteModal({
       setStep('select')
       setFieldErrors({})
       setPaymentSession(null)
+      setSelectedPackage(defaultPackageAmount)
+      setCustomAmount('')
       if (category?.allow_free_vote === false) {
         setVoteMode('paid')
       } else {
@@ -75,7 +84,7 @@ export default function CommercialVoteModal({
         })
       }
     }
-  }, [isOpen, category, user])
+  }, [isOpen, category, user, defaultPackageAmount])
 
   // Payment Countdown Timer
   useEffect(() => {
@@ -87,11 +96,40 @@ export default function CommercialVoteModal({
     }
   }, [step, paymentSession, paymentTimer])
 
+  // Realtime Auto-Polling Payment Status
+  useEffect(() => {
+    if (step !== 'payment' || !paymentSession?.reference_id) return
+
+    let isMounted = true
+    const interval = setInterval(async () => {
+      try {
+        const res = await api(`/votes/${paymentSession.reference_id}/status`)
+        if (res.is_confirmed && isMounted) {
+          clearInterval(interval)
+          if (userToken) loadUserVotes()
+          onVoteSuccess({
+            ...res.data,
+            finalist_name: finalist.name,
+            category_name: category?.name,
+          })
+          onClose()
+        }
+      } catch {
+        // Silently retry on polling network glitches
+      }
+    }, 3500)
+
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
+  }, [step, paymentSession?.reference_id, userToken, finalist.name, category?.name, loadUserVotes, onVoteSuccess, onClose])
+
   if (!isOpen || !finalist) return null
 
   const pricePerVote = category?.price_per_vote || 1000
   const activeAmount = customAmount ? Math.max(1, parseInt(customAmount) || 1) : selectedPackage
-  const activeTotalPrice = voteMode === 'free' ? 0 : (customAmount ? activeAmount * pricePerVote : (PACKAGES.find(p => p.amount === selectedPackage)?.price || activeAmount * pricePerVote))
+  const activeTotalPrice = voteMode === 'free' ? 0 : (customAmount ? activeAmount * pricePerVote : (activePackages.find(p => p.amount === selectedPackage)?.price || activeAmount * pricePerVote))
 
   async function handleSubmitOrder(e) {
     e.preventDefault()
@@ -298,7 +336,7 @@ export default function CommercialVoteModal({
                 </div>
 
                 <div className="grid grid-cols-3 gap-2.5">
-                  {PACKAGES.map((pkg) => {
+                  {activePackages.map((pkg) => {
                     const isSelected = !customAmount && selectedPackage === pkg.amount
                     return (
                       <button
@@ -580,6 +618,15 @@ export default function CommercialVoteModal({
                 {fieldErrors.payment}
               </div>
             )}
+
+            {/* Real-time Payment Status Indicator */}
+            <div className="flex items-center justify-center gap-2 py-2 px-3.5 bg-[#F4F9EE] border border-[#D5E6C4] rounded-xl text-xs text-[#446F19] font-medium text-center">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#70B325] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#70B325]" />
+              </span>
+              <span>Menunggu pembayaran... Terkonfirmasi otomatis setelah transfer/scan.</span>
+            </div>
 
             {/* Actions: Real Check and Client Demo Simulation */}
             <div className="space-y-2 pt-2">

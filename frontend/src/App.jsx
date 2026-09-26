@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
 import GoogleOneTap from './components/GoogleOneTap'
@@ -7,6 +8,12 @@ import AdminDashboardPage from './pages/AdminDashboardPage'
 import LoginPage from './pages/LoginPage'
 import PublicEventsPage from './pages/PublicEventsPage'
 import CategoryVotingPage from './pages/CategoryVotingPage'
+import NotFoundPage from './pages/NotFoundPage'
+import EmbedVotingPage from './pages/EmbedVotingPage'
+import AdminManagementPage from './pages/AdminManagementPage'
+import EmbedCodeModal from './components/EmbedCodeModal'
+import VotePackagesModal from './components/VotePackagesModal'
+import AdjustVoteModal from './components/AdjustVoteModal'
 import { resolveStorageUrl } from './api/client'
 
 const categories = {
@@ -170,8 +177,11 @@ const finalists = {
   fields: [
     { name: 'category_id', label: 'Kategori Voting', type: 'select', optionsKey: 'categories' },
     { name: 'name', label: 'Nama Lengkap Finalis' },
-    { name: 'photo', label: 'Foto / Poster Finalis', type: 'file' },
-    { name: 'description', label: 'Asal Daerah / Deskripsi Finalis', type: 'textarea' },
+    { name: 'photo', label: 'Foto Utama / Poster Finalis', type: 'file' },
+    { name: 'extra_photos', label: 'Foto Tambahan / Galeri (Pilih Beberapa Foto Sekaligus)', type: 'files' },
+    { name: 'social_ig', label: 'Instagram (contoh: yogafatwanto_)' },
+    { name: 'bio', label: 'Biodata / Visi Misi Singkat' },
+    { name: 'description', label: 'Asal Daerah / Profil Lengkap Finalis', type: 'textarea' },
   ],
   columns: [
     {
@@ -226,6 +236,91 @@ const finalists = {
   options: { categories: { endpoint: '/admin/categories' } },
 }
 
+function CategoriesAdminPage() {
+  const [embedModalCategory, setEmbedModalCategory] = useState(null)
+  const [packagesModalCategory, setPackagesModalCategory] = useState(null)
+  const [reloadKey, setReloadKey] = useState(0)
+
+  return (
+    <>
+      <ResourcePage
+        key={reloadKey}
+        {...categories}
+        extraActions={(item) => (
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setPackagesModalCategory(item)}
+              className="px-2 py-1 rounded-lg text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors flex items-center gap-1 cursor-pointer"
+              title="Atur paket harga suara voting"
+            >
+              <span>💰 Paket</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setEmbedModalCategory(item)}
+              className="px-2 py-1 rounded-lg text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors flex items-center gap-1 cursor-pointer"
+              title="Dapatkan kode widget iframe untuk website"
+            >
+              <span>🌐 Embed</span>
+            </button>
+          </div>
+        )}
+      />
+
+      {embedModalCategory && (
+        <EmbedCodeModal
+          isOpen={Boolean(embedModalCategory)}
+          onClose={() => setEmbedModalCategory(null)}
+          category={embedModalCategory}
+        />
+      )}
+
+      {packagesModalCategory && (
+        <VotePackagesModal
+          isOpen={Boolean(packagesModalCategory)}
+          onClose={() => setPackagesModalCategory(null)}
+          category={packagesModalCategory}
+          onSuccess={() => setReloadKey((prev) => prev + 1)}
+        />
+      )}
+    </>
+  )
+}
+
+function FinalistsAdminPage() {
+  const [adjustModalFinalist, setAdjustModalFinalist] = useState(null)
+  const [reloadKey, setReloadKey] = useState(0)
+
+  return (
+    <>
+      <ResourcePage
+        key={reloadKey}
+        {...finalists}
+        extraActions={(item) => (
+          <button
+            type="button"
+            onClick={() => setAdjustModalFinalist(item)}
+            className="px-2 py-1 rounded-lg text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors flex items-center gap-1 cursor-pointer"
+            title="Koreksi atau reset perolehan suara"
+          >
+            <span>⚖️ Koreksi</span>
+          </button>
+        )}
+      />
+
+      {adjustModalFinalist && (
+        <AdjustVoteModal
+          isOpen={Boolean(adjustModalFinalist)}
+          onClose={() => setAdjustModalFinalist(null)}
+          finalist={adjustModalFinalist}
+          onSuccess={() => setReloadKey((prev) => prev + 1)}
+        />
+      )}
+    </>
+  )
+}
+
 function ProtectedApp() {
   const { token, ready } = useAuth()
   if (!ready) return <p className="boot-state">Memeriksa sesi admin...</p>
@@ -249,14 +344,16 @@ export default function App() {
         <Route path="/" element={<PublicEventsPage />} />
         <Route path="/categories/:categoryId" element={<CategoryVotingPage />} />
         <Route path="/voting/:categoryId" element={<CategoryVotingPage />} />
+        <Route path="/embed/voting/:categoryId" element={<EmbedVotingPage />} />
         <Route path="/login" element={<LoginRoute />} />
         <Route path="/admin" element={<ProtectedApp />}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboardPage />} />
-          <Route path="categories" element={<ResourcePage {...categories} />} />
-          <Route path="finalists" element={<ResourcePage {...finalists} />} />
+          <Route path="categories" element={<CategoriesAdminPage />} />
+          <Route path="finalists" element={<FinalistsAdminPage />} />
+          <Route path="admins" element={<AdminManagementPage />} />
         </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </AuthProvider>
   )

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { IconClose, IconZap, IconTrophy } from './Icons'
 import { resolveStorageUrl } from '../api/client'
 
@@ -13,10 +13,26 @@ export default function FinalistDetailModal({
   isVotingExpired = false,
 }) {
   const [copied, setCopied] = useState(false)
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0)
+
+  // Collect all photos: main photo + extra_photos
+  const allPhotos = useMemo(() => {
+    if (!finalist) return []
+    const list = []
+    const primary = finalist.photo_url || finalist.photo
+    if (primary) list.push(primary)
+
+    if (Array.isArray(finalist.extra_photos)) {
+      finalist.extra_photos.forEach((p) => {
+        if (p && !list.includes(p)) list.push(p)
+      })
+    }
+    return list
+  }, [finalist])
 
   if (!isOpen || !finalist) return null
 
-  const photoSrc = finalist.photo_url || finalist.photo
+  const activePhoto = allPhotos[activePhotoIndex] || finalist.photo_url || finalist.photo
   const percentage =
     totalVotes > 0 ? Math.round((finalist.vote_count / totalVotes) * 100) : 0
 
@@ -33,6 +49,14 @@ export default function FinalistDetailModal({
     setTimeout(() => setCopied(false), 2000)
   }
 
+  function nextPhoto() {
+    setActivePhotoIndex((prev) => (prev + 1) % allPhotos.length)
+  }
+
+  function prevPhoto() {
+    setActivePhotoIndex((prev) => (prev - 1 + allPhotos.length) % allPhotos.length)
+  }
+
   return (
     <div
       role="dialog"
@@ -44,13 +68,13 @@ export default function FinalistDetailModal({
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 text-white/90 hover:text-white bg-black/40 hover:bg-black/60 rounded-full backdrop-blur-xs transition-colors"
+          className="absolute top-4 right-4 z-20 p-2 text-white/90 hover:text-white bg-black/40 hover:bg-black/60 rounded-full backdrop-blur-xs transition-colors cursor-pointer"
         >
           <IconClose className="w-5 h-5" />
         </button>
 
         {/* Top Header & Poster Card Header */}
-        <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full bg-gradient-to-b from-[#133E2B] via-[#0E2F20] to-[#0A1F16] flex items-center justify-center p-6 overflow-hidden">
+        <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full bg-gradient-to-b from-[#133E2B] via-[#0E2F20] to-[#0A1F16] flex flex-col items-center justify-center p-4 overflow-hidden">
           <div className="absolute inset-0 bg-radial from-emerald-500/20 via-transparent to-transparent pointer-events-none" />
 
           {/* Rank Badge */}
@@ -61,13 +85,33 @@ export default function FinalistDetailModal({
             </span>
           </div>
 
-          {/* Candidate Photo */}
+          {/* Photo Counter Badge if multiple photos */}
+          {allPhotos.length > 1 && (
+            <div className="absolute bottom-3 right-4 z-10">
+              <span className="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-[11px] font-bold text-white border border-white/20">
+                {activePhotoIndex + 1} / {allPhotos.length} Foto
+              </span>
+            </div>
+          )}
+
+          {/* Candidate Photo Display with Navigation Arrows */}
           <div className="relative z-10 flex items-center justify-center">
-            {photoSrc ? (
+            {allPhotos.length > 1 && (
+              <button
+                type="button"
+                onClick={prevPhoto}
+                className="absolute -left-10 sm:-left-12 p-1.5 rounded-full bg-black/50 hover:bg-black/80 text-white transition-all cursor-pointer z-10"
+                aria-label="Foto sebelumnya"
+              >
+                ◀
+              </button>
+            )}
+
+            {activePhoto ? (
               <img
-                src={resolveStorageUrl(photoSrc)}
+                src={resolveStorageUrl(activePhoto)}
                 alt={finalist.name}
-                className="w-36 h-44 sm:w-40 sm:h-48 object-cover object-top rounded-2xl shadow-2xl border-2 border-amber-300/50"
+                className="w-36 h-44 sm:w-40 sm:h-48 object-cover object-top rounded-2xl shadow-2xl border-2 border-amber-300/50 transition-all duration-300"
               />
             ) : (
               <div className="w-36 h-44 sm:w-40 sm:h-48 rounded-2xl bg-emerald-950/70 border border-emerald-700/50 flex flex-col items-center justify-center text-center p-4">
@@ -77,8 +121,43 @@ export default function FinalistDetailModal({
                 <span className="text-xs font-bold text-gray-300">Foto Resmi</span>
               </div>
             )}
+
+            {allPhotos.length > 1 && (
+              <button
+                type="button"
+                onClick={nextPhoto}
+                className="absolute -right-10 sm:-right-12 p-1.5 rounded-full bg-black/50 hover:bg-black/80 text-white transition-all cursor-pointer z-10"
+                aria-label="Foto selanjutnya"
+              >
+                ▶
+              </button>
+            )}
           </div>
         </div>
+
+        {/* Thumbnail Selector Strip if multiple photos */}
+        {allPhotos.length > 1 && (
+          <div className="flex items-center justify-center gap-2 p-2 bg-gray-100 border-b border-gray-200 overflow-x-auto">
+            {allPhotos.map((photo, idx) => (
+              <button
+                key={photo}
+                type="button"
+                onClick={() => setActivePhotoIndex(idx)}
+                className={`w-10 h-10 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 cursor-pointer ${
+                  activePhotoIndex === idx
+                    ? 'border-[#70B325] ring-2 ring-[#70B325]/40 scale-105'
+                    : 'border-transparent opacity-60 hover:opacity-100'
+                }`}
+              >
+                <img
+                  src={resolveStorageUrl(photo)}
+                  alt={`Thumbnail ${idx + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Modal Body */}
         <div className="p-6 sm:p-7 space-y-5">
@@ -119,14 +198,26 @@ export default function FinalistDetailModal({
               Profil & Advokasi Finalis
             </h4>
             <div className="text-xs sm:text-sm text-gray-600 leading-relaxed max-h-36 overflow-y-auto whitespace-pre-line pr-2 border-l-2 border-[#70B325] pl-3 bg-gray-50/70 py-2 rounded-r-xl">
-              {finalist.description ||
+              {finalist.bio || finalist.description ||
                 `${finalist.name} adalah salah satu kandidat perwakilan terbaik yang siap memberikan kontribusi nyata. Berikan dukungan terbaikmu agar terpilih sebagai pemenang favorit.`}
             </div>
           </div>
 
-          {/* Social Share Strip */}
-          <div className="pt-2 flex items-center justify-between gap-3 border-t border-gray-100">
-            <span className="text-xs font-bold text-gray-500">Ajak Teman Mendukung:</span>
+          {/* Social Share Strip & Instagram */}
+          <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-gray-500">Dukungan:</span>
+              {finalist.social_ig && (
+                <a
+                  href={`https://instagram.com/${finalist.social_ig.replace('@', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-2.5 py-1 bg-gradient-to-r from-pink-500 to-rose-600 text-white rounded-lg text-xs font-bold no-underline inline-flex items-center gap-1 hover:opacity-90"
+                >
+                  <span>📷 @{finalist.social_ig.replace('@', '')}</span>
+                </a>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"

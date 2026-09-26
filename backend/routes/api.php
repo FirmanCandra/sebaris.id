@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FinalistController;
+use App\Http\Controllers\Admin\AdminManagementController;
+use App\Http\Controllers\Admin\VoteAdjustController;
 use App\Http\Controllers\PublicCategoryController;
 use App\Http\Controllers\PublicFinalistController;
 use App\Http\Controllers\UserAuthController;
@@ -51,6 +53,13 @@ Route::prefix('admin')->group(function () {
         Route::get('categories/{category}/export', [VoteController::class, 'exportCsv']);
         Route::apiResource('categories', CategoryController::class);
         Route::apiResource('finalists', FinalistController::class);
+        // Vote count adjustment
+        Route::patch('finalists/{finalist}/adjust-votes', [VoteAdjustController::class, 'adjust']);
+        // Multi-admin management
+        Route::get('admins', [AdminManagementController::class, 'index']);
+        Route::post('admins', [AdminManagementController::class, 'store']);
+        Route::put('admins/{admin}', [AdminManagementController::class, 'update']);
+        Route::delete('admins/{admin}', [AdminManagementController::class, 'destroy']);
     });
 });
 

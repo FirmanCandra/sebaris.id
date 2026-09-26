@@ -15,6 +15,9 @@ class Finalist extends Model
         'category_id',
         'name',
         'photo',
+        'extra_photos',
+        'bio',
+        'social_ig',
         'description',
         'vote_count',
     ];
@@ -22,7 +25,8 @@ class Finalist extends Model
     protected function casts(): array
     {
         return [
-            'vote_count' => 'integer',
+            'vote_count'   => 'integer',
+            'extra_photos' => 'array',
         ];
     }
 

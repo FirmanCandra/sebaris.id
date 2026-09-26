@@ -27,10 +27,18 @@ class FinalistController extends Controller
 
     public function store(FinalistRequest $request): FinalistResource
     {
-        $data = $request->safe()->except('photo');
+        $data = $request->safe()->except(['photo', 'extra_photos']);
 
         if ($request->hasFile('photo')) {
             $data['photo'] = $request->file('photo')->store('finalists', 'public');
+        }
+
+        if ($request->hasFile('extra_photos')) {
+            $data['extra_photos'] = collect($request->file('extra_photos'))
+                ->map(fn ($f) => $f->store('finalists/extra', 'public'))
+                ->filter()
+                ->values()
+                ->toArray();
         }
 
         $finalist = Finalist::create($data)->load('category');
@@ -47,14 +55,25 @@ class FinalistController extends Controller
 
     public function update(FinalistRequest $request, Finalist $finalist): FinalistResource
     {
-        $data = $request->safe()->except('photo');
+        $data = $request->safe()->except(['photo', 'extra_photos']);
 
         if ($request->hasFile('photo')) {
             if ($finalist->photo) {
                 Storage::disk('public')->delete($finalist->photo);
             }
-
             $data['photo'] = $request->file('photo')->store('finalists', 'public');
+        }
+
+        if ($request->hasFile('extra_photos')) {
+            // Delete old extra photos
+            foreach ($finalist->extra_photos ?? [] as $oldPath) {
+                Storage::disk('public')->delete($oldPath);
+            }
+            $data['extra_photos'] = collect($request->file('extra_photos'))
+                ->map(fn ($f) => $f->store('finalists/extra', 'public'))
+                ->filter()
+                ->values()
+                ->toArray();
         }
 
         $finalist->update($data);
@@ -68,6 +87,10 @@ class FinalistController extends Controller
     {
         if ($finalist->photo) {
             Storage::disk('public')->delete($finalist->photo);
+        }
+
+        foreach ($finalist->extra_photos ?? [] as $path) {
+            Storage::disk('public')->delete($path);
         }
 
         $categoryId = $finalist->category_id;
