@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import SebarisLogo from './SebarisLogo'
-import { IconSearch, IconMenu, IconClose, IconSun, IconMoon, IconUser } from './Icons'
+import { IconSearch, IconMenu, IconClose, IconSun, IconMoon } from './Icons'
 import { useAuth, useUserAuth } from '../auth/AuthProvider'
 import { useTheme } from '../context/ThemeProvider'
 import UserAuthModal from './UserAuthModal'
@@ -11,21 +11,27 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
   const { user, userReady } = useUserAuth()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userModalOpen, setUserModalOpen] = useState(false)
   const [headerSearch, setHeaderSearch] = useState(searchQuery)
   const [isScrolled, setIsScrolled] = useState(false)
 
-  // Track window scroll for sticky navbar glass effect
+  // Track window scroll
   useEffect(() => {
     function handleScroll() {
-      setIsScrolled(window.scrollY > 25)
+      // Transition to solid glass when scrolled past 60px
+      setIsScrolled(window.scrollY > 60)
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
     handleScroll()
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Header is floating over dark hero section when at top of homepage
+  const isHomePage = location.pathname === '/'
+  const isOverHero = isHomePage && !isScrolled
 
   function handleSearchSubmit(e) {
     e.preventDefault()
@@ -68,9 +74,11 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
   return (
     <header
       className={`sticky top-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'backdrop-blur-xl bg-white/85 dark:bg-[#121612]/90 border-b border-[#E5EADF]/80 dark:border-[#2C3529]/80 shadow-xs'
-          : 'backdrop-blur-md bg-white/40 dark:bg-[#121612]/40 border-b border-transparent'
+        isOverHero
+          ? 'bg-transparent border-b border-transparent'
+          : theme === 'dark'
+          ? 'backdrop-blur-xl bg-[#121612]/90 border-b border-[#2C3529] shadow-sm'
+          : 'backdrop-blur-xl bg-white/90 border-b border-[#E5EADF] shadow-sm'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
@@ -81,13 +89,20 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
           className="flex items-center gap-2 flex-shrink-0 group focus:outline-none"
           aria-label="Sebaris.id Beranda"
         >
-          <SebarisLogo size="md" variant={theme === 'dark' ? 'white' : 'default'} />
+          <SebarisLogo
+            size="md"
+            variant={isOverHero || theme === 'dark' ? 'white' : 'default'}
+          />
         </Link>
 
         {/* 2. NAVBAR TENGAH OVAL / CAPSULE DENGAN BACKGROUND BLUR (Sesuai Referensi Foto) */}
         <nav
           aria-label="Navigasi Utama"
-          className="hidden md:inline-flex items-center gap-1.5 lg:gap-2 px-5 py-2 rounded-full backdrop-blur-xl bg-black/5 dark:bg-white/10 border border-black/10 dark:border-white/15 shadow-2xs transition-all"
+          className={`hidden md:inline-flex items-center gap-1.5 lg:gap-2 px-5 py-2 rounded-full backdrop-blur-xl transition-all shadow-2xs ${
+            isOverHero || theme === 'dark'
+              ? 'bg-white/10 border border-white/20 text-white'
+              : 'bg-black/5 border border-black/10 text-gray-800'
+          }`}
         >
           <NavLink
             to="/"
@@ -96,7 +111,9 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
               `px-4 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all ${
                 isActive
                   ? 'text-white bg-[#70B325] shadow-xs'
-                  : 'text-[#262A25] dark:text-gray-200 hover:text-[#70B325] dark:hover:text-[#D0FE15] hover:bg-black/5 dark:hover:bg-white/5'
+                  : isOverHero || theme === 'dark'
+                  ? 'text-white/85 hover:text-white hover:bg-white/10'
+                  : 'text-gray-700 hover:text-[#70B325] hover:bg-black/5'
               }`
             }
           >
@@ -106,7 +123,11 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
           <a
             href="/#voting-section"
             onClick={handleVoteClick}
-            className="px-4 py-1.5 rounded-full text-xs lg:text-sm font-semibold text-[#262A25] dark:text-gray-200 hover:text-[#70B325] dark:hover:text-[#D0FE15] hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+            className={`px-4 py-1.5 rounded-full text-xs lg:text-sm font-semibold transition-all ${
+              isOverHero || theme === 'dark'
+                ? 'text-white/85 hover:text-white hover:bg-white/10'
+                : 'text-gray-700 hover:text-[#70B325] hover:bg-black/5'
+            }`}
           >
             Vote
           </a>
@@ -114,7 +135,11 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
           <button
             type="button"
             onClick={handleCheckVoteClick}
-            className="px-4 py-1.5 rounded-full text-xs lg:text-sm font-semibold text-[#262A25] dark:text-gray-200 hover:text-[#70B325] dark:hover:text-[#D0FE15] hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer"
+            className={`px-4 py-1.5 rounded-full text-xs lg:text-sm font-semibold transition-all cursor-pointer ${
+              isOverHero || theme === 'dark'
+                ? 'text-white/85 hover:text-white hover:bg-white/10'
+                : 'text-gray-700 hover:text-[#70B325] hover:bg-black/5'
+            }`}
           >
             Cek Vote
           </button>
@@ -127,12 +152,18 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
           <button
             type="button"
             onClick={toggleTheme}
-            className="w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md bg-black/5 dark:bg-white/10 border border-black/10 dark:border-white/15 text-gray-700 dark:text-amber-400 hover:bg-black/10 dark:hover:bg-white/20 transition-all cursor-pointer"
+            className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md transition-all cursor-pointer ${
+              isOverHero || theme === 'dark'
+                ? 'bg-white/10 border border-white/20 text-amber-400 hover:bg-white/20'
+                : 'bg-black/5 border border-black/10 text-gray-700 hover:bg-black/10'
+            }`}
             aria-label="Ubah Tema"
             title={`Ganti ke mode ${theme === 'dark' ? 'terang' : 'gelap'}`}
           >
             {theme === 'dark' ? (
               <IconSun className="w-4 h-4 text-amber-400 animate-fadeIn" />
+            ) : isOverHero ? (
+              <IconMoon className="w-4 h-4 text-white animate-fadeIn" />
             ) : (
               <IconMoon className="w-4 h-4 text-gray-700 animate-fadeIn" />
             )}
@@ -142,7 +173,11 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
           {token && (
             <Link
               to="/admin/categories"
-              className="hidden xl:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#262A25] text-white dark:bg-[#70B325] text-xs font-bold hover:bg-black transition-colors no-underline"
+              className={`hidden xl:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-colors no-underline ${
+                isOverHero
+                  ? 'bg-white/15 hover:bg-white/25 text-white border border-white/20'
+                  : 'bg-[#262A25] text-white hover:bg-black'
+              }`}
               title="Buka Dashboard Administrator"
             >
               <span>Dashboard Admin</span>
@@ -151,12 +186,16 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
 
           {/* User Account / Masuk & Daftar Terpisah */}
           {!userReady ? (
-            <div className="h-9 w-24 rounded-full bg-gray-100 dark:bg-white/10 animate-pulse hidden sm:block" />
+            <div className="h-9 w-24 rounded-full bg-white/10 animate-pulse hidden sm:block" />
           ) : user ? (
             <button
               type="button"
               onClick={() => setUserModalOpen(true)}
-              className="flex items-center gap-2 py-1.5 px-3.5 rounded-full bg-[#F4F9EE] dark:bg-white/10 border border-[#D5E6C4] dark:border-white/15 hover:bg-[#EAF3DE] dark:hover:bg-white/20 transition-colors cursor-pointer"
+              className={`flex items-center gap-2 py-1.5 px-3.5 rounded-full transition-colors cursor-pointer ${
+                isOverHero || theme === 'dark'
+                  ? 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
+                  : 'bg-[#F4F9EE] border border-[#D5E6C4] text-[#262A25] hover:bg-[#EAF3DE]'
+              }`}
               title="Buka profil pemilih & riwayat vote"
             >
               {user.avatar ? (
@@ -171,7 +210,7 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
                   {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                 </div>
               )}
-              <span className="text-xs font-bold text-[#262A25] dark:text-gray-100 hidden sm:inline max-w-[110px] truncate">
+              <span className="text-xs font-bold hidden sm:inline max-w-[110px] truncate">
                 {user.name}
               </span>
             </button>
@@ -180,7 +219,11 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
               {/* Tombol Masuk (Ghost/Text Style seperti Log In di referensi) */}
               <Link
                 to="/login?tab=login"
-                className="hidden sm:inline-flex items-center px-3.5 py-2 text-xs sm:text-sm font-bold text-[#262A25] dark:text-gray-200 hover:text-[#70B325] dark:hover:text-[#D0FE15] transition-colors"
+                className={`hidden sm:inline-flex items-center px-3.5 py-2 text-xs sm:text-sm font-bold transition-colors ${
+                  isOverHero || theme === 'dark'
+                    ? 'text-white/90 hover:text-white'
+                    : 'text-[#262A25] hover:text-[#70B325]'
+                }`}
               >
                 Masuk
               </Link>
@@ -188,7 +231,11 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
               {/* Tombol Daftar (Pill Button Terpisah dengan Kontras Kuat seperti Sign Up di referensi) */}
               <Link
                 to="/login?tab=register"
-                className="inline-flex items-center px-4 sm:px-5 py-2 text-xs sm:text-sm font-extrabold rounded-full bg-[#262A25] text-white dark:bg-white dark:text-gray-950 hover:bg-[#70B325] dark:hover:bg-[#D0FE15] dark:hover:text-black shadow-sm transition-all transform hover:-translate-y-0.5 cursor-pointer"
+                className={`inline-flex items-center px-4 sm:px-5 py-2 text-xs sm:text-sm font-extrabold rounded-full shadow-sm transition-all transform hover:-translate-y-0.5 cursor-pointer ${
+                  isOverHero || theme === 'dark'
+                    ? 'bg-white text-gray-950 hover:bg-[#D0FE15]'
+                    : 'bg-[#262A25] text-white hover:bg-[#70B325]'
+                }`}
               >
                 Daftar
               </Link>
@@ -199,7 +246,11 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden w-9 h-9 rounded-full flex items-center justify-center border border-black/10 dark:border-white/15 backdrop-blur-md bg-black/5 dark:bg-white/10 text-[#262A25] dark:text-white"
+            className={`md:hidden w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md transition-all ${
+              isOverHero || theme === 'dark'
+                ? 'bg-white/10 border border-white/20 text-white'
+                : 'bg-black/5 border border-black/10 text-gray-800'
+            }`}
             aria-label="Buka menu navigasi"
           >
             {mobileMenuOpen ? <IconClose className="w-5 h-5" /> : <IconMenu className="w-5 h-5" />}

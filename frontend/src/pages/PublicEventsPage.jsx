@@ -130,7 +130,7 @@ export default function PublicEventsPage() {
       />
 
       {/* HERO SECTION — Sesuai Referensi Foto (Background Gambar Setema, Typography Raksasa, Tombol Pill, Stats, Showcase Card) */}
-      <section className="relative overflow-hidden min-h-[580px] sm:min-h-[640px] lg:min-h-[700px] flex items-center">
+      <section className="relative overflow-hidden min-h-[640px] sm:min-h-[700px] lg:min-h-[760px] flex items-center -mt-20 pt-24 sm:pt-28 pb-16">
         
         {/* Background Gambar Setema (Auditorium Megah E-Voting) */}
         <div className="absolute inset-0 z-0">
