@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateVoteRequest;
 use App\Http\Resources\VoteResource;
+use App\Mail\VoteConfirmationMail;
 use App\Models\Category;
 use App\Models\Finalist;
 use App\Models\Vote;
@@ -11,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -105,6 +107,15 @@ class VoteController extends Controller
                 $finalist->increment('vote_count', 1);
                 Cache::forget("public.finalists.{$category->id}");
 
+                // Send confirmation email if voter_contact is an email address
+                if (filter_var($contact, FILTER_VALIDATE_EMAIL)) {
+                    try {
+                        Mail::to($contact)->later(now()->addSeconds(3), new VoteConfirmationMail($vote->load('finalist.category')));
+                    } catch (\Throwable) {
+                        // Non-blocking: email failure must not fail the vote
+                    }
+                }
+
                 return [
                     'vote' => $vote->load('finalist.category'),
                     'payment' => null,
@@ -194,9 +205,20 @@ class VoteController extends Controller
             Cache::forget("public.finalists.{$vote->finalist->category_id}");
         });
 
+        // Send confirmation email after payment confirmed
+        $freshVote = $vote->fresh(['finalist.category']);
+        $contact = $freshVote->voter_contact ?? '';
+        if (filter_var($contact, FILTER_VALIDATE_EMAIL)) {
+            try {
+                Mail::to($contact)->later(now()->addSeconds(3), new VoteConfirmationMail($freshVote));
+            } catch (\Throwable) {
+                // Non-blocking
+            }
+        }
+
         return response()->json([
             'message' => 'Pembayaran berhasil dikonfirmasi! Suara telah ditambahkan.',
-            'data' => new VoteResource($vote->fresh(['finalist.category'])),
+            'data' => new VoteResource($freshVote),
         ]);
     }
 

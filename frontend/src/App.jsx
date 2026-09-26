@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './auth/AuthProvider'
 import GoogleOneTap from './components/GoogleOneTap'
 import ResourcePage from './components/ResourcePage'
 import AdminLayout from './layouts/AdminLayout'
+import AdminDashboardPage from './pages/AdminDashboardPage'
 import LoginPage from './pages/LoginPage'
 import PublicEventsPage from './pages/PublicEventsPage'
 import CategoryVotingPage from './pages/CategoryVotingPage'
@@ -235,7 +236,7 @@ function ProtectedApp() {
 function LoginRoute() {
   const { token, userToken, ready } = useAuth()
   if (!ready) return <p className="boot-state">Memeriksa sesi...</p>
-  if (token) return <Navigate to="/admin/categories" replace />
+  if (token) return <Navigate to="/admin/dashboard" replace />
   if (userToken) return <Navigate to="/" replace />
   return <LoginPage />
 }
@@ -250,7 +251,8 @@ export default function App() {
         <Route path="/voting/:categoryId" element={<CategoryVotingPage />} />
         <Route path="/login" element={<LoginRoute />} />
         <Route path="/admin" element={<ProtectedApp />}>
-          <Route index element={<Navigate to="categories" replace />} />
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="categories" element={<ResourcePage {...categories} />} />
           <Route path="finalists" element={<ResourcePage {...finalists} />} />
         </Route>

@@ -11,10 +11,12 @@ import {
   IconUsers,
   IconMenu,
   IconClose,
+  IconBarChart,
 } from '../components/Icons'
 import { api } from '../api/client'
 
 const NAV_LINKS = [
+  { to: '/admin/dashboard', label: 'Dashboard', icon: IconBarChart },
   { to: '/admin/categories', label: 'Kategori', icon: IconLayers },
   { to: '/admin/finalists', label: 'Finalis', icon: IconUsers },
 ]
@@ -161,7 +163,7 @@ export default function AdminLayout() {
             <nav className="space-y-1.5" aria-label="Navigasi admin utama">
               {NAV_LINKS.map((link) => {
                 const IconComponent = link.icon
-                const countKey = link.label.toLowerCase() === 'event' ? 'events' : link.label.toLowerCase() === 'kategori' ? 'categories' : 'finalists'
+                const countKey = link.label === 'Kategori' ? 'categories' : link.label === 'Finalis' ? 'finalists' : null
                 const badgeCount = counts[countKey]
 
                 return (

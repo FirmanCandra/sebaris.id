@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FinalistController;
 use App\Http\Controllers\PublicCategoryController;
 use App\Http\Controllers\PublicFinalistController;
@@ -45,6 +46,7 @@ Route::prefix('admin')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', [AuthController::class, 'me']);
         Route::post('logout', [AuthController::class, 'logout']);
+        Route::get('dashboard', [DashboardController::class, 'index']);
         Route::post('categories/{category}/freeze', [CategoryController::class, 'toggleFreeze']);
         Route::get('categories/{category}/export', [VoteController::class, 'exportCsv']);
         Route::apiResource('categories', CategoryController::class);
