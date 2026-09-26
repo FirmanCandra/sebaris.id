@@ -215,11 +215,11 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
               </span>
             </button>
           ) : (
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              {/* Tombol Masuk (Ghost/Text Style seperti Log In di referensi) */}
+            <div className="flex items-center gap-1 sm:gap-2">
+              {/* Tombol Masuk */}
               <Link
                 to="/login?tab=login"
-                className={`hidden sm:inline-flex items-center px-3.5 py-2 text-xs sm:text-sm font-bold transition-colors ${
+                className={`inline-flex items-center px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-bold transition-colors ${
                   isOverHero || theme === 'dark'
                     ? 'text-white/90 hover:text-white'
                     : 'text-[#262A25] hover:text-[#70B325]'
@@ -228,10 +228,10 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
                 Masuk
               </Link>
 
-              {/* Tombol Daftar (Pill Button Terpisah dengan Kontras Kuat seperti Sign Up di referensi) */}
+              {/* Tombol Daftar */}
               <Link
                 to="/login?tab=register"
-                className={`inline-flex items-center px-4 sm:px-5 py-2 text-xs sm:text-sm font-extrabold rounded-full shadow-sm transition-all transform hover:-translate-y-0.5 cursor-pointer ${
+                className={`inline-flex items-center px-3.5 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm font-extrabold rounded-full shadow-sm transition-all transform hover:-translate-y-0.5 cursor-pointer ${
                   isOverHero || theme === 'dark'
                     ? 'bg-white text-gray-950 hover:bg-[#D0FE15]'
                     : 'bg-[#262A25] text-white hover:bg-[#70B325]'

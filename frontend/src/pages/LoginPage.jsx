@@ -34,6 +34,7 @@ export default function LoginPage() {
   const [successMsg, setSuccessMsg] = useState('')
   const [saving, setSaving] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [isGsiRendered, setIsGsiRendered] = useState(false)
   const googleBtnRef = useRef(null)
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -45,7 +46,7 @@ export default function LoginPage() {
     let attempts = 0
     const interval = setInterval(() => {
       attempts++
-      if (window.google?.accounts?.id) {
+      if (window.google?.accounts?.id && googleBtnRef.current) {
         clearInterval(interval)
         try {
           window.google.accounts.id.initialize({
@@ -53,24 +54,25 @@ export default function LoginPage() {
             callback: handleGoogleResponse,
             auto_select: false,
             cancel_on_tap_outside: true,
+            use_fedcm_for_prompt: false,
           })
 
-          if (googleBtnRef.current) {
-            googleBtnRef.current.innerHTML = ''
-            window.google.accounts.id.renderButton(googleBtnRef.current, {
-              type: 'standard',
-              theme: 'outline',
-              size: 'large',
-              width: 350,
-              text: 'continue_with',
-              shape: 'rectangular',
-              logo_alignment: 'left',
-            })
-          }
+          googleBtnRef.current.innerHTML = ''
+          window.google.accounts.id.renderButton(googleBtnRef.current, {
+            type: 'standard',
+            theme: 'outline',
+            size: 'large',
+            width: 350,
+            text: authMode === 'register' ? 'signup_with' : 'continue_with',
+            shape: 'rectangular',
+            logo_alignment: 'left',
+          })
+          setIsGsiRendered(true)
         } catch (initErr) {
-          console.error('GSI Init Error:', initErr)
+          console.warn('GSI Init Error:', initErr)
+          setIsGsiRendered(false)
         }
-      } else if (attempts > 30) {
+      } else if (attempts > 25) {
         clearInterval(interval)
       }
     }, 200)
@@ -155,7 +157,24 @@ export default function LoginPage() {
       return
     }
     if (window.google?.accounts?.id) {
-      window.google.accounts.id.prompt()
+      try {
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: handleGoogleResponse,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+          use_fedcm_for_prompt: false,
+        })
+        window.google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            console.warn('Google One Tap not displayed:', notification.getNotDisplayedReason())
+          }
+        })
+      } catch (err) {
+        console.warn('GSI prompt error:', err)
+      }
+    } else {
+      setError('Layanan Google Sign-In sedang dimuat. Mohon tunggu sejenak atau periksa koneksi internet.')
     }
   }
 
@@ -230,38 +249,40 @@ export default function LoginPage() {
 
         {/* Google Sign In Section */}
         <div className="space-y-3">
-          <div className="flex justify-center">
-            {googleClientId ? (
-              <div
-                ref={googleBtnRef}
-                className="w-full flex justify-center min-h-[44px]"
-                id="googleSignInBtn"
-              />
-            ) : (
+          <div className="flex justify-center w-full min-h-[44px]">
+            {/* Google official rendered button */}
+            <div
+              ref={googleBtnRef}
+              className={`w-full flex justify-center ${isGsiRendered ? 'block' : 'hidden'}`}
+              id="googleSignInBtn"
+            />
+
+            {/* Resilient button: Always visible if Google iframe hasn't rendered yet or fails */}
+            {!isGsiRendered && (
               <button
                 type="button"
                 onClick={handleFallbackGoogleClick}
-                className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs sm:text-sm rounded-xl border border-gray-300 shadow-xs transition-all hover:shadow active:scale-[0.99] cursor-pointer"
+                className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-white dark:bg-[#252E21] hover:bg-gray-50 dark:hover:bg-[#2F3A2A] text-gray-700 dark:text-gray-200 font-bold text-xs sm:text-sm rounded-xl border border-gray-300 dark:border-white/20 shadow-xs transition-all hover:shadow active:scale-[0.99] cursor-pointer"
               >
                 <IconGoogle className="w-5 h-5 flex-shrink-0" />
-                <span>Masuk dengan Google</span>
+                <span>{authMode === 'login' ? 'Masuk dengan Google' : 'Daftar dengan Google'}</span>
               </button>
             )}
           </div>
 
           {googleLoading && (
-            <p className="text-center text-xs text-[#70B325] font-semibold animate-pulse">
-              Memproses akun Google & mengirim email notifikasi...
+            <p className="text-center text-xs text-[#70B325] dark:text-[#86C839] font-semibold animate-pulse">
+              Memproses akun Google...
             </p>
           )}
 
           {/* Divider */}
           <div className="relative flex py-1.5 items-center">
-            <div className="flex-grow border-t border-gray-200"></div>
-            <span className="flex-shrink mx-3 text-[11px] font-semibold text-gray-400">
-              atau dengan email & kata sandi
+            <div className="flex-grow border-t border-gray-200 dark:border-white/15"></div>
+            <span className="flex-shrink mx-3 text-[11px] font-semibold text-gray-400 dark:text-gray-500">
+              atau dengan email &amp; kata sandi
             </span>
-            <div className="flex-grow border-t border-gray-200"></div>
+            <div className="flex-grow border-t border-gray-200 dark:border-white/15"></div>
           </div>
         </div>
 

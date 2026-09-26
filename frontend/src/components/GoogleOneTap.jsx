@@ -1,14 +1,25 @@
 import { useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "../auth/AuthProvider"
 
 export default function GoogleOneTap() {
   const { user, token, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
   useEffect(() => {
-    if (user || token || !clientId) return
+    // Jangan jalankan One Tap di halaman login, register, atau admin agar tidak bentrok dengan tombol Google
+    if (
+      user ||
+      token ||
+      !clientId ||
+      location.pathname.startsWith('/login') ||
+      location.pathname.startsWith('/register') ||
+      location.pathname.startsWith('/admin')
+    ) {
+      return
+    }
 
     let cancelled = false
 
@@ -34,14 +45,15 @@ export default function GoogleOneTap() {
           cancel_on_tap_outside: true,
           context: "signin",
           itp_support: true,
+          use_fedcm_for_prompt: false,
         })
         window.google.accounts.id.prompt((notification) => {
           if (notification.isNotDisplayed()) {
-            console.info("[OneTap] Tidak ditampilkan:", notification.getNotDisplayedReason())
+            // Silently handle dismissed or blocked prompt
           }
         })
       } catch (e) {
-        console.warn("[OneTap] Init error:", e)
+        // Silently catch One Tap prompt errors
       }
     }
 
