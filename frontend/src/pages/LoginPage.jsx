@@ -160,29 +160,29 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F2F8EE] via-[#F6FAF2] to-[#EAF2E4] flex flex-col justify-center items-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-[#F2F8EE] via-[#F6FAF2] to-[#EAF2E4] dark:from-[#121612] dark:via-[#161B15] dark:to-[#0E120E] flex flex-col justify-center items-center p-4 transition-colors duration-300">
       {/* Back to Home Link */}
       <div className="w-full max-w-md mb-4 flex justify-between items-center">
         <Link
           to="/"
-          className="text-xs font-bold text-gray-600 hover:text-[#70B325] transition-colors flex items-center gap-1 no-underline"
+          className="text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#70B325] dark:hover:text-[#86C839] transition-colors flex items-center gap-1 no-underline"
         >
           <span>← Kembali ke Beranda</span>
         </Link>
-        <span className="text-xs text-gray-400 font-medium">sebaris.id</span>
+        <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">sebaris.id</span>
       </div>
 
       {/* Main Login Card */}
-      <div className="w-full max-w-md bg-white border border-[#E5EADF] rounded-3xl p-7 sm:p-8 shadow-xl space-y-5">
+      <div className="w-full max-w-md bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] rounded-3xl p-7 sm:p-8 shadow-xl space-y-5 transition-colors">
         {/* Brand Logo & Title */}
         <div className="text-center space-y-1.5">
           <div className="flex justify-center mb-1">
             <SebarisLogo size="md" />
           </div>
-          <h1 className="text-2xl font-extrabold text-[#262A25] tracking-tight">
+          <h1 className="text-2xl font-extrabold text-[#262A25] dark:text-white tracking-tight">
             {authMode === 'login' ? 'Selamat Datang Kembali' : 'Buat Akun Pemilih Baru'}
           </h1>
-          <p className="text-xs text-gray-500 leading-relaxed px-2">
+          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed px-2">
             {authMode === 'login'
               ? 'Masuk untuk memberikan suara, mengelola sistem, atau melihat riwayat pemilihan.'
               : 'Daftarkan diri Anda untuk memberikan suara pada event voting dan finalis favorit.'}
@@ -190,7 +190,7 @@ export default function LoginPage() {
         </div>
 
         {/* Tab Switcher: Masuk vs Daftar */}
-        <div className="flex bg-[#F4F6F2] p-1 rounded-xl">
+        <div className="flex bg-[#F4F6F2] dark:bg-black/30 p-1 rounded-xl">
           <button
             type="button"
             onClick={() => {
@@ -199,8 +199,8 @@ export default function LoginPage() {
             }}
             className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
               authMode === 'login'
-                ? 'bg-white text-[#262A25] shadow-xs'
-                : 'text-gray-500 hover:text-gray-900'
+                ? 'bg-white dark:bg-[#252E21] text-[#262A25] dark:text-white shadow-xs'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
             Masuk Akun
@@ -213,8 +213,8 @@ export default function LoginPage() {
             }}
             className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
               authMode === 'register'
-                ? 'bg-white text-[#262A25] shadow-xs'
-                : 'text-gray-500 hover:text-gray-900'
+                ? 'bg-white dark:bg-[#252E21] text-[#262A25] dark:text-white shadow-xs'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
             Daftar Baru
@@ -223,7 +223,7 @@ export default function LoginPage() {
 
         {/* Error Alert */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-xl text-xs font-bold leading-normal">
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 p-3.5 rounded-xl text-xs font-bold leading-normal">
             {error}
           </div>
         )}
@@ -269,7 +269,7 @@ export default function LoginPage() {
         {authMode === 'login' ? (
           <form onSubmit={submitLogin} className="space-y-3.5">
             <div>
-              <label htmlFor="login-email" className="block text-xs font-bold text-gray-700 mb-1">
+              <label htmlFor="login-email" className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
                 Email 
               </label>
               <input
@@ -286,7 +286,7 @@ export default function LoginPage() {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label htmlFor="login-password" className="block text-xs font-bold text-gray-700">
+                <label htmlFor="login-password" className="block text-xs font-bold text-gray-700 dark:text-gray-300">
                   Kata Sandi
                 </label>
               </div>
@@ -321,7 +321,7 @@ export default function LoginPage() {
           /* MODE 2: REGISTER FORM */
           <form onSubmit={submitRegister} className="space-y-3.5">
             <div>
-              <label htmlFor="reg-name" className="block text-xs font-bold text-gray-700 mb-1">
+              <label htmlFor="reg-name" className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
                 Nama Lengkap
               </label>
               <input
@@ -337,7 +337,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="reg-email" className="block text-xs font-bold text-gray-700 mb-1">
+              <label htmlFor="reg-email" className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
                 Alamat Email
               </label>
               <input
@@ -353,7 +353,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="reg-password" className="block text-xs font-bold text-gray-700 mb-1">
+              <label htmlFor="reg-password" className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
                 Kata Sandi
               </label>
               <input
@@ -370,7 +370,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="reg-confirm-password" className="block text-xs font-bold text-gray-700 mb-1">
+              <label htmlFor="reg-confirm-password" className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
                 Konfirmasi Kata Sandi
               </label>
               <input

@@ -6,12 +6,12 @@ import CheckVoteModal from '../components/CheckVoteModal'
 import SebarisLogo from '../components/SebarisLogo'
 import heroBg from '../assets/hero-bg.jpg'
 import {
-  IconSearch,
   IconFlame,
   IconClock,
   IconCheckVote,
   IconChevronRight,
   IconZap,
+  IconTrophy,
 } from '../components/Icons'
 import {
   BannerSchool,
@@ -28,7 +28,13 @@ import {
 const POPULAR_VOTINGS_DATA = []
 const RECENT_VOTINGS_DATA = []
 
-const CATEGORIES = ['Semua', 'Sekolah', 'Kampus', 'Organisasi', 'Komunitas']
+const CATEGORY_ITEMS = [
+  { id: 'Semua', label: 'Semua Ajang', icon: '🌟' },
+  { id: 'Kampus', label: 'Kampus / Univ', icon: '🎓' },
+  { id: 'Sekolah', label: 'Sekolah & OSIS', icon: '🏫' },
+  { id: 'Organisasi', label: 'Organisasi', icon: '👥' },
+  { id: 'Komunitas', label: 'Komunitas & Award', icon: '🏆' },
+]
 
 export default function PublicEventsPage() {
   const navigate = useNavigate()
@@ -40,6 +46,7 @@ export default function PublicEventsPage() {
   const [backendCategories, setBackendCategories] = useState([])
   const [_loadingCategories, setLoadingCategories] = useState(true)
   const [heroSlideIndex, setHeroSlideIndex] = useState(0)
+  const [champions, setChampions] = useState([])
 
   useEffect(() => {
     api('/categories')
@@ -53,6 +60,41 @@ export default function PublicEventsPage() {
       })
       .finally(() => setLoadingCategories(false))
   }, [])
+
+  // Fetch #1 leading candidates across active categories for "Dukung Terus Juara 1 Kamu" spotlight
+  useEffect(() => {
+    if (backendCategories.length === 0) return
+    let isMounted = true
+
+    Promise.all(
+      backendCategories.slice(0, 4).map(async (cat) => {
+        try {
+          const res = await api(`/categories/${cat.id}/leaderboard`)
+          if (Array.isArray(res.data) && res.data.length > 0) {
+            const leader = res.data[0]
+            const totalVotes = res.data.reduce((sum, f) => sum + (f.vote_count || 0), 0)
+            return {
+              category: cat,
+              finalist: leader,
+              totalVotes,
+              percentage: totalVotes > 0 ? Math.round((leader.vote_count / totalVotes) * 100) : 0,
+            }
+          }
+          return null
+        } catch {
+          return null
+        }
+      })
+    ).then((results) => {
+      if (isMounted) {
+        setChampions(results.filter(Boolean))
+      }
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [backendCategories])
 
   function handleCheckVoteSubmit(e) {
     e.preventDefault()
@@ -73,7 +115,13 @@ export default function PublicEventsPage() {
         title: cat.name,
         organizer: cat.organizer || 'Forum Genre / Panitia',
         daysLeft: cat.end_date ? `s/d ${cat.end_date}` : 'Sedang Berlangsung',
-        category: 'Komunitas',
+        category: cat.name.toLowerCase().includes('sekolah') || cat.name.toLowerCase().includes('osis')
+          ? 'Sekolah'
+          : cat.name.toLowerCase().includes('bem') || cat.name.toLowerCase().includes('fakultas') || cat.name.toLowerCase().includes('kampus')
+          ? 'Kampus'
+          : cat.name.toLowerCase().includes('organisasi')
+          ? 'Organisasi'
+          : 'Komunitas',
         votes: `${cat.finalists_count || 0} finalis`,
         percentage: 60 + ((idx * 11) % 35),
         thumbnail: cat.thumbnail_url || cat.thumbnail,
@@ -100,7 +148,11 @@ export default function PublicEventsPage() {
         title: cat.name,
         organizer: cat.organizer || 'Penyelenggara',
         daysLeft: cat.end_date ? `s/d ${cat.end_date}` : 'Buka',
-        category: 'Komunitas',
+        category: cat.name.toLowerCase().includes('sekolah') || cat.name.toLowerCase().includes('osis')
+          ? 'Sekolah'
+          : cat.name.toLowerCase().includes('bem') || cat.name.toLowerCase().includes('fakultas') || cat.name.toLowerCase().includes('kampus')
+          ? 'Kampus'
+          : 'Komunitas',
         votes: `${cat.finalists_count || 0} finalis`,
         thumbnail: cat.thumbnail_url || cat.thumbnail,
         IconComponent: [ThumbnailEarth, ThumbnailTech, ThumbnailMusic, ThumbnailCamera][idx % 4],
@@ -145,7 +197,7 @@ export default function PublicEventsPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/40 pointer-events-none" />
         </div>
 
-        {/* Watermark Tipografi Raksasa (seperti EGYPT di referensi foto) */}
+        {/* Watermark Tipografi Raksasa */}
         <div
           aria-hidden="true"
           className="absolute top-8 sm:top-12 left-4 sm:left-10 lg:left-16 text-[80px] sm:text-[140px] lg:text-[210px] font-black tracking-widest text-white/5 dark:text-white/10 select-none pointer-events-none uppercase font-sans z-0 leading-none"
@@ -177,7 +229,7 @@ export default function PublicEventsPage() {
                 </p>
               </div>
 
-              {/* Stats Row (seperti 20K+, 2K+, 5K+ di foto referensi) */}
+              {/* Stats Row */}
               <div className="grid grid-cols-3 gap-3 sm:gap-6 pt-2 pb-2 border-y border-white/15 max-w-lg">
                 <div>
                   <div className="text-xl sm:text-2xl lg:text-3xl font-black text-white">
@@ -205,7 +257,7 @@ export default function PublicEventsPage() {
                 </div>
               </div>
 
-              {/* Tombol Aksi Terpisah (seperti Book Now ↗ di referensi foto) */}
+              {/* Tombol Aksi Terpisah */}
               <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-1">
                 <a
                   href="#voting-section"
@@ -228,7 +280,7 @@ export default function PublicEventsPage() {
               </div>
             </div>
 
-            {/* Kolom Kanan: Floating Showcase Card (seperti kartu pemandangan 01/10 di referensi foto) */}
+            {/* Kolom Kanan: Floating Showcase Card */}
             <div className="lg:col-span-5 flex justify-center lg:justify-end">
               <div className="w-full max-w-sm rounded-3xl backdrop-blur-xl bg-black/40 border border-white/20 p-5 shadow-2xl text-white space-y-4 relative">
                 
@@ -272,9 +324,8 @@ export default function PublicEventsPage() {
                   </div>
                 </div>
 
-                {/* Slider bar & Navigasi Slide (seperti di referensi) */}
+                {/* Slider bar & Navigasi Slide */}
                 <div className="flex items-center justify-between pt-1">
-                  {/* Slider Progress Indicator */}
                   <div className="flex items-center gap-1.5">
                     {backendCategories.slice(0, 4).map((_, idx) => (
                       <button
@@ -289,7 +340,6 @@ export default function PublicEventsPage() {
                     ))}
                   </div>
 
-                  {/* Tombol Lihat Ajang Ini */}
                   {showcaseItem ? (
                     <Link
                       to={`/voting/${showcaseItem.slug || showcaseItem.id}`}
@@ -318,21 +368,122 @@ export default function PublicEventsPage() {
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 flex-1 w-full">
         
-        {/* Category Filter Pills (dengan Dark Mode adaptif) */}
-        <section className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none" aria-label="Kategori Voting">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setActiveCategory(cat)}
-              className={`filter-pill dark:bg-white/5 dark:text-gray-300 dark:border-white/10 dark:hover:bg-white/10 ${
-                activeCategory === cat ? 'active' : ''
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        {/* KreenConnect-Inspired Category Icon Grid & Pills Bar */}
+        <section className="bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] p-3 sm:p-4 rounded-2xl shadow-xs" aria-label="Kategori Voting">
+          <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+            {CATEGORY_ITEMS.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setActiveCategory(cat.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer min-h-[44px] ${
+                  activeCategory === cat.id
+                    ? 'bg-[#70B325] text-white shadow-xs'
+                    : 'bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10'
+                }`}
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.label}</span>
+              </button>
+            ))}
+          </div>
         </section>
+
+        {/* SECTION: DUKUNG TERUS JUARA 1 KAMU (KreenConnect Signature Spotlight Section) */}
+        {champions.length > 0 && (
+          <section className="bg-gradient-to-r from-[#FFFDF6] via-[#FDF7EA] to-[#FBF0D9] dark:from-[#21281A] dark:via-[#1D2418] dark:to-[#181E14] border border-amber-300/60 dark:border-amber-500/30 rounded-3xl p-5 sm:p-7 shadow-xs space-y-5">
+            
+            {/* Header with Trophy Icon */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/60 dark:border-amber-500/20 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-400 text-amber-950 flex items-center justify-center font-black text-xl shadow-xs flex-shrink-0">
+                  <IconTrophy className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg sm:text-2xl font-black text-[#262A25] dark:text-white tracking-tight flex items-center gap-2">
+                    <span>Dukung Terus Juara 1 Kamu</span>
+                    <span className="text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-amber-400/90 text-amber-950">
+                      Top Ranking
+                    </span>
+                  </h2>
+                  <p className="text-xs text-gray-600 dark:text-gray-300">
+                    Kandidat terdepan dengan perolehan suara tertinggi saat ini dari ajang pemilihan aktif
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Champions Grid (Cards for #1 ranked contenders) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+              {champions.map(({ category, finalist, totalVotes, percentage }) => (
+                <div
+                  key={finalist.id}
+                  className="bg-white dark:bg-[#1A2018] border border-amber-200 dark:border-[#2C3529] rounded-2xl p-4 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-3 group"
+                >
+                  <div className="flex items-start gap-3.5">
+                    {/* Contestant Portrait Photo */}
+                    <div className="relative w-20 h-24 sm:w-24 sm:h-28 rounded-xl overflow-hidden bg-gray-100 dark:bg-black/40 flex-shrink-0 border border-amber-300 dark:border-amber-500/50">
+                      {finalist.photo_url || finalist.photo ? (
+                        <img
+                          src={resolveStorageUrl(finalist.photo_url || finalist.photo)}
+                          alt={finalist.name}
+                          className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-emerald-950 text-[#70B325] font-black text-lg">
+                          {finalist.name.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                      <span className="absolute top-1 left-1 bg-amber-400 text-amber-950 text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-xs">
+                        🥇 #1
+                      </span>
+                    </div>
+
+                    {/* Candidate Details */}
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider block truncate">
+                        {category.name}
+                      </span>
+                      <h3 className="font-black text-sm sm:text-base text-[#262A25] dark:text-white truncate mt-0.5 group-hover:text-[#70B325] transition-colors">
+                        {finalist.name}
+                      </h3>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">
+                        {finalist.description || 'Kandidat Unggulan'}
+                      </p>
+
+                      {/* Vote Count & Percentage */}
+                      <div className="mt-2 space-y-1">
+                        <div className="flex items-center justify-between text-[11px] font-extrabold">
+                          <span className="text-gray-900 dark:text-white">
+                            {finalist.vote_count.toLocaleString('id-ID')} suara
+                          </span>
+                          <span className="text-[#70B325] dark:text-[#86C839]">
+                            {percentage}% suara
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-100 dark:bg-white/10 h-1.5 rounded-full overflow-hidden">
+                          <div
+                            className="bg-amber-400 h-full rounded-full"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Fast Vote Button */}
+                  <Link
+                    to={`/voting/${category.slug || category.id}?finalist=${finalist.id}`}
+                    className="w-full py-2 px-3 bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-xs rounded-xl text-center no-underline flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                  >
+                    <IconZap className="w-3.5 h-3.5" />
+                    <span>Dukung Juara 1 ({finalist.name.split(' ')[0]})</span>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Section 1: Voting Terpopuler & Cek Vote Kamu */}
         <section id="voting-section" className="space-y-4">
@@ -347,7 +498,7 @@ export default function PublicEventsPage() {
                 <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#262A25] dark:text-white">
                   Voting Terpopuler
                 </h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Pilihan terbanyak minggu ini</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Pilihan terbanyak dan terhangat minggu ini</p>
               </div>
             </div>
             <a
@@ -359,7 +510,7 @@ export default function PublicEventsPage() {
             </a>
           </div>
 
-          {/* Grid Layout: 4 Cards on Left, Cek Vote Widget on Right */}
+          {/* Grid Layout: 8 cols Cards on Left, 4 cols Cek Vote on Right */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
             {/* Voting Cards Grid (8 cols on lg) */}
@@ -371,7 +522,7 @@ export default function PublicEventsPage() {
                   </div>
                   <h3 className="text-base font-extrabold text-[#262A25] dark:text-white">Belum Ada Voting Aktif</h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm">
-                    Saat ini belum ada event voting yang sedang dibuka. Kunjungi kembali dalam beberapa saat atau buat event dari dashboard admin.
+                    Saat ini belum ada ajang voting yang cocok dengan filter atau pencarian Anda.
                   </p>
                 </div>
               ) : (
@@ -380,17 +531,16 @@ export default function PublicEventsPage() {
                   return (
                     <article
                       key={item.id}
-                      className="card-base flex flex-col overflow-hidden group bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] rounded-2xl hover:border-[#70B325] dark:hover:border-[#70B325] transition-all"
+                      className="card-base flex flex-col overflow-hidden group bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] rounded-2xl hover:border-[#70B325] dark:hover:border-[#70B325] transition-all shadow-xs"
                     >
-                      {/* Banner Illustration or Uploaded Thumbnail */}
+                      {/* Banner Image with Status Pill */}
                       <div className="h-44 w-full relative overflow-hidden bg-gray-100 dark:bg-black/30 flex items-center justify-center">
                         {item.thumbnail ? (
                           <img
                             src={resolveStorageUrl(item.thumbnail)}
                             alt={item.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             loading="lazy"
-                            decoding="async"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none'
                             }}
@@ -398,17 +548,23 @@ export default function PublicEventsPage() {
                         ) : (
                           <Banner />
                         )}
-                        {/* Status Badge */}
-                        <span className="absolute top-3 left-3 status-pill bg-white/90 dark:bg-black/75 backdrop-blur-xs border border-white/60 dark:border-white/10 shadow-xs text-gray-800 dark:text-gray-200">
-                          <span className="status-dot" />
+
+                        {/* Top-Left Live Status Badge with Pulsating Dot */}
+                        <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 dark:bg-black/80 backdrop-blur-xs border border-white/60 dark:border-white/15 text-[11px] font-black uppercase text-gray-900 dark:text-white shadow-xs">
+                          <span className="w-2 h-2 rounded-full bg-[#70B325] animate-ping" />
                           Sedang Berlangsung
+                        </span>
+
+                        {/* Top-Right Category Chip */}
+                        <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold uppercase tracking-wider border border-white/10">
+                          {item.category}
                         </span>
                       </div>
 
                       {/* Card Body */}
                       <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                         <div>
-                          <h3 className="font-extrabold text-sm sm:text-base text-[#262A25] dark:text-white group-hover:text-[#70B325] transition-colors line-clamp-2">
+                          <h3 className="font-extrabold text-sm sm:text-base text-[#262A25] dark:text-white group-hover:text-[#70B325] dark:group-hover:text-[#86C839] transition-colors line-clamp-2">
                             <Link
                               to={`/voting/${item.slug || item.id}`}
                               className="no-underline text-inherit hover:text-[#70B325]"
@@ -417,16 +573,15 @@ export default function PublicEventsPage() {
                             </Link>
                           </h3>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1.5">
-                            <span>{item.organizer}</span>
+                            <span className="truncate">{item.organizer} ✓</span>
                             <span>•</span>
-                            <span className="text-amber-600 dark:text-amber-400 font-semibold">{item.daysLeft}</span>
+                            <span className="text-amber-600 dark:text-amber-400 font-semibold whitespace-nowrap">{item.daysLeft}</span>
                           </p>
                         </div>
 
-                        {/* Avatars Stack & Vote Count */}
+                        {/* Avatars Stack & Candidate Count */}
                         <div className="space-y-2 pt-1 border-t border-gray-100 dark:border-white/10">
                           <div className="flex items-center justify-between">
-                            {/* Avatars */}
                             <div className="flex -space-x-1.5 overflow-hidden">
                               {item.avatars.map((initials, idx) => (
                                 <div
@@ -442,7 +597,6 @@ export default function PublicEventsPage() {
                                 </div>
                               )}
                             </div>
-                            {/* Vote Count */}
                             <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
                               {item.votes}
                             </span>
@@ -460,7 +614,7 @@ export default function PublicEventsPage() {
                         {/* CTA Button */}
                         <Link
                           to={`/voting/${item.slug || item.id}`}
-                          className="w-full mt-2 py-2 px-3 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-bold text-xs sm:text-sm rounded-xl text-center no-underline flex items-center justify-center gap-1.5 transition-all shadow-xs"
+                          className="w-full mt-2 py-2.5 px-3 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-xs sm:text-sm rounded-xl text-center no-underline flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
                         >
                           <span>Vote Sekarang</span>
                           <IconChevronRight className="w-3.5 h-3.5" />
@@ -483,10 +637,10 @@ export default function PublicEventsPage() {
 
                 <div>
                   <h3 className="text-lg font-extrabold text-[#262A25] dark:text-white">
-                    Cek Vote Kamu
+                    Cek Bukti Vote Kamu
                   </h3>
                   <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
-                    Masukkan kode transaksi atau ID voting untuk melihat hasil dan keabsahan suara kamu.
+                    Masukkan kode transaksi atau ID voting untuk memeriksa status dan keabsahan suara kamu di sistem blockchain e-voting.
                   </p>
                 </div>
 
@@ -510,7 +664,7 @@ export default function PublicEventsPage() {
                     type="submit"
                     className="w-full h-11 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <span>Cek Sekarang</span>
+                    <span>Cek Bukti Sah Sekarang</span>
                     <IconChevronRight className="w-4 h-4" />
                   </button>
                 </form>
@@ -538,7 +692,7 @@ export default function PublicEventsPage() {
                   Voting Terbaru
                 </h2>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Jangan lewatkan voting terbaru yang sedang dibuka
+                  Daftar ajang pemilihan terbaru yang baru saja dibuka untuk publik
                 </p>
               </div>
             </div>
@@ -572,7 +726,6 @@ export default function PublicEventsPage() {
                         alt={item.title}
                         className="w-12 h-12 rounded-xl object-cover border border-[#E5EADF] dark:border-white/10 flex-shrink-0"
                         loading="lazy"
-                        decoding="async"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none'
                         }}
