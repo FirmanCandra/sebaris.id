@@ -59,54 +59,50 @@ export default function VotingCountdown({ endDate, status = 'active', onExpire }
   if (!timeLeft) return null
 
   return (
-    <div className="bg-gradient-to-r from-[#123E2A] to-[#1C533A] text-white rounded-2xl p-4 sm:p-5 shadow-sm border border-emerald-800/40">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3 text-center sm:text-left">
-          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-amber-300 flex-shrink-0">
-            <IconClock className="w-5 h-5 animate-pulse" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-emerald-300">
-                Voting Sedang Berlangsung
-              </span>
-            </div>
-            <h3 className="text-sm sm:text-base font-extrabold text-white">
-              Sisa Waktu Pemberian Suara
-            </h3>
-          </div>
+    <div className="bg-black/35 backdrop-blur-md text-white rounded-2xl p-4 sm:p-5 shadow-lg border border-white/15 w-full">
+      {/* Header */}
+      <div className="flex items-center gap-2.5 mb-3">
+        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-[#D0FE15] flex items-center justify-center flex-shrink-0">
+          <IconClock className="w-4 h-4 animate-pulse" />
         </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#D0FE15] animate-ping flex-shrink-0" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#D0FE15] truncate">
+              Voting Sedang Berlangsung
+            </span>
+          </div>
+          <h3 className="text-xs sm:text-sm font-extrabold text-white truncate">
+            Sisa Waktu Pemberian Suara
+          </h3>
+        </div>
+      </div>
 
-        {/* Counter Blocks */}
-        <div className="flex items-center gap-2 text-center">
-          <div className="bg-black/30 backdrop-blur-xs px-2.5 sm:px-3 py-1.5 rounded-xl border border-white/10 min-w-[52px]">
-            <span className="block text-base sm:text-xl font-black text-amber-300 font-mono">
-              {String(timeLeft.days).padStart(2, '0')}
-            </span>
-            <span className="text-[9px] uppercase font-bold text-gray-300">Hari</span>
-          </div>
-          <span className="text-amber-300 font-black text-lg">:</span>
-          <div className="bg-black/30 backdrop-blur-xs px-2.5 sm:px-3 py-1.5 rounded-xl border border-white/10 min-w-[52px]">
-            <span className="block text-base sm:text-xl font-black text-amber-300 font-mono">
-              {String(timeLeft.hours).padStart(2, '0')}
-            </span>
-            <span className="text-[9px] uppercase font-bold text-gray-300">Jam</span>
-          </div>
-          <span className="text-amber-300 font-black text-lg">:</span>
-          <div className="bg-black/30 backdrop-blur-xs px-2.5 sm:px-3 py-1.5 rounded-xl border border-white/10 min-w-[52px]">
-            <span className="block text-base sm:text-xl font-black text-amber-300 font-mono">
-              {String(timeLeft.minutes).padStart(2, '0')}
-            </span>
-            <span className="text-[9px] uppercase font-bold text-gray-300">Menit</span>
-          </div>
-          <span className="text-amber-300 font-black text-lg">:</span>
-          <div className="bg-black/30 backdrop-blur-xs px-2.5 sm:px-3 py-1.5 rounded-xl border border-white/10 min-w-[52px]">
-            <span className="block text-base sm:text-xl font-black text-emerald-400 font-mono">
-              {String(timeLeft.seconds).padStart(2, '0')}
-            </span>
-            <span className="text-[9px] uppercase font-bold text-gray-300">Detik</span>
-          </div>
+      {/* 4 Counter Blocks in an unbreakable 4-column grid */}
+      <div className="grid grid-cols-4 gap-1.5 sm:gap-2 text-center">
+        <div className="bg-black/40 backdrop-blur-xs py-2 px-1 rounded-xl border border-white/10">
+          <span className="block text-base sm:text-lg lg:text-xl font-black text-[#D0FE15] font-mono leading-none">
+            {String(timeLeft.days).padStart(2, '0')}
+          </span>
+          <span className="text-[9px] uppercase font-bold text-gray-300 mt-1 block">Hari</span>
+        </div>
+        <div className="bg-black/40 backdrop-blur-xs py-2 px-1 rounded-xl border border-white/10">
+          <span className="block text-base sm:text-lg lg:text-xl font-black text-[#D0FE15] font-mono leading-none">
+            {String(timeLeft.hours).padStart(2, '0')}
+          </span>
+          <span className="text-[9px] uppercase font-bold text-gray-300 mt-1 block">Jam</span>
+        </div>
+        <div className="bg-black/40 backdrop-blur-xs py-2 px-1 rounded-xl border border-white/10">
+          <span className="block text-base sm:text-lg lg:text-xl font-black text-[#D0FE15] font-mono leading-none">
+            {String(timeLeft.minutes).padStart(2, '0')}
+          </span>
+          <span className="text-[9px] uppercase font-bold text-gray-300 mt-1 block">Menit</span>
+        </div>
+        <div className="bg-black/40 backdrop-blur-xs py-2 px-1 rounded-xl border border-white/10">
+          <span className="block text-base sm:text-lg lg:text-xl font-black text-[#D0FE15] font-mono leading-none">
+            {String(timeLeft.seconds).padStart(2, '0')}
+          </span>
+          <span className="text-[9px] uppercase font-bold text-gray-300 mt-1 block">Detik</span>
         </div>
       </div>
     </div>

@@ -75,6 +75,10 @@ export default function CategoryVotingPage() {
   }, [categoryId, selectedMessageFinalistId])
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [categoryId])
+
+  useEffect(() => {
     loadData()
     const interval = window.setInterval(loadData, 10000)
     return () => window.clearInterval(interval)
@@ -224,31 +228,31 @@ export default function CategoryVotingPage() {
               )}
 
               {/* Event Metrics Pills Row */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 pt-2">
-                <div className="bg-black/35 backdrop-blur-md p-2.5 rounded-xl border border-white/15">
-                  <span className="text-[10px] uppercase font-bold text-gray-300 block">Finalis Resmi</span>
-                  <span className="text-base sm:text-lg font-black text-white block mt-0.5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-1">
+                <div className="bg-black/35 backdrop-blur-md p-2.5 sm:p-3 rounded-xl border border-white/15 flex flex-col justify-between min-w-0">
+                  <span className="text-[10px] uppercase font-bold text-gray-300 block truncate">Finalis Resmi</span>
+                  <span className="text-sm sm:text-base lg:text-lg font-black text-white block mt-0.5 truncate">
                     {finalists.length} Kandidat
                   </span>
                 </div>
 
-                <div className="bg-black/35 backdrop-blur-md p-2.5 rounded-xl border border-white/15">
-                  <span className="text-[10px] uppercase font-bold text-gray-300 block">Total Suara</span>
-                  <span className="text-base sm:text-lg font-black text-[#D0FE15] block mt-0.5">
+                <div className="bg-black/35 backdrop-blur-md p-2.5 sm:p-3 rounded-xl border border-white/15 flex flex-col justify-between min-w-0">
+                  <span className="text-[10px] uppercase font-bold text-gray-300 block truncate">Total Suara</span>
+                  <span className="text-sm sm:text-base lg:text-lg font-black text-[#D0FE15] block mt-0.5 truncate">
                     {isFrozen ? '🔒 Freeze' : `${totalVotes.toLocaleString('id-ID')} Suara`}
                   </span>
                 </div>
 
-                <div className="bg-black/35 backdrop-blur-md p-2.5 rounded-xl border border-white/15">
-                  <span className="text-[10px] uppercase font-bold text-gray-300 block">Tarif Tambahan</span>
-                  <span className="text-base sm:text-lg font-black text-white block mt-0.5">
+                <div className="bg-black/35 backdrop-blur-md p-2.5 sm:p-3 rounded-xl border border-white/15 flex flex-col justify-between min-w-0">
+                  <span className="text-[10px] uppercase font-bold text-gray-300 block truncate">Tarif Tambahan</span>
+                  <span className="text-sm sm:text-base lg:text-lg font-black text-white block mt-0.5 truncate">
                     Rp {(category?.price_per_vote || 1000).toLocaleString('id-ID')}/vote
                   </span>
                 </div>
 
-                <div className="bg-black/35 backdrop-blur-md p-2.5 rounded-xl border border-white/15">
-                  <span className="text-[10px] uppercase font-bold text-gray-300 block">Metode Pembayaran</span>
-                  <span className="text-base sm:text-lg font-black text-white block mt-0.5">
+                <div className="bg-black/35 backdrop-blur-md p-2.5 sm:p-3 rounded-xl border border-white/15 flex flex-col justify-between min-w-0">
+                  <span className="text-[10px] uppercase font-bold text-gray-300 block truncate">Pembayaran</span>
+                  <span className="text-sm sm:text-base lg:text-lg font-black text-white block mt-0.5 truncate">
                     QRIS &amp; VA Otomatis
                   </span>
                 </div>
@@ -256,7 +260,7 @@ export default function CategoryVotingPage() {
             </div>
 
             {/* Right Column (4 cols): Embedded Digital Countdown Box */}
-            <div className="lg:col-span-4">
+            <div className="lg:col-span-4 w-full">
               {category?.end_date ? (
                 <VotingCountdown
                   endDate={category.end_date}
@@ -487,7 +491,7 @@ export default function CategoryVotingPage() {
 
             {/* CONTESTANT CARDS GRID (KreenConnect Professional Pageant Style) */}
             {!loading && !error && filteredFinalists.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {filteredFinalists.map((finalist, index) => {
                   const photoSrc = finalist.photo_url || finalist.photo
                   const percentage =
@@ -498,7 +502,7 @@ export default function CategoryVotingPage() {
                   return (
                     <article
                       key={finalist.id}
-                      className="card-base flex flex-col overflow-hidden bg-white dark:bg-[#1A2018] border border-[#E2EADA] dark:border-[#2C3529] rounded-2xl shadow-xs hover:border-[#70B325] dark:hover:border-[#70B325] hover:shadow-md transition-all group"
+                      className="card-base flex flex-col overflow-hidden bg-white dark:bg-[#1A2018] border border-[#E2EADA] dark:border-[#2C3529] rounded-2xl shadow-xs hover:border-[#70B325] dark:hover:border-[#70B325] hover:shadow-md transition-all group max-w-sm sm:max-w-none mx-auto w-full"
                     >
                       {/* Portrait Photo Centerpiece (Aspect 3:4) */}
                       <div

@@ -6,11 +6,13 @@ import App from './App.jsx'
 
 import { ThemeProvider } from './context/ThemeProvider'
 import ErrorBoundary from './components/ErrorBoundary'
+import ScrollToTop from './components/ScrollToTop'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
       <BrowserRouter>
+        <ScrollToTop />
         <ThemeProvider>
           <App />
         </ThemeProvider>
