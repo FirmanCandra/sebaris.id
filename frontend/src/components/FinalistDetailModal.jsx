@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { IconClose, IconZap, IconTrophy } from './Icons'
-import { resolveStorageUrl } from '../api/client'
+import { api, resolveStorageUrl } from '../api/client'
 
 export default function FinalistDetailModal({
   isOpen,
@@ -14,6 +14,30 @@ export default function FinalistDetailModal({
 }) {
   const [copied, setCopied] = useState(false)
   const [activePhotoIndex, setActivePhotoIndex] = useState(0)
+  const [messages, setMessages] = useState([])
+  const [loadingMessages, setLoadingMessages] = useState(false)
+
+  // Fetch Wall of Support messages for this finalist
+  useEffect(() => {
+    if (!isOpen || !finalist?.id || !category) return
+
+    let isMounted = true
+    setLoadingMessages(true)
+    api(`/categories/${category.slug || category.id}/messages?finalist_id=${finalist.id}`)
+      .then((res) => {
+        if (isMounted) {
+          setMessages(res.data || [])
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) setLoadingMessages(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [isOpen, finalist?.id, category])
 
   // Collect all photos: main photo + extra_photos
   const allPhotos = useMemo(() => {
@@ -234,6 +258,67 @@ export default function FinalistDetailModal({
                 {copied ? 'Tersalin!' : '🔗 Salin Link'}
               </button>
             </div>
+          </div>
+
+          {/* Wall of Support / Pesan & Doa Pendukung */}
+          <div className="space-y-2.5 pt-3 border-t border-gray-100">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-black uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
+                <span>💬 Pesan & Doa Pendukung</span>
+                <span className="text-[10px] font-bold px-2 py-0.2 rounded-full bg-[#EAF5DE] text-[#4F7E1D]">
+                  {messages.length}
+                </span>
+              </h4>
+              <span className="text-[10px] text-gray-400 font-medium">
+                Pesan langsung dari pemilih
+              </span>
+            </div>
+
+            {loadingMessages ? (
+              <div className="p-3 text-center text-xs text-gray-400">
+                Memuat pesan dukungan...
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200 text-center space-y-1">
+                <p className="text-xs font-bold text-gray-700">
+                  Belum ada pesan untuk {finalist.name.split(' ')[0]}
+                </p>
+                <p className="text-[11px] text-gray-400">
+                  Kirimkan dukungan dan jadilah yang pertama memberikan kata-kata semangat!
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
+                {messages.map((item) => (
+                  <div
+                    key={item.id}
+                    className="p-3 bg-gray-50 hover:bg-[#F9FAF8] rounded-xl border border-gray-200/80 transition-colors space-y-1 text-left"
+                  >
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-5 h-5 rounded-full bg-[var(--brand-primary-light)] text-[var(--brand-primary)] font-black text-[10px] flex items-center justify-center flex-shrink-0">
+                          {item.voter_name ? item.voter_name.charAt(0).toUpperCase() : 'P'}
+                        </div>
+                        <strong className="text-gray-800 text-xs font-bold truncate max-w-[140px]">
+                          {item.voter_name}
+                        </strong>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <span className="text-[10px] font-black text-[#558223] bg-[#EAF5DE] px-2 py-0.5 rounded-full">
+                          ⚡ {item.vote_amount} Suara
+                        </span>
+                        <span className="text-[10px] text-gray-400">
+                          {item.time_ago}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-600 pl-7 italic leading-relaxed">
+                      &quot;{item.message}&quot;
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Primary CTA */}

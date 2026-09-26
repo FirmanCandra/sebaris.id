@@ -54,6 +54,8 @@ export default function CommercialVoteModal({
   const [form, setForm] = useState({
     voter_name: user?.name || '',
     voter_contact: user?.email || '',
+    message: '',
+    is_anonymous: false,
   })
   const [fieldErrors, setFieldErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
@@ -77,12 +79,12 @@ export default function CommercialVoteModal({
       } else {
         setVoteMode('free')
       }
-      if (user) {
-        setForm({
-          voter_name: user.name || '',
-          voter_contact: user.email || '',
-        })
-      }
+      setForm({
+        voter_name: user?.name || '',
+        voter_contact: user?.email || '',
+        message: '',
+        is_anonymous: false,
+      })
     }
   }, [isOpen, category, user, defaultPackageAmount])
 
@@ -141,6 +143,8 @@ export default function CommercialVoteModal({
         finalist_id: finalist.id,
         voter_name: form.voter_name,
         voter_contact: form.voter_contact,
+        message: form.message?.trim() || null,
+        is_anonymous: form.is_anonymous ? 1 : 0,
         type: voteMode,
         vote_amount: voteMode === 'free' ? 1 : activeAmount,
         payment_method: voteMode === 'free' ? 'free' : paymentMethod,
@@ -500,6 +504,37 @@ export default function CommercialVoteModal({
                     {fieldErrors.voter_contact[0] || fieldErrors.voter_contact}
                   </p>
                 )}
+              </div>
+
+              {/* Wall of Support Message (Optional) */}
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-gray-700">
+                    Pesan Semangat / Doa (Wall of Support):
+                  </label>
+                  <span className="text-[10px] text-gray-400 font-semibold">
+                    {(form.message || '').length}/500
+                  </span>
+                </div>
+                <textarea
+                  rows={2}
+                  maxLength={500}
+                  placeholder={`Tuliskan doa atau pesan semangat untuk ${finalist.name.split(' ')[0]} (akan muncul di Wall of Support)...`}
+                  value={form.message}
+                  onChange={(e) => setForm({ ...form, message: e.target.value })}
+                  className="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-[#70B325] focus:outline-none resize-none"
+                />
+                <label className="flex items-center gap-2 cursor-pointer pt-0.5">
+                  <input
+                    type="checkbox"
+                    checked={form.is_anonymous}
+                    onChange={(e) => setForm({ ...form, is_anonymous: e.target.checked })}
+                    className="rounded text-[#70B325] focus:ring-[#70B325] w-3.5 h-3.5 cursor-pointer"
+                  />
+                  <span className="text-[11px] font-semibold text-gray-500">
+                    Kirim sebagai Anonim (sembunyikan nama Anda)
+                  </span>
+                </label>
               </div>
             </div>
 

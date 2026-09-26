@@ -18,6 +18,8 @@ class CreateVoteRequest extends FormRequest
             'voter_name' => ['required', 'string', 'max:255'],
             'voter_contact' => ['required', 'string', 'min:4', 'max:255'],
             'type' => ['required', 'in:free,paid'],
+            'message' => ['nullable', 'string', 'max:500'],
+            'is_anonymous' => ['nullable', 'boolean'],
             'vote_amount' => ['nullable', 'integer', 'min:1', 'max:10000'],
             'payment_method' => ['nullable', 'string', 'in:qris,bca_va,bri_va,mandiri_va,gopay,free'],
         ];

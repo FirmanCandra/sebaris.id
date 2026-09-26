@@ -16,6 +16,8 @@ class Vote extends Model
         'finalist_id',
         'voter_name',
         'voter_contact',
+        'message',
+        'is_anonymous',
         'vote_amount',
         'total_price',
         'type',
@@ -29,6 +31,7 @@ class Vote extends Model
         return [
             'vote_amount' => 'integer',
             'total_price' => 'integer',
+            'is_anonymous' => 'boolean',
             'paid_at' => 'datetime',
         ];
     }

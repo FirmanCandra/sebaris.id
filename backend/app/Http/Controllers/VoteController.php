@@ -52,6 +52,8 @@ class VoteController extends Controller
             $user = auth('sanctum')->user();
             $contact = $request->string('voter_contact')->trim()->lower()->toString();
             $voterName = $request->string('voter_name')->trim()->toString();
+            $message = $request->string('message')->trim()->toString() ?: null;
+            $isAnonymous = $request->boolean('is_anonymous');
 
             if ($type === 'free') {
                 if (!($category->allow_free_vote ?? true)) {
@@ -96,6 +98,8 @@ class VoteController extends Controller
                     'finalist_id' => $finalist->id,
                     'voter_name' => $voterName,
                     'voter_contact' => $contact,
+                    'message' => $message,
+                    'is_anonymous' => $isAnonymous,
                     'vote_amount' => 1,
                     'total_price' => 0,
                     'type' => 'free',
@@ -135,6 +139,8 @@ class VoteController extends Controller
                 'finalist_id' => $finalist->id,
                 'voter_name' => $voterName,
                 'voter_contact' => $contact,
+                'message' => $message,
+                'is_anonymous' => $isAnonymous,
                 'vote_amount' => $voteAmount,
                 'total_price' => $totalPrice,
                 'type' => 'paid',
@@ -339,5 +345,53 @@ class VoteController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Get Wall of Support messages for a category or specific finalist.
+     * GET /categories/{category}/messages
+     */
+    public function messages(Request $request, string $category): JsonResponse
+    {
+        $cat = Category::query()
+            ->where(function ($query) use ($category) {
+                if (is_numeric($category)) {
+                    $query->where('id', (int) $category);
+                } else {
+                    $query->where('slug', $category);
+                }
+            })
+            ->firstOrFail();
+
+        $query = Vote::query()
+            ->with('finalist:id,name,photo')
+            ->whereHas('finalist', fn ($q) => $q->where('category_id', $cat->id))
+            ->where('status', 'confirmed')
+            ->whereNotNull('message')
+            ->where('message', '!=', '')
+            ->latest('paid_at');
+
+        if ($request->filled('finalist_id')) {
+            $query->where('finalist_id', $request->integer('finalist_id'));
+        }
+
+        $messages = $query->limit(50)->get()->map(function ($vote) {
+            return [
+                'id' => $vote->id,
+                'voter_name' => $vote->is_anonymous ? 'Pendukung Anonim' : $vote->voter_name,
+                'is_anonymous' => (bool) $vote->is_anonymous,
+                'message' => $vote->message,
+                'vote_amount' => $vote->vote_amount,
+                'finalist_id' => $vote->finalist_id,
+                'finalist_name' => $vote->finalist?->name,
+                'created_at' => $vote->paid_at?->toISOString() ?? $vote->created_at->toISOString(),
+                'time_ago' => $vote->paid_at?->diffForHumans() ?? $vote->created_at->diffForHumans(),
+            ];
+        });
+
+        return response()->json([
+            'data' => $messages,
+            'count' => $messages->count(),
+        ]);
     }
 }

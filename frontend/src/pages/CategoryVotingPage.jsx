@@ -23,11 +23,16 @@ export default function CategoryVotingPage() {
 
   const [category, setCategory] = useState(null)
   const [finalists, setFinalists] = useState([])
-  const [activeTab, setActiveTab] = useState('finalis') // 'finalis' | 'leaderboard' | 'deskripsi'
+  const [activeTab, setActiveTab] = useState('finalis') // 'finalis' | 'leaderboard' | 'dukungan' | 'deskripsi'
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [isVotingExpired, setIsVotingExpired] = useState(false)
+
+  // Wall of Support Messages State
+  const [messages, setMessages] = useState([])
+  const [loadingMessages, setLoadingMessages] = useState(false)
+  const [selectedMessageFinalistId, setSelectedMessageFinalistId] = useState('')
 
   // Modals state
   const [selectedFinalistForVote, setSelectedFinalistForVote] = useState(null)
@@ -55,11 +60,30 @@ export default function CategoryVotingPage() {
     }
   }, [categoryId])
 
+  const loadMessages = useCallback(async () => {
+    try {
+      setLoadingMessages(true)
+      const query = selectedMessageFinalistId ? `?finalist_id=${selectedMessageFinalistId}` : ''
+      const res = await api(`/categories/${categoryId}/messages${query}`)
+      setMessages(res.data || [])
+    } catch {
+      // ignore message load glitch
+    } finally {
+      setLoadingMessages(false)
+    }
+  }, [categoryId, selectedMessageFinalistId])
+
   useEffect(() => {
     loadData()
     const interval = window.setInterval(loadData, 10000)
     return () => window.clearInterval(interval)
   }, [loadData])
+
+  useEffect(() => {
+    loadMessages()
+    const interval = window.setInterval(loadMessages, 8000)
+    return () => window.clearInterval(interval)
+  }, [loadMessages])
 
   // Handle URL param: ?finalist=123 (direct candidate deep link)
   useEffect(() => {
@@ -196,6 +220,22 @@ export default function CategoryVotingPage() {
             </button>
             <button
               type="button"
+              onClick={() => setActiveTab('dukungan')}
+              className={`py-3.5 font-bold text-sm sm:text-base border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'dukungan'
+                  ? 'border-[#70B325] text-[#70B325]'
+                  : 'border-transparent text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              <span>Pesan Pendukung</span>
+              {messages.length > 0 && (
+                <span className="text-[10px] bg-[#EAF5DE] text-[#4F7E1D] px-2 py-0.5 rounded-full font-black">
+                  {messages.length}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveTab('deskripsi')}
               className={`py-3.5 font-bold text-sm sm:text-base border-b-2 transition-all cursor-pointer ${
                 activeTab === 'deskripsi'
@@ -241,6 +281,32 @@ export default function CategoryVotingPage() {
                 </p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* WALL OF SUPPORT LIVE STREAM TICKER */}
+        {messages.length > 0 && activeTab !== 'dukungan' && (
+          <div
+            onClick={() => setActiveTab('dukungan')}
+            className="bg-white hover:bg-[#F8FAF6] border border-[#D5E6C4] rounded-2xl p-3 sm:px-4 sm:py-3 shadow-2xs flex items-center justify-between gap-3 cursor-pointer transition-all animate-fadeIn"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="flex h-2.5 w-2.5 relative flex-shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#70B325] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#70B325]" />
+              </span>
+              <span className="text-[11px] font-black uppercase tracking-wider text-[#558223] flex-shrink-0">
+                💬 Dukungan Baru:
+              </span>
+              <p className="text-xs text-gray-700 truncate">
+                <strong className="text-gray-900">{messages[0].voter_name}</strong>{' '}
+                <span className="text-gray-400">({messages[0].time_ago}):</span>{' '}
+                <span className="italic text-gray-600">&quot;{messages[0].message}&quot;</span>
+              </p>
+            </div>
+            <span className="text-xs font-bold text-[#70B325] flex-shrink-0 hover:underline">
+              Lihat Semua →
+            </span>
           </div>
         )}
 
@@ -593,7 +659,113 @@ export default function CategoryVotingPage() {
           </section>
         )}
 
-        {/* TAB 3: DESKRIPSI ACARA */}
+        {/* TAB 3: WALL OF SUPPORT (PESAN & DOA PENDUKUNG) */}
+        {activeTab === 'dukungan' && (
+          <section className="space-y-6 max-w-4xl mx-auto animate-fadeIn">
+            <div className="text-center space-y-1.5 pt-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-[#70B325] bg-[#EAF5DE] px-3 py-1 rounded-full">
+                Wall of Support
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#262A25]">
+                Pesan & Doa Pendukung
+              </h1>
+              <p className="text-xs sm:text-sm text-gray-500 max-w-xl mx-auto">
+                Dukungan nyata dan pesan semangat dari para pemilih yang mengalir untuk para kandidat favorit.
+              </p>
+            </div>
+
+            {/* Filter by Candidate */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 bg-white border border-[#E5EADF] rounded-2xl shadow-2xs">
+              <span className="text-xs font-bold text-gray-700">
+                Saring pesan berdasarkan kandidat:
+              </span>
+              <select
+                value={selectedMessageFinalistId}
+                onChange={(e) => setSelectedMessageFinalistId(e.target.value)}
+                className="w-full sm:w-auto text-xs font-bold py-2 px-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#70B325] focus:outline-none"
+              >
+                <option value="">Semua Finalis ({messages.length} pesan)</option>
+                {finalists.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Messages Grid / List */}
+            {loadingMessages ? (
+              <div className="p-16 text-center text-gray-500">
+                <div className="w-8 h-8 border-3 border-[#70B325] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-sm font-semibold">Memuat pesan dukungan...</p>
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="bg-white border border-[#E5EADF] rounded-2xl p-12 text-center text-gray-500 max-w-lg mx-auto space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-[#EAF5DE] text-[#70B325] flex items-center justify-center mx-auto text-2xl font-black">
+                  💬
+                </div>
+                <div className="space-y-1">
+                  <p className="text-base font-extrabold text-[#262A25]">
+                    Belum ada pesan dukungan
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Jadilah pemilih pertama yang menuliskan pesan semangat dan doa untuk kandidat!
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('finalis')}
+                  className="btn-primary text-xs font-bold py-2 px-5 mx-auto"
+                >
+                  Pilih Finalis & Beri Dukungan
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {messages.map((item) => (
+                  <div
+                    key={item.id}
+                    className="p-4 bg-white rounded-2xl border border-[#E2EADA] shadow-2xs hover:shadow-xs transition-all space-y-2.5 flex flex-col justify-between text-left"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-8 h-8 rounded-full bg-[var(--brand-primary-light)] text-[var(--brand-primary)] font-black text-xs flex items-center justify-center flex-shrink-0">
+                            {item.voter_name ? item.voter_name.charAt(0).toUpperCase() : 'P'}
+                          </div>
+                          <div className="min-w-0">
+                            <strong className="text-xs font-extrabold text-gray-800 block truncate">
+                              {item.voter_name}
+                            </strong>
+                            <span className="text-[10px] text-gray-400 font-semibold block truncate">
+                              Mendukung: <span className="text-[#70B325] font-bold">{item.finalist_name}</span>
+                            </span>
+                          </div>
+                        </div>
+
+                        <span className="text-[10px] font-black text-[#558223] bg-[#EAF5DE] px-2.5 py-0.5 rounded-full flex-shrink-0">
+                          ⚡ {item.vote_amount} Suara
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-gray-600 italic leading-relaxed pl-10 border-l-2 border-[#70B325]/30">
+                        &quot;{item.message}&quot;
+                      </p>
+                    </div>
+
+                    <div className="pt-2 text-right border-t border-gray-50">
+                      <span className="text-[10px] text-gray-400 font-medium">
+                        {item.time_ago}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* TAB 4: DESKRIPSI ACARA */}
         {activeTab === 'deskripsi' && (
           <section className="max-w-3xl mx-auto bg-white border border-[#E5EADF] rounded-2xl p-6 sm:p-8 space-y-6">
             <div>

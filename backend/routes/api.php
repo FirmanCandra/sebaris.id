@@ -16,11 +16,13 @@ Route::get('categories', [PublicCategoryController::class, 'index']);
 Route::get('categories/{category}', [PublicCategoryController::class, 'show']);
 Route::get('categories/{category}/finalists', [PublicFinalistController::class, 'index']);
 Route::get('categories/{category}/leaderboard', [PublicFinalistController::class, 'leaderboard']);
+Route::get('categories/{category}/messages', [VoteController::class, 'messages']);
 
 // Voting endpoints (slug/id aliases)
 Route::get('voting/{category}', [PublicCategoryController::class, 'show']);
 Route::get('voting/{category}/finalists', [PublicFinalistController::class, 'index']);
 Route::get('voting/{category}/leaderboard', [PublicFinalistController::class, 'leaderboard']);
+Route::get('voting/{category}/messages', [VoteController::class, 'messages']);
 
 // Votes, Payments, Check, and Verification
 Route::post('votes', [VoteController::class, 'store'])->middleware('throttle:30,1');
