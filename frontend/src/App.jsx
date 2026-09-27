@@ -35,6 +35,7 @@ const events = {
   description: 'Kelola induk ajang/event yang menaungi beberapa tingkatan kategori pemilihan (Premier, Sekunder, Tersier).',
   endpoint: '/admin/events',
   fields: [
+    { name: 'thumbnail', label: 'Poster / Thumbnail Event (Rasio 3:4 Potret, misal 900x1200 px)', type: 'file' },
     { name: 'name', label: 'Nama Event / Ajang' },
     { name: 'start_date', label: 'Tanggal Mulai', type: 'date' },
     { name: 'end_date', label: 'Tanggal Selesai', type: 'date' },
@@ -51,23 +52,39 @@ const events = {
   columns: [
     {
       key: 'name',
-      label: 'Nama Event',
+      label: 'Nama Event / Ajang',
       render: (item) => (
-        <Link
-          to={`/admin/events/${item.id}`}
-          className="group block no-underline"
-          title="Klik untuk membuka dan mengelola event ini"
-        >
-          <span className="font-extrabold text-sm text-[var(--neutral-text-main)] group-hover:text-[var(--brand-primary)] transition-colors block">
-            {item.name}
-          </span>
-          <span className="text-xs text-gray-500 group-hover:text-[var(--brand-primary)] transition-colors flex items-center gap-1 mt-0.5">
-            <span>{item.categories_count ?? 0} Kategori Terdaftar</span>
-            <span className="text-[var(--brand-primary)] font-bold inline-flex items-center gap-0.5">
-              Buka Event <IconChevronRight className="w-3 h-3" />
+        <div className="flex items-center gap-3">
+          {item.thumbnail || item.thumbnail_url ? (
+            <img
+              src={resolveStorageUrl(item.thumbnail_url || item.thumbnail)}
+              alt={item.name}
+              className="w-12 h-14 rounded-xl object-cover border border-[var(--neutral-border)] flex-shrink-0"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none'
+              }}
+            />
+          ) : (
+            <div className="w-12 h-14 rounded-xl bg-[var(--brand-primary-light)] text-[var(--brand-primary)] font-black text-xs flex items-center justify-center flex-shrink-0">
+              {item.name?.slice(0, 2)?.toUpperCase() || 'EV'}
+            </div>
+          )}
+          <Link
+            to={`/admin/events/${item.id}`}
+            className="group block no-underline min-w-0"
+            title="Klik untuk membuka dan mengelola event ini"
+          >
+            <span className="font-extrabold text-sm text-[var(--neutral-text-main)] group-hover:text-[var(--brand-primary)] transition-colors block truncate max-w-sm">
+              {item.name}
             </span>
-          </span>
-        </Link>
+            <span className="text-xs text-gray-500 group-hover:text-[var(--brand-primary)] transition-colors flex items-center gap-1 mt-0.5">
+              <span>{item.categories_count ?? 0} Kategori Terdaftar</span>
+              <span className="text-[var(--brand-primary)] font-bold inline-flex items-center gap-0.5">
+                Buka Event <IconChevronRight className="w-3 h-3" />
+              </span>
+            </span>
+          </Link>
+        </div>
       ),
     },
     {
@@ -108,10 +125,10 @@ const events = {
 
 const categories = {
   title: 'Kategori Voting',
-  description: 'Kelola sesi voting, penentuan tingkatan (Premier, Sekunder, Tersier), induk event, thumbnail poster, tarif, dan freeze leaderboard.',
+  description: 'Kelola sesi voting, penentuan tingkatan (Premier, Sekunder, Tersier), induk event, tarif, dan freeze leaderboard.',
   endpoint: '/admin/categories',
   fields: [
-    { name: 'thumbnail', label: 'Poster / Thumbnail Voting (Rasio 3:4 Potret, misal 900x1200 px)', type: 'file' },
+    { name: 'thumbnail', label: 'Thumbnail Khusus Kategori (Opsional, jika kosong otomatis memakai poster Event)', type: 'file' },
     { name: 'event_id', label: 'Induk Event / Ajang (Pilih Event)', type: 'select', optionsKey: 'events' },
     {
       name: 'tier',

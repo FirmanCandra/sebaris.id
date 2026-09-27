@@ -203,7 +203,7 @@ export default function PublicEventsPage() {
             daysLeft: ev.end_date ? `s/d ${ev.end_date}` : (premierCat?.end_date ? `s/d ${premierCat.end_date}` : 'Sedang Berlangsung'),
             votes: `${catCount} Kategori Pemilihan`,
             totalFinalists,
-            thumbnail: premierCat?.thumbnail_url || premierCat?.thumbnail,
+            thumbnail: ev.thumbnail_url || ev.thumbnail || premierCat?.thumbnail_url || premierCat?.thumbnail,
             BannerComponent: [BannerCampus, BannerSchool, BannerFestival, BannerPoster][idx % 4],
           }
         })
@@ -221,7 +221,7 @@ export default function PublicEventsPage() {
           title: cat.event?.name || cat.name,
           organizer: cat.organizer || 'Panitia Pelaksana',
           daysLeft: cat.event?.end_date ? `s/d ${cat.event.end_date}` : (cat.end_date ? `s/d ${cat.end_date}` : 'Sedang Berlangsung'),
-          thumbnail: cat.thumbnail_url || cat.thumbnail,
+          thumbnail: cat.event?.thumbnail_url || cat.event?.thumbnail || cat.thumbnail_url || cat.thumbnail,
           categoriesCount: 1,
         })
       } else {
@@ -229,8 +229,9 @@ export default function PublicEventsPage() {
         item.categoriesCount += 1
         if (cat.tier === 'premier') {
           item.slug = cat.slug || String(cat.id)
-          if (cat.thumbnail_url || cat.thumbnail) {
-            item.thumbnail = cat.thumbnail_url || cat.thumbnail
+          const thumb = cat.event?.thumbnail_url || cat.event?.thumbnail || cat.thumbnail_url || cat.thumbnail
+          if (thumb) {
+            item.thumbnail = thumb
           }
         }
       }
@@ -270,7 +271,7 @@ export default function PublicEventsPage() {
             organizer: premierCat?.organizer || 'Panitia Pelaksana',
             endDate: ev.end_date ? `Berakhir ${ev.end_date}` : (premierCat?.end_date ? `Berakhir ${premierCat.end_date}` : 'Telah Selesai'),
             votes: `${catCount} Kategori • ${totalFinalists} Finalis`,
-            thumbnail: premierCat?.thumbnail_url || premierCat?.thumbnail,
+            thumbnail: ev.thumbnail_url || ev.thumbnail || premierCat?.thumbnail_url || premierCat?.thumbnail,
             IconComponent: [ThumbnailEarth, ThumbnailTech, ThumbnailMusic, ThumbnailCamera][idx % 4],
           }
         })
@@ -285,7 +286,7 @@ export default function PublicEventsPage() {
       organizer: cat.organizer || 'Panitia Pelaksana',
       endDate: cat.end_date ? `Berakhir ${cat.end_date}` : 'Telah Selesai',
       votes: `${cat.finalists_count || 0} finalis`,
-      thumbnail: cat.thumbnail_url || cat.thumbnail,
+      thumbnail: cat.event?.thumbnail_url || cat.event?.thumbnail || cat.thumbnail_url || cat.thumbnail,
       IconComponent: [ThumbnailEarth, ThumbnailTech, ThumbnailMusic, ThumbnailCamera][idx % 4],
     }))
   }, [backendEvents, backendCategories, pastCategories])

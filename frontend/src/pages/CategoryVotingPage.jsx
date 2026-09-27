@@ -1363,13 +1363,23 @@ export default function CategoryVotingPage() {
           <div className="bg-white dark:bg-[#1A2018] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xs">
             <div className="flex flex-col sm:flex-row gap-6 items-start">
               {/* Event Poster / Banner Thumbnail */}
-              <div className="w-full sm:w-48 aspect-[4/5] rounded-xl overflow-hidden bg-gradient-to-br from-[#123E2A] to-[#0A1D14] flex-shrink-0 flex items-center justify-center p-3 text-center border border-gray-200 dark:border-white/10">
-                <div className="space-y-1">
-                  <IconTrophy className="w-7 h-7 text-[#70B325] mx-auto" />
-                  <div className="text-xs font-black text-white">{categoryTitle}</div>
-                  <div className="text-[10px] text-gray-300">Official Voting</div>
+              {category?.thumbnail || category?.event?.thumbnail || category?.thumbnail_url || category?.event?.thumbnail_url ? (
+                <div className="w-full sm:w-48 aspect-[3/4] rounded-xl overflow-hidden flex-shrink-0 border border-gray-200 dark:border-white/10 shadow-xs group">
+                  <img
+                    src={resolveStorageUrl(category?.thumbnail || category?.thumbnail_url || category?.event?.thumbnail || category?.event?.thumbnail_url)}
+                    alt={categoryTitle}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
                 </div>
-              </div>
+              ) : (
+                <div className="w-full sm:w-48 aspect-[3/4] rounded-xl overflow-hidden bg-gradient-to-br from-[#123E2A] to-[#0A1D14] flex-shrink-0 flex items-center justify-center p-3 text-center border border-gray-200 dark:border-white/10">
+                  <div className="space-y-1">
+                    <IconTrophy className="w-7 h-7 text-[#70B325] mx-auto" />
+                    <div className="text-xs font-black text-white">{categoryTitle}</div>
+                    <div className="text-[10px] text-gray-300">Official Voting</div>
+                  </div>
+                </div>
+              )}
 
               {/* Event Details */}
               <div className="space-y-4 flex-1">

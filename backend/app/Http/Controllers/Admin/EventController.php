@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\EventRequest;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
 class EventController extends Controller
@@ -21,6 +22,10 @@ class EventController extends Controller
         $data = $request->validated();
         if (empty($data['status'])) {
             $data['status'] = 'active';
+        }
+
+        if ($request->hasFile('thumbnail')) {
+            $data['thumbnail'] = $request->file('thumbnail')->store('events', 'public');
         }
 
         return new EventResource(Event::create($data));
@@ -39,13 +44,26 @@ class EventController extends Controller
 
     public function update(EventRequest $request, Event $event): EventResource
     {
-        $event->update($request->validated());
+        $data = $request->validated();
+
+        if ($request->hasFile('thumbnail')) {
+            if ($event->thumbnail) {
+                Storage::disk('public')->delete($event->thumbnail);
+            }
+            $data['thumbnail'] = $request->file('thumbnail')->store('events', 'public');
+        }
+
+        $event->update($data);
 
         return new EventResource($event->fresh()->loadCount('categories'));
     }
 
     public function destroy(Event $event): Response
     {
+        if ($event->thumbnail) {
+            Storage::disk('public')->delete($event->thumbnail);
+        }
+
         $event->delete();
 
         return response()->noContent();

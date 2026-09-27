@@ -15,6 +15,7 @@ class EventRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'thumbnail' => $this->hasFile('thumbnail') ? ['image', 'max:3072'] : ['nullable'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'status' => ['nullable', 'in:active,inactive'],

@@ -13,9 +13,10 @@ class DummyEventsAndBannersSeeder extends Seeder
     public function run(): void
     {
         // 1. EVENT 1: Pemilihan Putra Putri Duta Pariwisata Nusantara 2026
-        $eventPariwisata = Event::firstOrCreate(
+        $eventPariwisata = Event::updateOrCreate(
             ['name' => 'Pemilihan Putra Putri Duta Pariwisata Nusantara 2026'],
             [
+                'thumbnail'  => 'categories/thumb_duta_pariwisata.jpg',
                 'start_date' => '2026-09-01',
                 'end_date'   => '2026-10-31',
                 'status'     => 'active',
@@ -84,9 +85,10 @@ class DummyEventsAndBannersSeeder extends Seeder
         }
 
         // 2. EVENT 2: Sound of Campus National Band & Vocal Championship 2026
-        $eventMusic = Event::firstOrCreate(
+        $eventMusic = Event::updateOrCreate(
             ['name' => 'Sound of Campus National Band & Vocal Championship 2026'],
             [
+                'thumbnail'  => 'categories/thumb_festival_musik.jpg',
                 'start_date' => '2026-09-10',
                 'end_date'   => '2026-11-20',
                 'status'     => 'active',

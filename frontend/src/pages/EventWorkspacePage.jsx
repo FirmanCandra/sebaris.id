@@ -64,7 +64,7 @@ export default function EventWorkspacePage() {
   const [savingFinalist, setSavingFinalist] = useState(false)
 
   const [isEventModalOpen, setIsEventModalOpen] = useState(false)
-  const [eventValues, setEventValues] = useState({ name: '', start_date: '', end_date: '', status: 'active' })
+  const [eventValues, setEventValues] = useState({ name: '', thumbnail: '', start_date: '', end_date: '', status: 'active' })
   const [savingEvent, setSavingEvent] = useState(false)
 
   // Load Event and its categories
@@ -342,6 +342,7 @@ export default function EventWorkspacePage() {
     if (!eventData) return
     setEventValues({
       name: eventData.name || '',
+      thumbnail: eventData.thumbnail || '',
       start_date: eventData.start_date || '',
       end_date: eventData.end_date || '',
       status: eventData.status || 'active',
@@ -353,10 +354,26 @@ export default function EventWorkspacePage() {
     e.preventDefault()
     setSavingEvent(true)
     try {
+      const hasFile = eventValues.thumbnail instanceof File
+      const body = hasFile
+        ? (() => {
+            const fd = new FormData()
+            Object.entries(eventValues).forEach(([k, v]) => {
+              if (k === 'thumbnail') {
+                if (v instanceof File) fd.append('thumbnail', v)
+              } else if (v !== '' && v !== null && v !== undefined) {
+                fd.append(k, v)
+              }
+            })
+            fd.append('_method', 'PUT')
+            return fd
+          })()
+        : eventValues
+
       await api(`/admin/events/${eventId}`, {
-        method: 'PUT',
+        method: hasFile ? 'POST' : 'PUT',
         token,
-        body: eventValues,
+        body,
       })
       setIsEventModalOpen(false)
       await loadEvent()
@@ -444,34 +461,47 @@ export default function EventWorkspacePage() {
       {/* Main Event Hero Banner Card */}
       <div className="card-base p-6 bg-[var(--neutral-surface)] border border-[var(--neutral-border)] space-y-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2.5">
-              <span
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wide ${
-                  eventData?.status === 'active'
-                    ? 'bg-[#EBF7E3] text-[#48781B]'
-                    : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                }`}
-              >
+          <div className="flex items-start gap-4">
+            {eventData?.thumbnail || eventData?.thumbnail_url ? (
+              <img
+                src={resolveStorageUrl(eventData.thumbnail_url || eventData.thumbnail)}
+                alt={eventData.name}
+                className="w-16 h-20 rounded-2xl object-cover border border-[var(--neutral-border)] shadow-xs flex-shrink-0"
+              />
+            ) : (
+              <div className="w-16 h-20 rounded-2xl bg-[var(--brand-primary-light)] text-[var(--brand-primary)] font-black text-sm flex items-center justify-center border border-[var(--neutral-border)] shadow-xs flex-shrink-0">
+                {eventData?.name?.slice(0, 2)?.toUpperCase() || 'EV'}
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2.5">
                 <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    eventData?.status === 'active' ? 'bg-[#70B325] animate-pulse' : 'bg-gray-400'
+                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wide ${
+                    eventData?.status === 'active'
+                      ? 'bg-[#EBF7E3] text-[#48781B]'
+                      : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
                   }`}
-                />
-                {eventData?.status === 'active' ? 'Event Aktif' : 'Nonaktif'}
-              </span>
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      eventData?.status === 'active' ? 'bg-[#70B325] animate-pulse' : 'bg-gray-400'
+                    }`}
+                  />
+                  {eventData?.status === 'active' ? 'Event Aktif' : 'Nonaktif'}
+                </span>
 
-              <span className="text-xs text-gray-400 font-semibold">
-                Periode: {eventData?.start_date || '-'} s/d {eventData?.end_date || '-'}
-              </span>
+                <span className="text-xs text-gray-400 font-semibold">
+                  Periode: {eventData?.start_date || '-'} s/d {eventData?.end_date || '-'}
+                </span>
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl font-black text-[var(--neutral-text-main)] tracking-tight">
+                {eventData?.name}
+              </h1>
+              <p className="text-xs text-gray-500">
+                Kelola kategori bertingkat (Premier, Sekunder, Tersier) dan finalis langsung dari event ini.
+              </p>
             </div>
-
-            <h1 className="text-2xl sm:text-3xl font-black text-[var(--neutral-text-main)] tracking-tight">
-              {eventData?.name}
-            </h1>
-            <p className="text-xs text-gray-500">
-              Kelola kategori bertingkat (Premier, Sekunder, Tersier) dan finalis langsung dari event ini.
-            </p>
           </div>
 
           <div className="flex items-center gap-2 self-start md:self-center">
@@ -1060,10 +1090,10 @@ export default function EventWorkspacePage() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold text-gray-700 dark:text-gray-300">
-                    Poster / Thumbnail Voting
+                    Thumbnail Khusus Kategori (Opsional)
                   </label>
                   <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                    Rasio Ideal: 3:4 (Potret)
+                    Fallback: Poster Event
                   </span>
                 </div>
                 <input
@@ -1073,7 +1103,7 @@ export default function EventWorkspacePage() {
                   className="form-input text-xs file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-[var(--brand-primary-light)] file:text-[var(--brand-primary)]"
                 />
                 <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
-                  Gunakan ukuran <strong>900 × 1200 px</strong> (atau 750 × 1000 px). Pastikan teks judul &amp; QR code berada di tengah dengan margin minimal 10% agar pas sempurna di katalog desktop &amp; mobile.
+                  Kosongkan jika ingin otomatis menggunakan poster/thumbnail utama dari Event. Jika diisi, thumbnail ini akan khusus tampil untuk sesi kategori ini saja.
                 </p>
               </div>
 
@@ -1386,6 +1416,52 @@ export default function EventWorkspacePage() {
                     className="form-input text-xs sm:text-sm"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                    Poster / Thumbnail Event (Rasio 3:4 Potret)
+                  </label>
+                  <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    900 × 1200 px
+                  </span>
+                </div>
+                {eventValues.thumbnail && !(eventValues.thumbnail instanceof File) && (
+                  <div className="flex items-center gap-3 p-2 bg-[var(--neutral-surface-soft)] rounded-xl border border-[var(--neutral-border)]">
+                    <img
+                      src={resolveStorageUrl(eventValues.thumbnail)}
+                      alt="Current Poster"
+                      className="w-12 h-16 rounded-lg object-cover border border-[var(--neutral-border)] shadow-2xs"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-gray-800 dark:text-gray-200">Poster Saat Ini</p>
+                      <p className="text-[11px] text-gray-500 truncate">Pilih file baru di bawah untuk mengganti</p>
+                    </div>
+                  </div>
+                )}
+                {eventValues.thumbnail instanceof File && (
+                  <div className="flex items-center gap-3 p-2 bg-emerald-50 dark:bg-emerald-950/20 rounded-xl border border-emerald-200 dark:border-emerald-800/40">
+                    <img
+                      src={URL.createObjectURL(eventValues.thumbnail)}
+                      alt="New Poster Preview"
+                      className="w-12 h-16 rounded-lg object-cover border border-emerald-300 shadow-2xs"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300">Poster Baru Terpilih</p>
+                      <p className="text-[11px] text-emerald-600 dark:text-emerald-400 truncate">{eventValues.thumbnail.name}</p>
+                    </div>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setEventValues((prev) => ({ ...prev, thumbnail: e.target.files?.[0] ?? prev.thumbnail }))}
+                  className="form-input text-xs file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-[var(--brand-primary-light)] file:text-[var(--brand-primary)]"
+                />
+                <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                  Poster ini adalah identitas visual utama event dan akan tampil di katalog beranda publik serta diwarisi ke seluruh kategori di bawah event ini.
+                </p>
               </div>
 
               <div className="space-y-1">
