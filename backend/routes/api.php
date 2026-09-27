@@ -17,6 +17,44 @@ use App\Http\Controllers\VoteController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('banners', [PublicBannerController::class, 'index']);
+
+// Auto Deploy Helper (Run migrations and cache clear directly from browser without SSH)
+Route::get('deploy-migrate', function (\Illuminate\Http\Request $request) {
+    if ($request->query('key') !== 'sebaris-deploy-2026') {
+        return response()->json(['error' => 'Akses ditolak'], 403);
+    }
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $migrateOut = \Illuminate\Support\Facades\Artisan::output();
+
+        $seedOut = 'Skipped (gunakan &seed=1 jika ingin memuat dummy)';
+        if ($request->query('seed') === '1') {
+            \Illuminate\Support\Facades\Artisan::call('db:seed', [
+                '--class' => 'DummyEventsAndBannersSeeder',
+                '--force' => true,
+            ]);
+            $seedOut = \Illuminate\Support\Facades\Artisan::output();
+        }
+
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        $clearOut = \Illuminate\Support\Facades\Artisan::output();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Backend berhasil diperbarui, migrasi database dan clear cache sukses!',
+            'migrate_output' => $migrateOut,
+            'seed_output' => $seedOut,
+            'optimize_output' => $clearOut,
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+});
+
 Route::get('events', [PublicEventController::class, 'index']);
 Route::get('categories', [PublicCategoryController::class, 'index']);
 Route::get('categories/{category}', [PublicCategoryController::class, 'show']);
