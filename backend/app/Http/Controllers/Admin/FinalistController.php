@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\FinalistRequest;
 use App\Http\Resources\FinalistResource;
 use App\Models\Finalist;
+use App\Services\ImageOptimizer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
@@ -30,12 +31,12 @@ class FinalistController extends Controller
         $data = $request->safe()->except(['photo', 'extra_photos']);
 
         if ($request->hasFile('photo')) {
-            $data['photo'] = $request->file('photo')->store('finalists', 'public');
+            $data['photo'] = ImageOptimizer::storeOptimized($request->file('photo'), 'finalists', 900, 78);
         }
 
         if ($request->hasFile('extra_photos')) {
             $data['extra_photos'] = collect($request->file('extra_photos'))
-                ->map(fn ($f) => $f->store('finalists/extra', 'public'))
+                ->map(fn ($f) => ImageOptimizer::storeOptimized($f, 'finalists/extra', 900, 78))
                 ->filter()
                 ->values()
                 ->toArray();
@@ -61,7 +62,7 @@ class FinalistController extends Controller
             if ($finalist->photo) {
                 Storage::disk('public')->delete($finalist->photo);
             }
-            $data['photo'] = $request->file('photo')->store('finalists', 'public');
+            $data['photo'] = ImageOptimizer::storeOptimized($request->file('photo'), 'finalists', 900, 78);
         }
 
         if ($request->hasFile('extra_photos')) {
@@ -70,7 +71,7 @@ class FinalistController extends Controller
                 Storage::disk('public')->delete($oldPath);
             }
             $data['extra_photos'] = collect($request->file('extra_photos'))
-                ->map(fn ($f) => $f->store('finalists/extra', 'public'))
+                ->map(fn ($f) => ImageOptimizer::storeOptimized($f, 'finalists/extra', 900, 78))
                 ->filter()
                 ->values()
                 ->toArray();

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
+use App\Services\ImageOptimizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -42,7 +43,7 @@ class BannerController extends Controller
         ];
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('banners', 'public');
+            $data['image'] = ImageOptimizer::storeOptimized($request->file('image'), 'banners', 1400, 78);
         }
 
         $banner = Banner::create($data);
@@ -87,7 +88,7 @@ class BannerController extends Controller
             if ($banner->image && Storage::disk('public')->exists($banner->image)) {
                 Storage::disk('public')->delete($banner->image);
             }
-            $data['image'] = $request->file('image')->store('banners', 'public');
+            $data['image'] = ImageOptimizer::storeOptimized($request->file('image'), 'banners', 1400, 78);
         }
 
         $banner->update($data);

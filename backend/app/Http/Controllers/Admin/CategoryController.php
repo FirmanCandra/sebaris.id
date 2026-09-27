@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CategoryRequest;
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
+use App\Services\ImageOptimizer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
@@ -34,7 +35,7 @@ class CategoryController extends Controller
         $data = $request->safe()->except('thumbnail');
 
         if ($request->hasFile('thumbnail')) {
-            $data['thumbnail'] = $request->file('thumbnail')->store('categories', 'public');
+            $data['thumbnail'] = ImageOptimizer::storeOptimized($request->file('thumbnail'), 'categories', 1000, 78);
         }
 
         $category = Category::create($data);
@@ -57,7 +58,7 @@ class CategoryController extends Controller
                 Storage::disk('public')->delete($category->thumbnail);
             }
 
-            $data['thumbnail'] = $request->file('thumbnail')->store('categories', 'public');
+            $data['thumbnail'] = ImageOptimizer::storeOptimized($request->file('thumbnail'), 'categories', 1000, 78);
         }
 
         $category->update($data);

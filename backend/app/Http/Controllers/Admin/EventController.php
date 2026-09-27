@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\EventRequest;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
+use App\Services\ImageOptimizer;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,7 +26,7 @@ class EventController extends Controller
         }
 
         if ($request->hasFile('thumbnail')) {
-            $data['thumbnail'] = $request->file('thumbnail')->store('events', 'public');
+            $data['thumbnail'] = ImageOptimizer::storeOptimized($request->file('thumbnail'), 'events', 1000, 78);
         }
 
         return new EventResource(Event::create($data));
@@ -50,7 +51,7 @@ class EventController extends Controller
             if ($event->thumbnail) {
                 Storage::disk('public')->delete($event->thumbnail);
             }
-            $data['thumbnail'] = $request->file('thumbnail')->store('events', 'public');
+            $data['thumbnail'] = ImageOptimizer::storeOptimized($request->file('thumbnail'), 'events', 1000, 78);
         }
 
         $event->update($data);

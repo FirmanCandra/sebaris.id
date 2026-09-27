@@ -72,14 +72,47 @@ function isEventPast(ev) {
   return false
 }
 
+const CACHE_KEYS = {
+  EVENTS: 'sebaris_cache_events',
+  CATEGORIES: 'sebaris_cache_categories',
+  BANNERS: 'sebaris_cache_banners',
+}
+
+function getLocalCache(key) {
+  try {
+    const raw = sessionStorage.getItem(key)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+function setLocalCache(key, data) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(data))
+  } catch {
+    // Quota or private browsing fallback
+  }
+}
+
 export default function PublicEventsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isCheckVoteModalOpen, setIsCheckVoteModalOpen] = useState(false)
   const [checkVoteModalQuery, setCheckVoteModalQuery] = useState('')
-  const [backendEvents, setBackendEvents] = useState([])
-  const [backendCategories, setBackendCategories] = useState([])
-  const [backendBanners, setBackendBanners] = useState([])
-  const [loadingData, setLoadingData] = useState(true)
+  
+  // Instant Paint: initialize directly from session cache if available (0ms load on refresh)
+  const [backendEvents, setBackendEvents] = useState(() => getLocalCache(CACHE_KEYS.EVENTS) || [])
+  const [backendCategories, setBackendCategories] = useState(() => getLocalCache(CACHE_KEYS.CATEGORIES) || [])
+  const [backendBanners, setBackendBanners] = useState(() => getLocalCache(CACHE_KEYS.BANNERS) || [])
+  
+  const hasCachedDataRef = useRef(
+    Boolean(
+      (getLocalCache(CACHE_KEYS.CATEGORIES)?.length > 0) ||
+      (getLocalCache(CACHE_KEYS.BANNERS)?.length > 0)
+    )
+  )
+
+  const [loadingData, setLoadingData] = useState(() => !hasCachedDataRef.current)
   const [loadedBannerImages, setLoadedBannerImages] = useState({})
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0)
   const [isBannerPaused, setIsBannerPaused] = useState(false)
@@ -115,6 +148,11 @@ export default function PublicEventsPage() {
   }, [])
 
   useEffect(() => {
+    // Silent background revalidation: if we already painted cached content, don't flash skeletons
+    if (!hasCachedDataRef.current) {
+      setLoadingData(true)
+    }
+
     Promise.all([
       api('/events').catch(() => ({ data: [] })),
       api('/categories').catch(() => ({ data: [] })),
@@ -123,12 +161,15 @@ export default function PublicEventsPage() {
       .then(([eventsRes, catRes, bannersRes]) => {
         if (Array.isArray(eventsRes?.data) && eventsRes.data.length > 0) {
           setBackendEvents(eventsRes.data)
+          setLocalCache(CACHE_KEYS.EVENTS, eventsRes.data)
         }
         if (Array.isArray(catRes?.data) && catRes.data.length > 0) {
           setBackendCategories(catRes.data)
+          setLocalCache(CACHE_KEYS.CATEGORIES, catRes.data)
         }
         if (Array.isArray(bannersRes?.data) && bannersRes.data.length > 0) {
           setBackendBanners(bannersRes.data)
+          setLocalCache(CACHE_KEYS.BANNERS, bannersRes.data)
         }
       })
       .catch(() => {
@@ -387,7 +428,7 @@ export default function PublicEventsPage() {
 
                 const imageElement = (
                   <div className="relative w-full h-full bg-[#E6ECE1] dark:bg-black/50 overflow-hidden">
-                    {/* Shimmer Placeholder before image finishes loading */}
+                    {/* Shimmer Placeholder only when image is not yet cached or loaded */}
                     {!isImageLoaded && (
                       <div className="absolute inset-0 flex items-center justify-center bg-[#E6ECE1]/90 dark:bg-white/5">
                         <div className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/50 dark:via-white/10 to-transparent pointer-events-none" />
@@ -396,14 +437,20 @@ export default function PublicEventsPage() {
                     <img
                       src={banner.image}
                       alt={banner.title || 'Banner Event Sebaris'}
-                      className={`w-full h-full object-cover object-center transition-opacity duration-700 ease-out ${
+                      className={`w-full h-full object-cover object-center transition-opacity duration-300 ease-out ${
                         isImageLoaded ? 'opacity-100' : 'opacity-0'
                       }`}
                       draggable={false}
                       loading={idx === 0 ? 'eager' : 'lazy'}
                       fetchPriority={idx === 0 ? 'high' : 'auto'}
+                      decoding="async"
                       onLoad={() => {
                         setLoadedBannerImages((prev) => ({ ...prev, [banner.id || idx]: true }))
+                      }}
+                      ref={(el) => {
+                        if (el && el.complete && !isImageLoaded) {
+                          setLoadedBannerImages((prev) => ({ ...prev, [banner.id || idx]: true }))
+                        }
                       }}
                     />
                   </div>
@@ -594,6 +641,7 @@ export default function PublicEventsPage() {
                             alt={item.title}
                             className="w-full h-full object-cover group-hover/poster:scale-105 transition-transform duration-500"
                             loading="lazy"
+                            decoding="async"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none'
                             }}
