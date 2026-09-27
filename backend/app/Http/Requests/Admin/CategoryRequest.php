@@ -26,6 +26,8 @@ class CategoryRequest extends FormRequest
             'allow_free_vote'   => ['nullable', 'boolean'],
             'freeze_leaderboard'=> ['nullable', 'boolean'],
             'event_id'          => ['nullable', 'integer'],
+            'tier'              => ['nullable', 'string', 'in:premier,sekunder,tersier'],
+            'sort_order'        => ['nullable', 'integer', 'min:1'],
         ];
     }
 }

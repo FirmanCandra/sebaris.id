@@ -12,13 +12,16 @@ import {
   IconMenu,
   IconClose,
   IconBarChart,
+  IconImage,
 } from '../components/Icons'
 import { api } from '../api/client'
 
 const NAV_LINKS = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: IconBarChart },
+  { to: '/admin/events', label: 'Event / Ajang', icon: IconTrophy },
   { to: '/admin/categories', label: 'Kategori', icon: IconLayers },
   { to: '/admin/finalists', label: 'Finalis', icon: IconUsers },
+  { to: '/admin/banners', label: 'Banner Slider', icon: IconImage },
   { to: '/admin/admins', label: 'Admin & Tim', icon: IconUsers },
 ]
 
@@ -29,18 +32,22 @@ export default function AdminLayout() {
   const location = useLocation()
   const { theme, toggleTheme } = useTheme()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [counts, setCounts] = useState({ categories: 0, finalists: 0 })
+  const [counts, setCounts] = useState({ events: 0, categories: 0, finalists: 0, banners: 0 })
 
   // Fetch count badges for sidebar
   useEffect(() => {
     if (!token) return
     Promise.allSettled([
+      api('/admin/events', { token }),
       api('/admin/categories', { token }),
       api('/admin/finalists', { token }),
-    ]).then(([resCats, resFinalists]) => {
+      api('/admin/banners', { token }),
+    ]).then(([resEvents, resCats, resFinalists, resBanners]) => {
       setCounts({
+        events: resEvents.status === 'fulfilled' && resEvents.value?.data ? resEvents.value.data.length : 0,
         categories: resCats.status === 'fulfilled' && resCats.value?.data ? resCats.value.data.length : 0,
         finalists: resFinalists.status === 'fulfilled' && resFinalists.value?.data ? resFinalists.value.data.length : 0,
+        banners: resBanners.status === 'fulfilled' && resBanners.value?.data ? resBanners.value.data.length : 0,
       })
     })
   }, [token, location.pathname])
@@ -155,7 +162,16 @@ export default function AdminLayout() {
             <nav className="space-y-1.5" aria-label="Navigasi admin utama">
               {NAV_LINKS.map((link) => {
                 const IconComponent = link.icon
-                const countKey = link.label === 'Kategori' ? 'categories' : link.label === 'Finalis' ? 'finalists' : null
+                const countKey =
+                  link.label === 'Event / Ajang'
+                    ? 'events'
+                    : link.label === 'Kategori'
+                    ? 'categories'
+                    : link.label === 'Finalis'
+                    ? 'finalists'
+                    : link.label === 'Banner Slider'
+                    ? 'banners'
+                    : null
                 const badgeCount = counts[countKey]
 
                 return (

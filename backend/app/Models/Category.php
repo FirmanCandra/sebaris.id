@@ -14,6 +14,8 @@ class Category extends Model
 
     protected $fillable = [
         'event_id',
+        'tier',
+        'sort_order',
         'name',
         'slug',
         'thumbnail',
@@ -47,13 +49,25 @@ class Category extends Model
     protected function casts(): array
     {
         return [
-            'start_date'       => 'date',
-            'end_date'         => 'date',
-            'price_per_vote'   => 'integer',
-            'allow_free_vote'  => 'boolean',
+            'start_date'         => 'date',
+            'end_date'           => 'date',
+            'price_per_vote'     => 'integer',
+            'sort_order'         => 'integer',
+            'allow_free_vote'    => 'boolean',
             'freeze_leaderboard' => 'boolean',
-            'vote_packages'    => 'array',
+            'vote_packages'      => 'array',
         ];
+    }
+
+    public function scopeOrdered($query)
+    {
+        return $query->orderByRaw("CASE 
+            WHEN tier = 'premier' THEN 1 
+            WHEN tier = 'sekunder' THEN 2 
+            WHEN tier = 'tersier' THEN 3 
+            ELSE 4 END")
+            ->orderBy('sort_order', 'asc')
+            ->orderBy('id', 'asc');
     }
 
     public function event(): BelongsTo

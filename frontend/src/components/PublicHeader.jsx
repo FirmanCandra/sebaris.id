@@ -73,9 +73,9 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
 
   return (
     <>
-      <header className="sticky top-0 sm:top-3 z-50 w-full px-2.5 sm:px-6 lg:px-8 pointer-events-none transition-all duration-300">
+      <header className="sticky top-0 sm:top-3 z-50 w-full px-2.5 sm:px-6 lg:px-8 pt-[env(safe-area-inset-top,0px)] pointer-events-none transition-all duration-300">
       <div
-        className={`max-w-7xl mx-auto pointer-events-auto h-16 sm:h-18 px-5 sm:px-8 rounded-full flex items-center justify-between gap-4 transition-all duration-300 backdrop-blur-xl backdrop-saturate-150 ${
+        className={`max-w-7xl mx-auto pointer-events-auto h-16 sm:h-18 px-4 sm:px-8 rounded-full flex items-center justify-between gap-3 sm:gap-4 transition-all duration-300 backdrop-blur-xl backdrop-saturate-150 ios-isolate ${
           isOverHero
             ? 'bg-black/30 border border-white/20 text-white shadow-xl shadow-black/20'
             : theme === 'dark'
@@ -243,7 +243,7 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={`md:hidden w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md transition-all ${
+            className={`md:hidden w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center backdrop-blur-md transition-all cursor-pointer ${
               isOverHero || theme === 'dark'
                 ? 'bg-white/10 border border-white/20 text-white'
                 : 'bg-black/5 border border-black/10 text-gray-800'
@@ -266,8 +266,8 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
           />
 
           {/* Floating Mobile Card */}
-          <div className="md:hidden fixed top-20 inset-x-3 sm:inset-x-6 z-50 pointer-events-auto animate-fadeIn">
-            <div className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#151C14]/95 border border-white/60 dark:border-white/15 p-5 shadow-2xl space-y-4 max-h-[82vh] overflow-y-auto">
+          <div className="md:hidden fixed top-[calc(env(safe-area-inset-top,0px)+4.5rem)] inset-x-3 sm:inset-x-6 z-50 pointer-events-auto animate-fadeIn">
+            <div className="rounded-3xl backdrop-blur-2xl bg-white/95 dark:bg-[#151C14]/95 border border-white/60 dark:border-white/15 p-5 shadow-2xl space-y-4 max-h-[82vh] overflow-y-auto ios-isolate">
             
             {/* Quick Search */}
             <form onSubmit={handleSearchSubmit}>

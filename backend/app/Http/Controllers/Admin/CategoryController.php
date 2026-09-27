@@ -16,10 +16,14 @@ class CategoryController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = Category::query()->withCount('finalists')->latest();
+        $query = Category::query()->with('event')->withCount('finalists')->ordered();
 
         if ($request->filled('status')) {
             $query->where('status', $request->string('status'));
+        }
+
+        if ($request->filled('event_id')) {
+            $query->where('event_id', $request->integer('event_id'));
         }
 
         return CategoryResource::collection($query->get());
@@ -34,14 +38,14 @@ class CategoryController extends Controller
         }
 
         $category = Category::create($data);
-        Cache::forget('public.categories');
+        Cache::forget('public.categories.all');
 
-        return new CategoryResource($category->loadCount('finalists'));
+        return new CategoryResource($category->load('event')->loadCount('finalists'));
     }
 
     public function show(Category $category): CategoryResource
     {
-        return new CategoryResource($category->loadCount('finalists'));
+        return new CategoryResource($category->load('event')->loadCount('finalists'));
     }
 
     public function update(CategoryRequest $request, Category $category): CategoryResource
@@ -57,9 +61,9 @@ class CategoryController extends Controller
         }
 
         $category->update($data);
-        Cache::forget('public.categories');
+        Cache::forget('public.categories.all');
 
-        return new CategoryResource($category->fresh()->loadCount('finalists'));
+        return new CategoryResource($category->fresh()->load('event')->loadCount('finalists'));
     }
 
     public function destroy(Category $category): Response
@@ -69,6 +73,7 @@ class CategoryController extends Controller
         }
 
         $category->delete();
+        Cache::forget('public.categories.all');
         Cache::forget('public.categories');
 
         return response()->noContent();
@@ -79,6 +84,7 @@ class CategoryController extends Controller
         $category->update([
             'freeze_leaderboard' => !$category->freeze_leaderboard,
         ]);
+        Cache::forget('public.categories.all');
         Cache::forget('public.categories');
         Cache::forget("public.finalists.{$category->id}");
 

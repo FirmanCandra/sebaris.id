@@ -27,7 +27,7 @@ export default function EReceiptModal({ isOpen, onClose, data }) {
   }
 
   function handleShareWhatsApp() {
-    const text = `Saya baru saja memberikan ${voteAmount} suara resmi untuk *${finalistName}* di ajang *${categoryName}* melalui sebaris.id! 🌟\n\nNo. Tiket: ${referenceId}\nStatus: Sah & Terhitung\n\nYuk ikutan dukung juga!`
+    const text = `Saya baru saja memberikan ${voteAmount} suara resmi untuk *${finalistName}* di ajang *${categoryName}* melalui sebaris.id!\n\nNo. Tiket: ${referenceId}\nStatus: Sah & Terhitung\n\nYuk ikutan dukung juga!`
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
   }
 

@@ -47,7 +47,7 @@ export default function FinalistDetailModal({
     return () => {
       isMounted = false
     }
-  }, [isOpen, finalist?.id, category])
+  }, [isOpen, finalist?.id, category?.id, category?.slug])
 
   // Collect all photos: main photo + extra_photos
   const allPhotos = useMemo(() => {
@@ -72,7 +72,7 @@ export default function FinalistDetailModal({
 
   function handleShareWhatsApp() {
     const directUrl = `${window.location.origin}/categories/${category?.slug || category?.id}?finalist=${finalist.id}`
-    const text = `Halo! Yuk dukung kandidat *${finalist.name}* di ajang *${category?.name || 'Voting'}* melalui sebaris.id! 🌟\n\nKlik link ini untuk beri vote secara langsung:\n${directUrl}`
+    const text = `Halo! Yuk dukung kandidat *${finalist.name}* di ajang *${category?.name || 'Voting'}* melalui sebaris.id!\n\nKlik link ini untuk beri vote secara langsung:\n${directUrl}`
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
   }
 
@@ -97,7 +97,7 @@ export default function FinalistDetailModal({
       aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-xs animate-fadeIn overflow-y-auto"
     >
-      <div className="bg-white dark:bg-[#151C14] text-[#262A25] dark:text-gray-100 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-gray-100 dark:border-white/10 relative my-auto transition-colors">
+      <div className="bg-white dark:bg-[#151C14] text-[#262A25] dark:text-gray-100 rounded-3xl max-w-lg w-full max-h-[90dvh] overflow-y-auto shadow-2xl border border-gray-100 dark:border-white/10 relative my-auto transition-colors ios-isolate">
         {/* Close Button */}
         <button
           type="button"

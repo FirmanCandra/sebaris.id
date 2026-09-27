@@ -11,11 +11,11 @@ class PublicCategoryController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        $categories = Cache::remember('public.categories', 60, function () {
+        $categories = Cache::remember('public.categories.all', 30, function () {
             return Category::query()
-                ->where('status', 'active')
+                ->with('event')
                 ->withCount('finalists')
-                ->latest()
+                ->ordered()
                 ->get();
         });
 
@@ -25,7 +25,11 @@ class PublicCategoryController extends Controller
     public function show(string $idOrSlug): CategoryResource
     {
         $category = Category::query()
-            ->where('status', 'active')
+            ->with([
+                'event.categories' => function ($query) {
+                    $query->ordered();
+                },
+            ])
             ->where(function ($query) use ($idOrSlug) {
                 if (is_numeric($idOrSlug)) {
                     $query->where('id', (int) $idOrSlug);

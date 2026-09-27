@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { api, resolveStorageUrl } from '../api/client'
 import PublicHeader from '../components/PublicHeader'
 import CheckVoteModal from '../components/CheckVoteModal'
@@ -10,8 +10,14 @@ import {
   IconClock,
   IconCheckVote,
   IconChevronRight,
+  IconChevronLeft,
   IconZap,
   IconTrophy,
+  IconArrowUpRight,
+  IconVoteBox,
+  IconCrown,
+  IconCheck,
+  IconLock,
 } from '../components/Icons'
 import {
   BannerSchool,
@@ -24,35 +30,85 @@ import {
   ThumbnailCamera,
 } from '../components/CardIllustrations'
 
-// Fallback arrays when no events are published yet
-const POPULAR_VOTINGS_DATA = []
-const RECENT_VOTINGS_DATA = []
+function isCategoryPast(cat) {
+  if (!cat) return false
+  if (cat.status === 'inactive' || cat.status === 'ended' || cat.status === 'completed') {
+    return true
+  }
+  if (cat.event?.status === 'inactive' || cat.event?.status === 'ended' || cat.event?.status === 'completed') {
+    return true
+  }
+  if (cat.end_date) {
+    const end = new Date(cat.end_date)
+    end.setHours(23, 59, 59, 999)
+    if (end < new Date()) {
+      return true
+    }
+  }
+  if (cat.event?.end_date) {
+    const end = new Date(cat.event.end_date)
+    end.setHours(23, 59, 59, 999)
+    if (end < new Date()) {
+      return true
+    }
+  }
+  return false
+}
 
-const CATEGORY_ITEMS = [
-  { id: 'Semua', label: 'Semua Ajang', icon: '🌟' },
-  { id: 'Kampus', label: 'Kampus / Univ', icon: '🎓' },
-  { id: 'Sekolah', label: 'Sekolah & OSIS', icon: '🏫' },
-  { id: 'Organisasi', label: 'Organisasi', icon: '👥' },
-  { id: 'Komunitas', label: 'Komunitas & Award', icon: '🏆' },
-]
+function isEventPast(ev) {
+  if (!ev) return false
+  if (ev.status === 'inactive' || ev.status === 'ended' || ev.status === 'completed') {
+    return true
+  }
+  if (ev.end_date) {
+    const end = new Date(ev.end_date)
+    end.setHours(23, 59, 59, 999)
+    if (end < new Date()) {
+      return true
+    }
+  }
+  return false
+}
 
 export default function PublicEventsPage() {
-  const navigate = useNavigate()
-  const [activeCategory, setActiveCategory] = useState('Semua')
   const [searchQuery, setSearchQuery] = useState('')
-  const [checkVoteCode, setCheckVoteCode] = useState('')
   const [isCheckVoteModalOpen, setIsCheckVoteModalOpen] = useState(false)
   const [checkVoteModalQuery, setCheckVoteModalQuery] = useState('')
+  const [backendEvents, setBackendEvents] = useState([])
   const [backendCategories, setBackendCategories] = useState([])
+  const [backendBanners, setBackendBanners] = useState([])
   const [_loadingCategories, setLoadingCategories] = useState(true)
-  const [heroSlideIndex, setHeroSlideIndex] = useState(0)
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0)
+  const [isBannerPaused, setIsBannerPaused] = useState(false)
+  const [touchStartX, setTouchStartX] = useState(null)
+  const [touchStartY, setTouchStartY] = useState(null)
   const [champions, setChampions] = useState([])
 
+  const highlightsSliderRef = useRef(null)
+  const championsSliderRef = useRef(null)
+  const pastSliderRef = useRef(null)
+
+  const scrollSlider = (ref, direction) => {
+    if (!ref.current) return
+    const offset = direction === 'left' ? -350 : 350
+    ref.current.scrollBy({ left: offset, behavior: 'smooth' })
+  }
+
   useEffect(() => {
-    api('/categories')
-      .then(({ data }) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setBackendCategories(data)
+    Promise.all([
+      api('/events').catch(() => ({ data: [] })),
+      api('/categories').catch(() => ({ data: [] })),
+      api('/banners').catch(() => ({ data: [] })),
+    ])
+      .then(([eventsRes, catRes, bannersRes]) => {
+        if (Array.isArray(eventsRes?.data) && eventsRes.data.length > 0) {
+          setBackendEvents(eventsRes.data)
+        }
+        if (Array.isArray(catRes?.data) && catRes.data.length > 0) {
+          setBackendCategories(catRes.data)
+        }
+        if (Array.isArray(bannersRes?.data) && bannersRes.data.length > 0) {
+          setBackendBanners(bannersRes.data)
         }
       })
       .catch(() => {
@@ -61,13 +117,19 @@ export default function PublicEventsPage() {
       .finally(() => setLoadingCategories(false))
   }, [])
 
-  // Fetch #1 leading candidates across active categories for "Dukung Terus Juara 1 Kamu" spotlight
+  // Separate active categories (Highlight) and past categories (Sudah Berlalu)
+  const activeCategories = backendCategories.filter((cat) => !isCategoryPast(cat))
+  const pastCategories = backendCategories.filter((cat) => isCategoryPast(cat))
+
+  // Fetch #1 leading candidates across active categories for "Top Voting" spotlight
   useEffect(() => {
     if (backendCategories.length === 0) return
     let isMounted = true
 
+    const targetCats = activeCategories.length > 0 ? activeCategories : backendCategories
+
     Promise.all(
-      backendCategories.slice(0, 4).map(async (cat) => {
+      targetCats.slice(0, 6).map(async (cat) => {
         try {
           const res = await api(`/categories/${cat.id}/leaderboard`)
           if (Array.isArray(res.data) && res.data.length > 0) {
@@ -94,82 +156,181 @@ export default function PublicEventsPage() {
     return () => {
       isMounted = false
     }
-  }, [backendCategories])
-
-  function handleCheckVoteSubmit(e) {
-    e.preventDefault()
-    setCheckVoteModalQuery(checkVoteCode)
-    setIsCheckVoteModalOpen(true)
-  }
+  }, [backendCategories, activeCategories.length])
 
   function handleOpenCheckVoteModal(code = '') {
-    setCheckVoteModalQuery(code || checkVoteCode)
+    setCheckVoteModalQuery(code)
     setIsCheckVoteModalOpen(true)
   }
 
-  // Combine backend categories or fallbacks
-  const displayPopular = backendCategories.length > 0
-    ? backendCategories.map((cat, idx) => ({
-        id: cat.id,
-        slug: cat.slug || String(cat.id),
-        title: cat.name,
-        organizer: cat.organizer || 'Forum Genre / Panitia',
-        daysLeft: cat.end_date ? `s/d ${cat.end_date}` : 'Sedang Berlangsung',
-        category: cat.name.toLowerCase().includes('sekolah') || cat.name.toLowerCase().includes('osis')
-          ? 'Sekolah'
-          : cat.name.toLowerCase().includes('bem') || cat.name.toLowerCase().includes('fakultas') || cat.name.toLowerCase().includes('kampus')
-          ? 'Kampus'
-          : cat.name.toLowerCase().includes('organisasi')
-          ? 'Organisasi'
-          : 'Komunitas',
-        votes: `${cat.finalists_count || 0} finalis`,
-        percentage: 60 + ((idx * 11) % 35),
-        thumbnail: cat.thumbnail_url || cat.thumbnail,
-        BannerComponent: [BannerSchool, BannerCampus, BannerFestival, BannerPoster][idx % 4],
-        avatars: ['SB', 'ID', 'VT'],
-        extraAvatars: cat.finalists_count > 3 ? cat.finalists_count - 3 : 0,
-      }))
-    : POPULAR_VOTINGS_DATA
+  // 1. Highlight Events: HANYA AJANG / EVENT INDUK (Bukan per sub-kategori)
+  const highlightEvents = useMemo(() => {
+    // Prioritas 1: Ambil data dari backendEvents jika tersedia (hanya yang aktif)
+    if (backendEvents.length > 0) {
+      return backendEvents
+        .filter((ev) => !isEventPast(ev))
+        .map((ev, idx) => {
+          const evCategories = (ev.categories && ev.categories.length > 0)
+            ? ev.categories
+            : backendCategories.filter((c) => c.event_id === ev.id)
+          const premierCat = evCategories.find((c) => c.tier === 'premier') || evCategories[0]
+          const catCount = ev.categories_count || evCategories.length
+          const totalFinalists = evCategories.reduce((sum, c) => sum + (c.finalists_count || 0), 0)
 
-  // Filter items based on active category and search query
-  const filteredPopular = displayPopular.filter((item) => {
-    const matchCat = activeCategory === 'Semua' || item.category === activeCategory
-    const matchSearch =
-      !searchQuery.trim() ||
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.organizer.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchCat && matchSearch
+          return {
+            id: `event-${ev.id}`,
+            eventId: ev.id,
+            slug: premierCat?.slug || premierCat?.id || String(ev.id),
+            title: ev.name,
+            organizer: premierCat?.organizer || 'Panitia Pelaksana',
+            daysLeft: ev.end_date ? `s/d ${ev.end_date}` : (premierCat?.end_date ? `s/d ${premierCat.end_date}` : 'Sedang Berlangsung'),
+            votes: `${catCount} Kategori Pemilihan`,
+            totalFinalists,
+            thumbnail: premierCat?.thumbnail_url || premierCat?.thumbnail,
+            BannerComponent: [BannerCampus, BannerSchool, BannerFestival, BannerPoster][idx % 4],
+          }
+        })
+    }
+
+    // Prioritas 2: Kelompokkan dari backendCategories berdasarkan event induk (hanya yang aktif)
+    const eventMap = new Map()
+    activeCategories.forEach((cat) => {
+      const eventKey = cat.event_id ? `event-${cat.event_id}` : `cat-${cat.id}`
+      if (!eventMap.has(eventKey)) {
+        eventMap.set(eventKey, {
+          id: eventKey,
+          eventId: cat.event_id,
+          slug: cat.slug || String(cat.id),
+          title: cat.event?.name || cat.name,
+          organizer: cat.organizer || 'Panitia Pelaksana',
+          daysLeft: cat.event?.end_date ? `s/d ${cat.event.end_date}` : (cat.end_date ? `s/d ${cat.end_date}` : 'Sedang Berlangsung'),
+          thumbnail: cat.thumbnail_url || cat.thumbnail,
+          categoriesCount: 1,
+        })
+      } else {
+        const item = eventMap.get(eventKey)
+        item.categoriesCount += 1
+        if (cat.tier === 'premier') {
+          item.slug = cat.slug || String(cat.id)
+          if (cat.thumbnail_url || cat.thumbnail) {
+            item.thumbnail = cat.thumbnail_url || cat.thumbnail
+          }
+        }
+      }
+    })
+
+    return Array.from(eventMap.values()).map((ev, idx) => ({
+      ...ev,
+      votes: `${ev.categoriesCount} Kategori Pemilihan`,
+      BannerComponent: [BannerCampus, BannerSchool, BannerFestival, BannerPoster][idx % 4],
+    }))
+  }, [backendEvents, backendCategories, activeCategories])
+
+  const filteredHighlights = highlightEvents.filter((item) => {
+    if (!searchQuery.trim()) return true
+    const q = searchQuery.toLowerCase()
+    return item.title.toLowerCase().includes(q) || item.organizer.toLowerCase().includes(q)
   })
 
-  const displayRecent = backendCategories.length > 0
-    ? backendCategories.map((cat, idx) => ({
-        id: cat.id,
-        slug: cat.slug || String(cat.id),
-        title: cat.name,
-        organizer: cat.organizer || 'Penyelenggara',
-        daysLeft: cat.end_date ? `s/d ${cat.end_date}` : 'Buka',
-        category: cat.name.toLowerCase().includes('sekolah') || cat.name.toLowerCase().includes('osis')
-          ? 'Sekolah'
-          : cat.name.toLowerCase().includes('bem') || cat.name.toLowerCase().includes('fakultas') || cat.name.toLowerCase().includes('kampus')
-          ? 'Kampus'
-          : 'Komunitas',
-        votes: `${cat.finalists_count || 0} finalis`,
-        thumbnail: cat.thumbnail_url || cat.thumbnail,
-        IconComponent: [ThumbnailEarth, ThumbnailTech, ThumbnailMusic, ThumbnailCamera][idx % 4],
-      }))
-    : RECENT_VOTINGS_DATA
+  // 3. Past Events (Event/ajang yang sudah berakhir atau berstatus nonaktif)
+  const pastEvents = useMemo(() => {
+    // Prioritas 1: Dari backendEvents yang sudah lewat / nonaktif
+    if (backendEvents.length > 0) {
+      const pastEvList = backendEvents.filter((ev) => isEventPast(ev))
+      if (pastEvList.length > 0) {
+        return pastEvList.map((ev, idx) => {
+          const evCategories = (ev.categories && ev.categories.length > 0)
+            ? ev.categories
+            : backendCategories.filter((c) => c.event_id === ev.id)
+          const premierCat = evCategories.find((c) => c.tier === 'premier') || evCategories[0]
+          const catCount = ev.categories_count || evCategories.length
+          const totalFinalists = evCategories.reduce((sum, c) => sum + (c.finalists_count || 0), 0)
 
-  const filteredRecent = displayRecent.filter((item) => {
-    const matchCat = activeCategory === 'Semua' || item.category === activeCategory
-    const matchSearch =
-      !searchQuery.trim() ||
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.organizer.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchCat && matchSearch
+          return {
+            id: `past-event-${ev.id}`,
+            slug: premierCat?.slug || premierCat?.id || String(ev.id),
+            title: ev.name,
+            organizer: premierCat?.organizer || 'Panitia Pelaksana',
+            endDate: ev.end_date ? `Berakhir ${ev.end_date}` : (premierCat?.end_date ? `Berakhir ${premierCat.end_date}` : 'Telah Selesai'),
+            votes: `${catCount} Kategori • ${totalFinalists} Finalis`,
+            thumbnail: premierCat?.thumbnail_url || premierCat?.thumbnail,
+            IconComponent: [ThumbnailEarth, ThumbnailTech, ThumbnailMusic, ThumbnailCamera][idx % 4],
+          }
+        })
+      }
+    }
+
+    // Prioritas 2: Dari pastCategories
+    return pastCategories.map((cat, idx) => ({
+      id: `past-cat-${cat.id}`,
+      slug: cat.slug || String(cat.id),
+      title: cat.event?.name || cat.name,
+      organizer: cat.organizer || 'Panitia Pelaksana',
+      endDate: cat.end_date ? `Berakhir ${cat.end_date}` : 'Telah Selesai',
+      votes: `${cat.finalists_count || 0} finalis`,
+      thumbnail: cat.thumbnail_url || cat.thumbnail,
+      IconComponent: [ThumbnailEarth, ThumbnailTech, ThumbnailMusic, ThumbnailCamera][idx % 4],
+    }))
+  }, [backendEvents, backendCategories, pastCategories])
+
+  const filteredPast = pastEvents.filter((item) => {
+    if (!searchQuery.trim()) return true
+    const q = searchQuery.toLowerCase()
+    return item.title.toLowerCase().includes(q) || item.organizer.toLowerCase().includes(q)
   })
 
-  // Showcase item for right hero card
-  const showcaseItem = backendCategories.length > 0 ? backendCategories[heroSlideIndex % backendCategories.length] : null
+  // Hero Banners (Banner gambar murni bergeser seperti Kreen & diatur lewat admin)
+  const heroBanners = useMemo(() => {
+    if (backendBanners && backendBanners.length > 0) {
+      return backendBanners.map((b) => ({
+        id: `banner-${b.id}`,
+        title: b.title,
+        image: resolveStorageUrl(b.image_url || b.image),
+        link_url: b.link_url,
+      }))
+    }
+
+    // Fallback jika admin belum mengunggah banner
+    if (highlightEvents.length > 0) {
+      return highlightEvents.filter((ev) => ev.thumbnail).map((ev) => ({
+        id: `banner-${ev.id}`,
+        title: ev.title,
+        image: resolveStorageUrl(ev.thumbnail),
+        link_url: `/voting/${ev.slug}`,
+      }))
+    }
+
+    return []
+  }, [backendBanners, highlightEvents])
+
+  // Auto-play hero banner carousel (setiap 5 detik)
+  useEffect(() => {
+    if (isBannerPaused || heroBanners.length <= 1) return
+    const timer = setInterval(() => {
+      setCurrentBannerIndex((prev) => (prev + 1) % heroBanners.length)
+    }, 5000)
+    return () => clearInterval(timer)
+  }, [isBannerPaused, heroBanners.length])
+
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX)
+    setTouchStartY(e.touches[0].clientY)
+  }
+  const handleTouchEnd = (e) => {
+    if (touchStartX === null || heroBanners.length <= 1) return
+    const diffX = touchStartX - e.changedTouches[0].clientX
+    const diffY = touchStartY !== null ? touchStartY - e.changedTouches[0].clientY : 0
+    // Only slide if horizontal intent is stronger than vertical scroll intent
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 35) {
+      if (diffX > 0) {
+        setCurrentBannerIndex((prev) => (prev + 1) % heroBanners.length)
+      } else {
+        setCurrentBannerIndex((prev) => (prev - 1 + heroBanners.length) % heroBanners.length)
+      }
+    }
+    setTouchStartX(null)
+    setTouchStartY(null)
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAF7] dark:bg-[#121612] text-[#262A25] dark:text-[#F3F5F1] flex flex-col font-sans transition-colors duration-300">
@@ -181,311 +342,123 @@ export default function PublicEventsPage() {
         onOpenCheckVote={() => handleOpenCheckVoteModal()}
       />
 
-      {/* HERO SECTION — Sesuai Referensi Foto (Background Gambar Setema, Typography Raksasa, Tombol Pill, Stats, Showcase Card) */}
-      <section className="relative overflow-hidden min-h-[640px] sm:min-h-[700px] lg:min-h-[760px] flex items-center -mt-20 pt-24 sm:pt-28 pb-16">
-        
-        {/* Background Gambar Setema (Auditorium Megah E-Voting) */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src={heroBg}
-            alt="Sebaris E-Voting Grand Stage"
-            className="w-full h-full object-cover object-center transform scale-105 select-none"
-            loading="eager"
-          />
-          {/* Lapisan Gradient Gelap Bernuansa Emerald yang Mewah */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#F8FAF7] dark:from-[#121612] via-black/60 to-black/80" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/40 pointer-events-none" />
-        </div>
+      {/* =========================================================================
+          HERO BANNER CAROUSEL (Banner Gambar Murni Sesuai Kreenconnect.com)
+          ========================================================================= */}
+      {heroBanners.length > 0 && (
+        <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-3 sm:pt-6 pb-1 w-full">
+          <div
+            className="relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-sm bg-gray-900 border border-[#E5EADF] dark:border-[#2C3529] aspect-[16/9] sm:aspect-[21/9] lg:aspect-[24/8] flex items-center group select-none ios-isolate"
+            onMouseEnter={() => setIsBannerPaused(true)}
+            onMouseLeave={() => setIsBannerPaused(false)}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            {/* Sliding Track for buttery smooth transitions */}
+            <div
+              className="flex h-full w-full transition-transform duration-500 ease-out will-change-transform"
+              style={{ transform: `translateX(-${currentBannerIndex * 100}%)` }}
+            >
+              {heroBanners.map((banner, idx) => {
+                const imageElement = (
+                  <img
+                    src={banner.image}
+                    alt={banner.title || 'Banner Event Sebaris'}
+                    className="w-full h-full object-cover object-center"
+                    draggable={false}
+                    loading={idx === 0 ? 'eager' : 'lazy'}
+                  />
+                )
 
-        {/* Watermark Tipografi Raksasa */}
-        <div
-          aria-hidden="true"
-          className="absolute top-8 sm:top-12 left-4 sm:left-10 lg:left-16 text-[80px] sm:text-[140px] lg:text-[210px] font-black tracking-widest text-white/5 dark:text-white/10 select-none pointer-events-none uppercase font-sans z-0 leading-none"
-        >
-          SEBARIS
-        </div>
-
-        {/* Konten Hero */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 relative z-10 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-            
-            {/* Kolom Kiri: Headline, Subtitle, Stats & Tombol Aksi */}
-            <div className="lg:col-span-7 space-y-6 sm:space-y-8 text-white">
-              
-              {/* Eyebrow Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full backdrop-blur-md bg-white/10 dark:bg-black/40 border border-white/20 text-[#D0FE15] font-bold text-xs tracking-wide shadow-sm">
-                <IconZap className="w-3.5 h-3.5 text-[#D0FE15]" />
-                <span>Platform E-Voting Resmi &amp; Terverifikasi</span>
-              </div>
-
-              {/* Headline */}
-              <div className="space-y-2">
-                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] text-white">
-                  Pilih &amp; Dukung.<br />
-                  <span className="text-[#D0FE15]">Transparan Nyata.</span>
-                </h1>
-                <p className="text-sm sm:text-base lg:text-lg text-gray-200/90 max-w-xl leading-relaxed font-normal">
-                  Ajang pemilihan umum daring resmi untuk kampus, sekolah, organisasi, dan ajang penghargaan komunitas. Dilengkapi verifikasi e-receipt resmi, polling QRIS otomatis, dan proteksi anti-kecurangan.
-                </p>
-              </div>
-
-              {/* Stats Row */}
-              <div className="grid grid-cols-3 gap-3 sm:gap-6 pt-2 pb-2 border-y border-white/15 max-w-lg">
-                <div>
-                  <div className="text-xl sm:text-2xl lg:text-3xl font-black text-white">
-                    100%
+                return (
+                  <div key={banner.id || idx} className="w-full h-full flex-shrink-0 relative overflow-hidden">
+                    {banner.link_url ? (
+                      banner.link_url.startsWith('http') ? (
+                        <a
+                          href={banner.link_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block w-full h-full cursor-pointer"
+                          title={banner.title}
+                        >
+                          {imageElement}
+                        </a>
+                      ) : (
+                        <Link
+                          to={banner.link_url}
+                          className="block w-full h-full cursor-pointer"
+                          title={banner.title}
+                        >
+                          {imageElement}
+                        </Link>
+                      )
+                    ) : (
+                      <div className="w-full h-full">{imageElement}</div>
+                    )}
                   </div>
-                  <p className="text-[11px] sm:text-xs text-gray-300 font-medium">
-                    Terenkripsi &amp; Anti-Fraud
-                  </p>
-                </div>
-                <div>
-                  <div className="text-xl sm:text-2xl lg:text-3xl font-black text-[#D0FE15]">
-                    Real-Time
-                  </div>
-                  <p className="text-[11px] sm:text-xs text-gray-300 font-medium">
-                    Tabulasi Suara Langsung
-                  </p>
-                </div>
-                <div>
-                  <div className="text-xl sm:text-2xl lg:text-3xl font-black text-white">
-                    E-Receipt
-                  </div>
-                  <p className="text-[11px] sm:text-xs text-gray-300 font-medium">
-                    Bukti Sah Terbit Otomatis
-                  </p>
-                </div>
-              </div>
-
-              {/* Tombol Aksi Terpisah */}
-              <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-1">
-                <a
-                  href="#voting-section"
-                  className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-white text-gray-950 hover:bg-[#D0FE15] font-black text-sm shadow-xl transition-all transform hover:-translate-y-0.5 cursor-pointer no-underline group"
-                >
-                  <span>Mulai Voting</span>
-                  <span className="w-6 h-6 rounded-full bg-gray-100 group-hover:bg-white text-gray-900 flex items-center justify-center text-xs font-black transition-colors">
-                    ↗
-                  </span>
-                </a>
-
-                <button
-                  type="button"
-                  onClick={() => handleOpenCheckVoteModal()}
-                  className="inline-flex items-center gap-2 px-5 py-3.5 rounded-full backdrop-blur-md bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold text-sm shadow-sm transition-all cursor-pointer"
-                >
-                  <IconCheckVote className="w-4 h-4 text-[#D0FE15]" />
-                  <span>Cek Bukti Suara</span>
-                </button>
-              </div>
+                )
+              })}
             </div>
 
-            {/* Kolom Kanan: Floating Showcase Card */}
-            <div className="lg:col-span-5 flex justify-center lg:justify-end">
-              <div className="w-full max-w-sm rounded-3xl backdrop-blur-xl bg-black/40 border border-white/20 p-5 shadow-2xl text-white space-y-4 relative">
-                
-                {/* Header Kartu Showcase */}
-                <div className="flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#70B325]/80 text-white text-[10px] font-black tracking-wider uppercase backdrop-blur-xs">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#D0FE15] animate-ping" />
-                    Live Voting
-                  </span>
-                  <span className="text-[11px] font-mono text-gray-300">
-                    {backendCategories.length > 0 ? `0${heroSlideIndex + 1} / 0${backendCategories.length}` : '01 / 01'}
-                  </span>
-                </div>
-
-                {/* Gambar / Visual Showcase */}
-                <div className="h-44 rounded-2xl overflow-hidden relative border border-white/15 bg-black/30 group">
-                  {showcaseItem?.thumbnail ? (
-                    <img
-                      src={resolveStorageUrl(showcaseItem.thumbnail)}
-                      alt={showcaseItem.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#123E2A] to-[#1E231C] p-4 text-center">
-                      <span className="text-3xl mb-1">🗳️</span>
-                      <p className="text-xs font-bold text-gray-200">Ajang Pemilihan Aktif</p>
-                    </div>
-                  )}
-
-                  {/* Gradient Overlay pada gambar */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                  
-                  {/* Info di atas gambar */}
-                  <div className="absolute bottom-3 left-3 right-3 text-left">
-                    <h3 className="text-sm font-extrabold text-white truncate">
-                      {showcaseItem?.name || 'Ajang Pemilihan BEM 2026/2027'}
-                    </h3>
-                    <p className="text-[11px] text-[#D0FE15] font-semibold">
-                      {showcaseItem?.finalists_count ? `${showcaseItem.finalists_count} Finalis Bersaing` : 'Voting Sedang Dibuka'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Slider bar & Navigasi Slide */}
-                <div className="flex items-center justify-between pt-1">
-                  <div className="flex items-center gap-1.5">
-                    {backendCategories.slice(0, 4).map((_, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setHeroSlideIndex(idx)}
-                        className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                          heroSlideIndex === idx ? 'w-6 bg-[#D0FE15]' : 'w-2 bg-white/30 hover:bg-white/50'
-                        }`}
-                        aria-label={`Slide ${idx + 1}`}
-                      />
-                    ))}
-                  </div>
-
-                  {showcaseItem ? (
-                    <Link
-                      to={`/voting/${showcaseItem.slug || showcaseItem.id}`}
-                      className="inline-flex items-center gap-1 text-xs font-black text-white hover:text-[#D0FE15] transition-colors no-underline"
-                    >
-                      <span>Lihat Ajang</span>
-                      <span className="text-sm">↗</span>
-                    </Link>
-                  ) : (
-                    <a
-                      href="#voting-section"
-                      className="inline-flex items-center gap-1 text-xs font-black text-white hover:text-[#D0FE15] transition-colors no-underline"
-                    >
-                      <span>Jelajahi</span>
-                      <span className="text-sm">↗</span>
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 flex-1 w-full">
-        
-        {/* KreenConnect-Inspired Category Icon Grid & Pills Bar */}
-        <section className="bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] p-3 sm:p-4 rounded-2xl shadow-xs" aria-label="Kategori Voting">
-          <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none">
-            {CATEGORY_ITEMS.map((cat) => (
+            {/* Left Arrow Button (Hidden on Mobile, Visible on Desktop hover) */}
+            {heroBanners.length > 1 && (
               <button
-                key={cat.id}
                 type="button"
-                onClick={() => setActiveCategory(cat.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer min-h-[44px] ${
-                  activeCategory === cat.id
-                    ? 'bg-[#70B325] text-white shadow-xs'
-                    : 'bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10'
-                }`}
+                onClick={() => setCurrentBannerIndex((prev) => (prev - 1 + heroBanners.length) % heroBanners.length)}
+                className="hidden sm:flex absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20 w-9 sm:w-11 h-9 sm:h-11 rounded-full bg-black/40 hover:bg-black/75 backdrop-blur-md border border-white/20 text-white items-center justify-center transition-all opacity-0 group-hover:opacity-100 hover:scale-105 active:scale-95 cursor-pointer shadow-lg"
+                aria-label="Banner sebelumnya"
               >
-                <span>{cat.icon}</span>
-                <span>{cat.label}</span>
+                <IconChevronLeft className="w-5 sm:w-6 h-5 sm:h-6" />
               </button>
-            ))}
+            )}
+
+            {/* Right Arrow Button (Hidden on Mobile, Visible on Desktop hover) */}
+            {heroBanners.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setCurrentBannerIndex((prev) => (prev + 1) % heroBanners.length)}
+                className="hidden sm:flex absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 w-9 sm:w-11 h-9 sm:h-11 rounded-full bg-black/40 hover:bg-black/75 backdrop-blur-md border border-white/20 text-white items-center justify-center transition-all opacity-0 group-hover:opacity-100 hover:scale-105 active:scale-95 cursor-pointer shadow-lg"
+                aria-label="Banner selanjutnya"
+              >
+                <IconChevronRight className="w-5 sm:w-6 h-5 sm:h-6" />
+              </button>
+            )}
+
+            {/* Mobile Counter Badge (Bottom Right, does NOT cover text/artwork in center or bottom) */}
+            {heroBanners.length > 1 && (
+              <div className="sm:hidden absolute bottom-2.5 right-2.5 z-20 px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[11px] font-bold text-white shadow-xs tracking-wider pointer-events-none">
+                {currentBannerIndex + 1} / {heroBanners.length}
+              </div>
+            )}
+
+            {/* Desktop Pagination Dots at Bottom Center */}
+            {heroBanners.length > 1 && (
+              <div className="hidden sm:flex absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 items-center gap-1.5 sm:gap-2">
+                {heroBanners.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setCurrentBannerIndex(idx)}
+                    className={`h-1.5 sm:h-2 rounded-full transition-all cursor-pointer ${
+                      currentBannerIndex === idx
+                        ? 'w-6 sm:w-8 bg-[#70B325] shadow-md'
+                        : 'w-1.5 sm:w-2 bg-white/50 hover:bg-white/90'
+                    }`}
+                    aria-label={`Slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </section>
+      )}
 
-        {/* SECTION: DUKUNG TERUS JUARA 1 KAMU (KreenConnect Signature Spotlight Section) */}
-        {champions.length > 0 && (
-          <section className="bg-gradient-to-r from-[#FFFDF6] via-[#FDF7EA] to-[#FBF0D9] dark:from-[#21281A] dark:via-[#1D2418] dark:to-[#181E14] border border-amber-300/60 dark:border-amber-500/30 rounded-3xl p-5 sm:p-7 shadow-xs space-y-5">
-            
-            {/* Header with Trophy Icon */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/60 dark:border-amber-500/20 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-400 text-amber-950 flex items-center justify-center font-black text-xl shadow-xs flex-shrink-0">
-                  <IconTrophy className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-lg sm:text-2xl font-black text-[#262A25] dark:text-white tracking-tight flex items-center gap-2">
-                    <span>Dukung Terus Juara 1 Kamu</span>
-                    <span className="text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-amber-400/90 text-amber-950">
-                      Top Ranking
-                    </span>
-                  </h2>
-                  <p className="text-xs text-gray-600 dark:text-gray-300">
-                    Kandidat terdepan dengan perolehan suara tertinggi saat ini dari ajang pemilihan aktif
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Champions Grid (Cards for #1 ranked contenders) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-              {champions.map(({ category, finalist, totalVotes, percentage }) => (
-                <div
-                  key={finalist.id}
-                  className="bg-white dark:bg-[#1A2018] border border-amber-200 dark:border-[#2C3529] rounded-2xl p-4 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-3 group"
-                >
-                  <div className="flex items-start gap-3.5">
-                    {/* Contestant Portrait Photo */}
-                    <div className="relative w-20 h-24 sm:w-24 sm:h-28 rounded-xl overflow-hidden bg-gray-100 dark:bg-black/40 flex-shrink-0 border border-amber-300 dark:border-amber-500/50">
-                      {finalist.photo_url || finalist.photo ? (
-                        <img
-                          src={resolveStorageUrl(finalist.photo_url || finalist.photo)}
-                          alt={finalist.name}
-                          className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-emerald-950 text-[#70B325] font-black text-lg">
-                          {finalist.name.slice(0, 2).toUpperCase()}
-                        </div>
-                      )}
-                      <span className="absolute top-1 left-1 bg-amber-400 text-amber-950 text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-xs">
-                        🥇 #1
-                      </span>
-                    </div>
-
-                    {/* Candidate Details */}
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider block truncate">
-                        {category.name}
-                      </span>
-                      <h3 className="font-black text-sm sm:text-base text-[#262A25] dark:text-white truncate mt-0.5 group-hover:text-[#70B325] transition-colors">
-                        {finalist.name}
-                      </h3>
-                      <p className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">
-                        {finalist.description || 'Kandidat Unggulan'}
-                      </p>
-
-                      {/* Vote Count & Percentage */}
-                      <div className="mt-2 space-y-1">
-                        <div className="flex items-center justify-between text-[11px] font-extrabold">
-                          <span className="text-gray-900 dark:text-white">
-                            {finalist.vote_count.toLocaleString('id-ID')} suara
-                          </span>
-                          <span className="text-[#70B325] dark:text-[#86C839]">
-                            {percentage}% suara
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-100 dark:bg-white/10 h-1.5 rounded-full overflow-hidden">
-                          <div
-                            className="bg-amber-400 h-full rounded-full"
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Fast Vote Button */}
-                  <Link
-                    to={`/voting/${category.slug || category.id}?finalist=${finalist.id}`}
-                    className="w-full py-2 px-3 bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-xs rounded-xl text-center no-underline flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
-                  >
-                    <IconZap className="w-3.5 h-3.5" />
-                    <span>Dukung Juara 1 ({finalist.name.split(' ')[0]})</span>
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Section 1: Voting Terpopuler & Cek Vote Kamu */}
+      {/* Main Content Area */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-10 space-y-8 sm:space-y-12 flex-1 w-full">
+        
+        {/* =========================================================================
+            1. PERTAMA: HIGHLIGHT EVENT / KATEGORI
+            ========================================================================= */}
         <section id="voting-section" className="space-y-4">
           
           {/* Section Header */}
@@ -495,76 +468,432 @@ export default function PublicEventsPage() {
                 <IconFlame className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#262A25] dark:text-white">
-                  Voting Terpopuler
-                </h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Pilihan terbanyak dan terhangat minggu ini</p>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#262A25] dark:text-white">
+                    Highlight Event
+                  </h2>
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#70B325]/15 text-[#558223] dark:text-[#86C839] text-[10px] font-black uppercase tracking-wider">
+                    Sedang Berlangsung
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Ajang pemilihan resmi yang sedang aktif dan dapat Anda ikuti sekarang
+                </p>
               </div>
             </div>
-            <a
-              href="#voting-section"
-              className="text-xs sm:text-sm font-bold text-[#70B325] dark:text-[#86C839] hover:underline flex items-center gap-1 no-underline"
-            >
-              <span>Lihat Semua</span>
-              <IconChevronRight className="w-4 h-4" />
-            </a>
+
+            {filteredHighlights.length > 0 && (
+              <Link
+                to={`/voting/${filteredHighlights[0]?.slug || filteredHighlights[0]?.id}`}
+                className="hidden sm:inline-flex items-center gap-1 text-sm font-extrabold text-[#70B325] dark:text-[#86C839] hover:underline whitespace-nowrap"
+              >
+                <span>Lihat Lebih Banyak</span>
+                <IconChevronRight className="w-4 h-4" />
+              </Link>
+            )}
           </div>
 
-          {/* Grid Layout: 8 cols Cards on Left, 4 cols Cek Vote on Right */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            
-            {/* Voting Cards Grid (8 cols on lg) */}
-            <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {filteredPopular.length === 0 ? (
-                <div className="sm:col-span-2 py-16 px-6 text-center bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] rounded-2xl flex flex-col items-center justify-center">
-                  <div className="w-14 h-14 rounded-2xl bg-[#F2F8EC] dark:bg-white/5 text-[#70B325] flex items-center justify-center mb-3">
-                    <IconFlame className="w-7 h-7" />
-                  </div>
-                  <h3 className="text-base font-extrabold text-[#262A25] dark:text-white">Belum Ada Voting Aktif</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm">
-                    Saat ini belum ada ajang voting yang cocok dengan filter atau pencarian Anda.
-                  </p>
-                </div>
-              ) : (
-                filteredPopular.map((item) => {
+          {/* Highlight Voting Cards Carousel / Slider */}
+          {filteredHighlights.length === 0 ? (
+            <div className="py-16 px-6 text-center bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] rounded-2xl flex flex-col items-center justify-center">
+              <div className="w-14 h-14 rounded-2xl bg-[#F2F8EC] dark:bg-white/5 text-[#70B325] flex items-center justify-center mb-3">
+                <IconFlame className="w-7 h-7" />
+              </div>
+              <h3 className="text-base font-extrabold text-[#262A25] dark:text-white">Belum Ada Ajang Aktif</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm">
+                Saat ini belum ada ajang voting aktif yang cocok dengan pencarian Anda.
+              </p>
+            </div>
+          ) : (
+            <div className="relative group/slider">
+              {/* Left Nav Arrow Button (Desktop/Tablet) */}
+              {filteredHighlights.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() => scrollSlider(highlightsSliderRef, 'left')}
+                  className="hidden sm:flex absolute -left-3.5 lg:-left-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white dark:bg-[#1A2018] shadow-md border border-[#E5EADF] dark:border-[#2C3529] text-gray-700 dark:text-gray-200 items-center justify-center hover:bg-gray-50 dark:hover:bg-white/10 hover:scale-105 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100"
+                  aria-label="Geser ke kiri"
+                >
+                  <IconChevronLeft className="w-5 h-5" />
+                </button>
+              )}
+
+              {/* Right Nav Arrow Button (Desktop/Tablet) */}
+              {filteredHighlights.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() => scrollSlider(highlightsSliderRef, 'right')}
+                  className="hidden sm:flex absolute -right-3.5 lg:-right-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white dark:bg-[#1A2018] shadow-md border border-[#E5EADF] dark:border-[#2C3529] text-gray-700 dark:text-gray-200 items-center justify-center hover:bg-gray-50 dark:hover:bg-white/10 hover:scale-105 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100"
+                  aria-label="Geser ke kanan"
+                >
+                  <IconChevronRight className="w-5 h-5" />
+                </button>
+              )}
+
+              {/* Horizontal Snap Slider */}
+              <div
+                ref={highlightsSliderRef}
+                className="flex gap-4 sm:gap-5 overflow-x-auto scrollbar-none snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0 pb-3 pt-1"
+              >
+                {filteredHighlights.map((item) => {
                   const Banner = item.BannerComponent
                   return (
                     <article
                       key={item.id}
-                      className="card-base flex flex-col overflow-hidden group bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] rounded-2xl hover:border-[#70B325] dark:hover:border-[#70B325] transition-all shadow-xs"
+                      className="flex-shrink-0 w-[74vw] max-w-[270px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl overflow-hidden bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group relative"
                     >
-                      {/* Banner Image with Status Pill */}
-                      <div className="h-44 w-full relative overflow-hidden bg-gray-100 dark:bg-black/30 flex items-center justify-center">
+                      {item.thumbnail ? (
+                        /* Full Poster Card Layout */
+                        <Link
+                          to={`/voting/${item.slug || item.id}`}
+                          className="relative w-full h-full block overflow-hidden group/poster select-none"
+                        >
+                          <img
+                            src={resolveStorageUrl(item.thumbnail)}
+                            alt={item.title}
+                            className="w-full h-full object-cover group-hover/poster:scale-105 transition-transform duration-500"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                            }}
+                          />
+
+                          {/* Top-Left Live Status Badge */}
+                          <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[10px] font-black uppercase text-white shadow-xs">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#70B325] animate-ping" />
+                            Live
+                          </span>
+
+                          {/* Bottom Gradient Overlay (Always visible on mobile, hover-revealed on desktop) */}
+                          <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 bg-gradient-to-t from-black/95 via-black/60 to-transparent flex flex-col justify-end text-white opacity-100 sm:opacity-0 sm:group-hover/poster:opacity-100 transition-opacity duration-300">
+                            <h3 className="font-extrabold text-xs sm:text-sm line-clamp-2 leading-tight text-white mb-1">
+                              {item.title}
+                            </h3>
+                            <p className="text-[11px] text-gray-300 truncate mb-2 sm:mb-2.5 flex items-center gap-1">
+                              <span className="truncate">{item.organizer}</span>
+                              <IconCheck className="w-3 h-3 text-[#70B325] flex-shrink-0" />
+                            </p>
+                            <div className="w-full py-1.5 sm:py-2 px-3 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-xs rounded-xl text-center shadow-xs flex items-center justify-center gap-1 active:scale-98 transition-all">
+                              <span>Buka Event</span>
+                              <IconChevronRight className="w-3.5 h-3.5" />
+                            </div>
+                          </div>
+                        </Link>
+                      ) : (
+                        /* Hybrid Card Layout */
+                        <div className="w-full h-full flex flex-col justify-between">
+                          {/* Top Image Banner (44%) */}
+                          <div className="relative h-[44%] w-full overflow-hidden bg-gray-100 dark:bg-black/30 flex items-center justify-center">
+                            <Banner />
+                            <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/95 dark:bg-black/80 backdrop-blur-xs border border-white/60 dark:border-white/15 text-[10px] font-black uppercase text-gray-900 dark:text-white shadow-xs">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#70B325] animate-ping" />
+                              Live
+                            </span>
+                          </div>
+
+                          {/* Bottom Card Body (56%) */}
+                          <div className="h-[56%] p-3 sm:p-3.5 flex flex-col justify-between space-y-1 bg-white dark:bg-[#1A2018]">
+                            <div className="space-y-1">
+                              <h3 className="font-bold text-xs sm:text-sm text-[#262A25] dark:text-white group-hover:text-[#70B325] dark:group-hover:text-[#86C839] transition-colors line-clamp-2 leading-tight">
+                                <Link to={`/voting/${item.slug || item.id}`} className="no-underline text-inherit">
+                                  {item.title}
+                                </Link>
+                              </h3>
+                              <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold truncate">
+                                {item.daysLeft}
+                              </p>
+                              <p className="text-xs font-bold text-[#558223] dark:text-[#86C839] truncate">
+                                {item.votes}
+                              </p>
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate flex items-center gap-1">
+                                <span className="truncate">{item.organizer}</span>
+                                <IconCheck className="w-3 h-3 text-[#70B325] flex-shrink-0" />
+                              </p>
+                            </div>
+
+                            <Link
+                              to={`/voting/${item.slug || item.id}`}
+                              className="w-full py-2 px-3 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-xs sm:text-sm rounded-xl text-center no-underline flex items-center justify-center gap-1 shadow-xs active:scale-98 transition-all"
+                            >
+                              <span>Buka Event</span>
+                              <IconChevronRight className="w-3 h-3" />
+                            </Link>
+                          </div>
+                        </div>
+                      )}
+                    </article>
+                  )
+                })}
+              </div>
+
+              {/* Mobile "Lihat Lebih Banyak ->" button below carousel */}
+              {filteredHighlights.length > 1 && (
+                <div className="sm:hidden flex items-center justify-center pt-3 pb-1">
+                  <Link
+                    to={`/voting/${filteredHighlights[0]?.slug || filteredHighlights[0]?.id}`}
+                    className="inline-flex items-center gap-1 text-sm font-extrabold text-[#70B325] dark:text-[#86C839] hover:underline"
+                  >
+                    <span>Lihat Lebih Banyak</span>
+                    <IconChevronRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* =========================================================================
+            2. KEDUA: TOP VOTING (Dukung Terus Juara 1 Kamu)
+            ========================================================================= */}
+        {champions.length > 0 && (
+          <section className="bg-gradient-to-r from-[#FFFDF6] via-[#FDF7EA] to-[#FBF0D9] dark:from-[#21281A] dark:via-[#1D2418] dark:to-[#181E14] border border-amber-300/60 dark:border-amber-500/30 rounded-3xl p-4 sm:p-7 shadow-xs space-y-4 sm:space-y-5 overflow-hidden">
+            
+            {/* Header with Trophy Icon */}
+            <div className="flex items-center justify-between gap-2 border-b border-amber-200/60 dark:border-amber-500/20 pb-3 sm:pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-400 text-amber-950 flex items-center justify-center font-black text-xl shadow-xs flex-shrink-0">
+                  <IconTrophy className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg sm:text-2xl font-black text-[#262A25] dark:text-white tracking-tight flex items-center gap-2">
+                    <span>Top Voting</span>
+                    <span className="text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-amber-400/90 text-amber-950">
+                      Top Ranking
+                    </span>
+                  </h2>
+                  <p className="text-xs text-gray-600 dark:text-gray-300">
+                    Kandidat terdepan dengan perolehan suara tertinggi saat ini dari ajang pemilihan aktif
+                  </p>
+                </div>
+              </div>
+
+              {champions.length > 0 && (
+                <Link
+                  to={`/voting/${champions[0]?.category.slug || champions[0]?.category.id}`}
+                  className="hidden sm:inline-flex items-center gap-1 text-sm font-black text-amber-700 dark:text-amber-400 hover:underline whitespace-nowrap"
+                >
+                  <span>Lihat Lebih Banyak</span>
+                  <IconChevronRight className="w-4 h-4" />
+                </Link>
+              )}
+            </div>
+
+            <div className="relative group/slider">
+              {/* Left Nav Arrow Button */}
+              {champions.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() => scrollSlider(championsSliderRef, 'left')}
+                  className="hidden sm:flex absolute -left-3.5 lg:-left-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white dark:bg-[#1A2018] shadow-md border border-amber-200 dark:border-[#2C3529] text-amber-950 dark:text-gray-200 items-center justify-center hover:bg-amber-50 dark:hover:bg-white/10 hover:scale-105 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100"
+                  aria-label="Geser ke kiri"
+                >
+                  <IconChevronLeft className="w-5 h-5" />
+                </button>
+              )}
+
+              {/* Right Nav Arrow Button */}
+              {champions.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() => scrollSlider(championsSliderRef, 'right')}
+                  className="hidden sm:flex absolute -right-3.5 lg:-right-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white dark:bg-[#1A2018] shadow-md border border-amber-200 dark:border-[#2C3529] text-amber-950 dark:text-gray-200 items-center justify-center hover:bg-amber-50 dark:hover:bg-white/10 hover:scale-105 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100"
+                  aria-label="Geser ke kanan"
+                >
+                  <IconChevronRight className="w-5 h-5" />
+                </button>
+              )}
+
+              {/* Horizontal Snap Slider */}
+              <div
+                ref={championsSliderRef}
+                className="flex gap-4 sm:gap-5 overflow-x-auto scrollbar-none snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0 pb-3 pt-1"
+              >
+                {champions.map(({ category, finalist, totalVotes, percentage }) => (
+                  <article
+                    key={finalist.id}
+                    className="flex-shrink-0 w-[74vw] max-w-[270px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl overflow-hidden bg-white dark:bg-[#1A2018] border border-amber-200 dark:border-amber-500/30 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+                  >
+                    {/* Contestant Portrait Photo (52%) */}
+                    <div className="relative h-[52%] w-full overflow-hidden bg-gray-100 dark:bg-black/40 flex items-center justify-center">
+                      {finalist.photo_url || finalist.photo ? (
+                        <img
+                          src={resolveStorageUrl(finalist.photo_url || finalist.photo)}
+                          alt={finalist.name}
+                          className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-950 to-gray-900 text-amber-300 font-black text-3xl">
+                          {finalist.name.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
+
+                      {/* Top Crown Badge */}
+                      <span className="absolute top-2.5 left-2.5 bg-amber-400 text-amber-950 text-[10px] font-black px-2 py-0.5 rounded-lg shadow-sm inline-flex items-center gap-1">
+                        <IconCrown className="w-3 h-3 text-amber-950" />
+                        <span>#1 Top Vote</span>
+                      </span>
+
+                      {/* Top Right Percentage Pill */}
+                      <span className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-md text-amber-300 font-extrabold text-[10px] px-2 py-0.5 rounded-full border border-white/20">
+                        {percentage}%
+                      </span>
+                    </div>
+
+                    {/* Candidate Details (48%) */}
+                    <div className="h-[48%] p-3 sm:p-3.5 flex flex-col justify-between space-y-1.5 bg-white dark:bg-[#1A2018]">
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider block truncate">
+                          {category.name}
+                        </span>
+                        <h3 className="font-black text-xs sm:text-sm text-[#262A25] dark:text-white truncate">
+                          {finalist.name}
+                        </h3>
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+                          {finalist.vote_count.toLocaleString('id-ID')} suara
+                        </p>
+                      </div>
+
+                      {/* Fast Vote Button */}
+                      <Link
+                        to={`/voting/${category.slug || category.id}?finalist=${finalist.id}`}
+                        className="w-full py-1.5 sm:py-2 bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-xs rounded-xl text-center no-underline flex items-center justify-center gap-1 shadow-xs active:scale-98 transition-all"
+                      >
+                        <IconZap className="w-3.5 h-3.5" />
+                        <span>Dukung Juara 1</span>
+                      </Link>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              {/* Mobile "Lihat Lebih Banyak ->" button below carousel */}
+              {champions.length > 1 && (
+                <div className="sm:hidden flex items-center justify-center pt-3 pb-1">
+                  <Link
+                    to={`/voting/${champions[0]?.category.slug || champions[0]?.category.id}`}
+                    className="inline-flex items-center gap-1 text-sm font-black text-amber-700 dark:text-amber-400 hover:underline"
+                  >
+                    <span>Lihat Lebih Banyak</span>
+                    <IconChevronRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* =========================================================================
+            3. KETIGA: EVENT / KATEGORI YANG SUDAH BERLALU
+            ========================================================================= */}
+        <section className="space-y-4 pt-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 flex items-center justify-center">
+                <IconClock className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#262A25] dark:text-white">
+                    Event &amp; Kategori yang Sudah Berlalu
+                  </h2>
+                  <span className="px-2.5 py-0.5 rounded-full bg-gray-200 dark:bg-white/10 text-gray-700 dark:text-gray-300 text-[10px] font-black uppercase tracking-wider">
+                    Selesai
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Arsip dan riwayat ajang pemilihan yang periode votingnya telah resmi berakhir
+                </p>
+              </div>
+            </div>
+
+            {filteredPast.length > 0 && (
+              <Link
+                to={`/voting/${filteredPast[0]?.slug || filteredPast[0]?.id}`}
+                className="hidden sm:inline-flex items-center gap-1 text-sm font-bold text-gray-600 dark:text-gray-400 hover:underline whitespace-nowrap"
+              >
+                <span>Lihat Semua Arsip</span>
+                <IconChevronRight className="w-4 h-4" />
+              </Link>
+            )}
+          </div>
+
+          {filteredPast.length === 0 ? (
+            <div className="py-10 px-6 text-center bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] rounded-2xl flex flex-col items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-400 flex items-center justify-center mb-2">
+                <IconClock className="w-6 h-6" />
+              </div>
+              <h3 className="text-sm font-bold text-[#262A25] dark:text-white">Belum Ada Ajang yang Berakhir</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm">
+                Semua ajang pemilihan yang terdaftar saat ini masih berstatus aktif dan sedang berlangsung.
+              </p>
+            </div>
+          ) : (
+            <div className="relative group/slider">
+              {/* Left Nav Arrow Button */}
+              {filteredPast.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() => scrollSlider(pastSliderRef, 'left')}
+                  className="hidden sm:flex absolute -left-3.5 lg:-left-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white dark:bg-[#1A2018] shadow-md border border-[#E5EADF] dark:border-[#2C3529] text-gray-700 dark:text-gray-200 items-center justify-center hover:bg-gray-50 dark:hover:bg-white/10 hover:scale-105 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100"
+                  aria-label="Geser ke kiri"
+                >
+                  <IconChevronLeft className="w-5 h-5" />
+                </button>
+              )}
+
+              {/* Right Nav Arrow Button */}
+              {filteredPast.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() => scrollSlider(pastSliderRef, 'right')}
+                  className="hidden sm:flex absolute -right-3.5 lg:-right-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white dark:bg-[#1A2018] shadow-md border border-[#E5EADF] dark:border-[#2C3529] text-gray-700 dark:text-gray-200 items-center justify-center hover:bg-gray-50 dark:hover:bg-white/10 hover:scale-105 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100"
+                  aria-label="Geser ke kanan"
+                >
+                  <IconChevronRight className="w-5 h-5" />
+                </button>
+              )}
+
+              {/* Horizontal Snap Slider */}
+              <div
+                ref={pastSliderRef}
+                className="flex gap-4 sm:gap-5 overflow-x-auto scrollbar-none snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0 pb-3 pt-1"
+              >
+                {filteredPast.map((item) => {
+                  const IconComp = item.IconComponent
+                  return (
+                    <article
+                      key={item.id}
+                      className="flex-shrink-0 w-[74vw] max-w-[270px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl overflow-hidden bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group opacity-90 hover:opacity-100"
+                    >
+                      {/* Poster / Thumbnail with subtle grayscale (46%) */}
+                      <div className="relative h-[46%] w-full overflow-hidden bg-gray-100 dark:bg-black/30 flex items-center justify-center">
                         {item.thumbnail ? (
                           <img
                             src={resolveStorageUrl(item.thumbnail)}
                             alt={item.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            className="w-full h-full object-cover grayscale contrast-90 group-hover:grayscale-0 transition-all duration-500"
                             loading="lazy"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none'
                             }}
                           />
                         ) : (
-                          <Banner />
+                          <div className="w-full h-full flex items-center justify-center bg-gray-800 text-gray-400">
+                            <IconComp className="w-16 h-16 opacity-40" />
+                          </div>
                         )}
 
-                        {/* Top-Left Live Status Badge with Pulsating Dot */}
-                        <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 dark:bg-black/80 backdrop-blur-xs border border-white/60 dark:border-white/15 text-[11px] font-black uppercase text-gray-900 dark:text-white shadow-xs">
-                          <span className="w-2 h-2 rounded-full bg-[#70B325] animate-ping" />
-                          Sedang Berlangsung
-                        </span>
-
-                        {/* Top-Right Category Chip */}
-                        <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold uppercase tracking-wider border border-white/10">
-                          {item.category}
+                        {/* Top Selesai Badge */}
+                        <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[10px] font-bold text-gray-300 shadow-xs">
+                          <IconLock className="w-3 h-3 text-gray-400" />
+                          <span>Selesai</span>
                         </span>
                       </div>
 
-                      {/* Card Body */}
-                      <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-                        <div>
-                          <h3 className="font-extrabold text-sm sm:text-base text-[#262A25] dark:text-white group-hover:text-[#70B325] dark:group-hover:text-[#86C839] transition-colors line-clamp-2">
+                      {/* Card Body (54%) */}
+                      <div className="h-[54%] p-3 sm:p-3.5 flex flex-col justify-between space-y-2 bg-white dark:bg-[#1A2018]">
+                        <div className="space-y-1">
+                          <h3 className="font-extrabold text-xs sm:text-sm text-[#262A25] dark:text-white line-clamp-2 leading-tight">
                             <Link
                               to={`/voting/${item.slug || item.id}`}
                               className="no-underline text-inherit hover:text-[#70B325]"
@@ -572,188 +901,45 @@ export default function PublicEventsPage() {
                               {item.title}
                             </Link>
                           </h3>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1.5">
-                            <span className="truncate">{item.organizer} ✓</span>
-                            <span>•</span>
-                            <span className="text-amber-600 dark:text-amber-400 font-semibold whitespace-nowrap">{item.daysLeft}</span>
+                          <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                            {item.organizer}
                           </p>
                         </div>
 
-                        {/* Avatars Stack & Candidate Count */}
-                        <div className="space-y-2 pt-1 border-t border-gray-100 dark:border-white/10">
-                          <div className="flex items-center justify-between">
-                            <div className="flex -space-x-1.5 overflow-hidden">
-                              {item.avatars.map((initials, idx) => (
-                                <div
-                                  key={idx}
-                                  className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-[#1A2018] bg-[#E9F3DF] dark:bg-white/10 text-[#558223] dark:text-[#86C839] font-bold text-[10px] flex items-center justify-center"
-                                >
-                                  {initials}
-                                </div>
-                              ))}
-                              {item.extraAvatars > 0 && (
-                                <div className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-[#1A2018] bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 font-bold text-[10px] flex items-center justify-center">
-                                  +{item.extraAvatars}
-                                </div>
-                              )}
-                            </div>
-                            <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                              {item.votes}
-                            </span>
-                          </div>
-
-                          {/* Progress Bar */}
-                          <div className="w-full bg-gray-100 dark:bg-white/10 h-1.5 rounded-full overflow-hidden">
-                            <div
-                              className="bg-[#70B325] h-full rounded-full transition-all duration-500"
-                              style={{ width: `${item.percentage}%` }}
-                            />
-                          </div>
+                        <div className="pt-2 border-t border-gray-100 dark:border-white/10 flex items-center justify-between text-[11px]">
+                          <span className="text-gray-500 dark:text-gray-400 font-medium">
+                            {item.endDate}
+                          </span>
+                          <Link
+                            to={`/voting/${item.slug || item.id}`}
+                            className="text-[#70B325] dark:text-[#86C839] font-bold hover:underline flex items-center gap-0.5 no-underline"
+                          >
+                            <span>Hasil Akhir</span>
+                            <IconArrowUpRight className="w-3 h-3" />
+                          </Link>
                         </div>
-
-                        {/* CTA Button */}
-                        <Link
-                          to={`/voting/${item.slug || item.id}`}
-                          className="w-full mt-2 py-2.5 px-3 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-xs sm:text-sm rounded-xl text-center no-underline flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
-                        >
-                          <span>Vote Sekarang</span>
-                          <IconChevronRight className="w-3.5 h-3.5" />
-                        </Link>
                       </div>
                     </article>
                   )
-                })
-              )}
-            </div>
-
-            {/* Right Column: Cek Vote Kamu Card (4 cols on lg) */}
-            <div className="lg:col-span-4" id="cek-vote-box">
-              <div className="bg-gradient-to-b from-[#F2F9EC] to-[#EBF6E3] dark:from-[#1A2318] dark:to-[#141C12] border border-[#D7E8C8] dark:border-[#2C3529] rounded-2xl p-6 shadow-sm space-y-4 sticky top-24">
-                
-                {/* Header with Icon */}
-                <div className="w-12 h-12 rounded-xl bg-white dark:bg-white/10 text-[#70B325] shadow-xs flex items-center justify-center">
-                  <IconCheckVote className="w-7 h-7 text-[#70B325]" />
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-extrabold text-[#262A25] dark:text-white">
-                    Cek Bukti Vote Kamu
-                  </h3>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
-                    Masukkan kode transaksi atau ID voting untuk memeriksa status dan keabsahan suara kamu di sistem blockchain e-voting.
-                  </p>
-                </div>
-
-                {/* Input & Form */}
-                <form onSubmit={handleCheckVoteSubmit} className="space-y-3">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={checkVoteCode}
-                      onChange={(e) => setCheckVoteCode(e.target.value)}
-                      placeholder="Contoh: SVT-2025-001234"
-                      className="w-full h-11 pl-9 pr-3 text-xs sm:text-sm bg-white dark:bg-black/30 border border-[#CADDB8] dark:border-white/15 rounded-xl text-[#262A25] dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#70B325] shadow-inner"
-                      required
-                    />
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                      <IconCheckVote className="w-4 h-4 text-[#70B325]" />
-                    </span>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full h-11 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <span>Cek Bukti Sah Sekarang</span>
-                    <IconChevronRight className="w-4 h-4" />
-                  </button>
-                </form>
-
-                {/* Trust guarantee badge */}
-                <div className="pt-3 border-t border-[#D5E6C4] dark:border-white/10 flex items-center justify-center gap-2 text-[11px] text-gray-600 dark:text-gray-400 font-medium">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#70B325]" />
-                  <span>Sistem e-voting terenkripsi &amp; transparan</span>
-                </div>
+                })}
               </div>
-            </div>
 
-          </div>
-        </section>
-
-        {/* Section 2: Voting Terbaru */}
-        <section className="space-y-4 pt-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                <IconClock className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#262A25] dark:text-white">
-                  Voting Terbaru
-                </h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Daftar ajang pemilihan terbaru yang baru saja dibuka untuk publik
-                </p>
-              </div>
-            </div>
-            <a
-              href="#voting-section"
-              className="text-xs sm:text-sm font-bold text-[#70B325] dark:text-[#86C839] hover:underline flex items-center gap-1 no-underline"
-            >
-              <span>Lihat Semua</span>
-              <IconChevronRight className="w-4 h-4" />
-            </a>
-          </div>
-
-          {/* Horizontal Cards Grid or Empty State */}
-          {filteredRecent.length === 0 ? (
-            <div className="py-8 px-6 text-center bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] rounded-2xl">
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Belum ada voting terbaru saat ini.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {filteredRecent.map((item) => {
-                const IconComp = item.IconComponent
-                return (
+              {/* Mobile "Lihat Semua Arsip ->" button below carousel */}
+              {filteredPast.length > 1 && (
+                <div className="sm:hidden flex items-center justify-center pt-3 pb-1">
                   <Link
-                    key={item.id}
-                    to={`/voting/${item.slug || item.id}`}
-                    className="card-base p-4 bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] rounded-2xl flex items-center gap-3.5 hover:border-[#70B325] dark:hover:border-[#70B325] transition-all group no-underline text-inherit cursor-pointer"
+                    to={`/voting/${filteredPast[0]?.slug || filteredPast[0]?.id}`}
+                    className="inline-flex items-center gap-1 text-sm font-bold text-gray-600 dark:text-gray-400 hover:underline"
                   >
-                    {item.thumbnail ? (
-                      <img
-                        src={resolveStorageUrl(item.thumbnail)}
-                        alt={item.title}
-                        className="w-12 h-12 rounded-xl object-cover border border-[#E5EADF] dark:border-white/10 flex-shrink-0"
-                        loading="lazy"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none'
-                        }}
-                      />
-                    ) : (
-                      <IconComp className="w-12 h-12 flex-shrink-0" />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#558223] dark:text-[#86C839] bg-[#F2F8EC] dark:bg-white/10 px-2 py-0.5 rounded-full mb-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#70B325]" />
-                        Sedang Berlangsung
-                      </span>
-                      <h3 className="font-extrabold text-xs sm:text-sm text-[#262A25] dark:text-white group-hover:text-[#70B325] transition-colors truncate">
-                        {item.title}
-                      </h3>
-                      <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 truncate">
-                        {item.organizer} • {item.daysLeft}
-                      </p>
-                      <p className="text-[11px] font-bold text-gray-700 dark:text-gray-300 mt-1">
-                        {item.votes}
-                      </p>
-                    </div>
+                    <span>Lihat Semua Arsip</span>
+                    <IconChevronRight className="w-4 h-4" />
                   </Link>
-                )
-              })}
+                </div>
+              )}
             </div>
           )}
         </section>
+
       </main>
 
       {/* Brand Footer */}

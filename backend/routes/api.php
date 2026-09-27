@@ -1,17 +1,23 @@
 <?php
 
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FinalistController;
 use App\Http\Controllers\Admin\AdminManagementController;
 use App\Http\Controllers\Admin\VoteAdjustController;
+use App\Http\Controllers\PublicBannerController;
 use App\Http\Controllers\PublicCategoryController;
+use App\Http\Controllers\PublicEventController;
 use App\Http\Controllers\PublicFinalistController;
 use App\Http\Controllers\UserAuthController;
 use App\Http\Controllers\VoteController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('banners', [PublicBannerController::class, 'index']);
+Route::get('events', [PublicEventController::class, 'index']);
 Route::get('categories', [PublicCategoryController::class, 'index']);
 Route::get('categories/{category}', [PublicCategoryController::class, 'show']);
 Route::get('categories/{category}/finalists', [PublicFinalistController::class, 'index']);
@@ -53,8 +59,10 @@ Route::prefix('admin')->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index']);
         Route::post('categories/{category}/freeze', [CategoryController::class, 'toggleFreeze']);
         Route::get('categories/{category}/export', [VoteController::class, 'exportCsv']);
+        Route::apiResource('events', EventController::class);
         Route::apiResource('categories', CategoryController::class);
         Route::apiResource('finalists', FinalistController::class);
+        Route::apiResource('banners', BannerController::class);
         // Vote count adjustment
         Route::patch('finalists/{finalist}/adjust-votes', [VoteAdjustController::class, 'adjust']);
         // Multi-admin management

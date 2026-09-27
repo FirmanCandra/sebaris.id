@@ -1,25 +1,42 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "../auth/AuthProvider"
+
+let isOneTapPromptPending = false
 
 export default function GoogleOneTap() {
   const { user, token, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+  const hasTriggeredRef = useRef(false)
 
   useEffect(() => {
-    // Jangan jalankan One Tap di halaman login, register, atau admin agar tidak bentrok dengan tombol Google
+    // 1. One Tap hanya aktif di halaman beranda '/' saat pengunjung belum login
+    // Jangan jalankan di /voting, /categories, /embed, /login, /register, /admin
     if (
+      location.pathname !== '/' ||
       user ||
       token ||
-      !clientId ||
-      location.pathname.startsWith('/login') ||
-      location.pathname.startsWith('/register') ||
-      location.pathname.startsWith('/admin')
+      !clientId
     ) {
       return
     }
+
+    // 2. Cegah trigger berulang jika sudah pernah ditutup/ditolak oleh user di sesi ini
+    try {
+      if (sessionStorage.getItem('sebaris_onetap_dismissed') === '1') {
+        return
+      }
+    } catch {
+      // ignore
+    }
+
+    // 3. Cegah multiple prompt requests aktif bersamaan (menghindari error "Only one navigator.credentials.get")
+    if (hasTriggeredRef.current || isOneTapPromptPending) {
+      return
+    }
+    hasTriggeredRef.current = true
 
     let cancelled = false
 
@@ -36,8 +53,17 @@ export default function GoogleOneTap() {
     }
 
     function initOneTap() {
-      if (cancelled || !window.google?.accounts?.id) return
+      if (cancelled || !window.google?.accounts?.id || isOneTapPromptPending) return
+
       try {
+        isOneTapPromptPending = true
+        // Batalkan request kredensial sebelumnya yang mungkin masih aktif di browser
+        try {
+          window.google.accounts.id.cancel()
+        } catch {
+          // ignore
+        }
+
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: handleCredential,
@@ -45,15 +71,24 @@ export default function GoogleOneTap() {
           cancel_on_tap_outside: true,
           context: "signin",
           itp_support: true,
-          use_fedcm_for_prompt: false,
         })
+
         window.google.accounts.id.prompt((notification) => {
-          if (notification.isNotDisplayed()) {
-            // Silently handle dismissed or blocked prompt
+          isOneTapPromptPending = false
+          if (
+            notification?.isNotDisplayed?.() ||
+            notification?.isSkippedMoment?.() ||
+            notification?.isDismissedMoment?.()
+          ) {
+            try {
+              sessionStorage.setItem('sebaris_onetap_dismissed', '1')
+            } catch {
+              // ignore
+            }
           }
         })
       } catch (e) {
-        // Silently catch One Tap prompt errors
+        isOneTapPromptPending = false
       }
     }
 
@@ -66,22 +101,33 @@ export default function GoogleOneTap() {
         if (window.google?.accounts?.id) {
           clearInterval(interval)
           initOneTap()
-        } else if (attempts > 30) {
+        } else if (attempts > 25) {
           clearInterval(interval)
         }
       }, 200)
+
       return () => {
         cancelled = true
         clearInterval(interval)
-        window.google?.accounts?.id?.cancel?.()
+        isOneTapPromptPending = false
+        try {
+          window.google?.accounts?.id?.cancel()
+        } catch {
+          // ignore
+        }
       }
     }
 
     return () => {
       cancelled = true
-      window.google?.accounts?.id?.cancel?.()
+      isOneTapPromptPending = false
+      try {
+        window.google?.accounts?.id?.cancel()
+      } catch {
+        // ignore
+      }
     }
-  }, [user, token, clientId, loginWithGoogle, navigate])
+  }, [user, token, clientId, loginWithGoogle, navigate, location.pathname])
 
   return null
 }

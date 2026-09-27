@@ -8,6 +8,8 @@ import {
   IconClose,
   IconUsers,
   IconSearch,
+  IconStar,
+  IconShield,
 } from '../components/Icons'
 
 export default function AdminManagementPage() {
@@ -262,7 +264,17 @@ export default function AdminManagementPage() {
                                 : 'bg-blue-100 text-blue-800 border border-blue-200'
                             }`}
                           >
-                            {item.role === 'superadmin' ? '⭐ Superadmin' : '🛡️ Panitia (Operator)'}
+                            {item.role === 'superadmin' ? (
+                              <span className="inline-flex items-center gap-1.5">
+                                <IconStar className="w-3.5 h-3.5 text-amber-500 fill-current" />
+                                <span>Superadmin</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5">
+                                <IconShield className="w-3.5 h-3.5 text-blue-600" />
+                                <span>Panitia (Operator)</span>
+                              </span>
+                            )}
                           </span>
                         </td>
 

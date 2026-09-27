@@ -1,4 +1,5 @@
 import React from 'react'
+import { IconAlertTriangle } from './Icons'
 
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -27,8 +28,8 @@ export default class ErrorBoundary extends React.Component {
       return (
         <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
           <div className="max-w-md w-full bg-slate-800/90 border border-slate-700/60 rounded-2xl p-8 shadow-2xl backdrop-blur-md">
-            <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-2xl">
-              ⚠️
+            <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+              <IconAlertTriangle className="w-7 h-7 text-amber-400" />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-white mb-2">
               Terjadi Kendala pada Tampilan

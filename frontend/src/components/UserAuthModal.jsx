@@ -5,7 +5,7 @@ import { useUserAuth } from '../auth/AuthProvider'
 import GoogleSignInButton from './GoogleSignInButton'
 import SebarisLogo from './SebarisLogo'
 import EReceiptModal from './EReceiptModal'
-import { IconClose, IconCheckVote, IconCalendar, IconUser, IconExternal } from './Icons'
+import { IconClose, IconCheckVote, IconCalendar, IconUser, IconExternal, IconChevronRight, IconArrowUpRight } from './Icons'
 
 export default function UserAuthModal({ isOpen, onClose }) {
   const { user, userVotes, loginUserWithGoogle, logoutUser, loadUserVotes } = useUserAuth()
@@ -189,13 +189,13 @@ export default function UserAuthModal({ isOpen, onClose }) {
                       </span>
                       <span className="font-black text-[#70B325] dark:text-[#8FE032] flex items-center gap-1 group-hover:underline">
                         <span>{userVotes.length} vote</span>
-                        <span className="text-xs group-hover:translate-x-1 transition-transform">→</span>
+                        <IconChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                       </span>
                     </div>
 
                     <div className="w-full mt-2 py-2 px-3 bg-[#70B325]/10 dark:bg-[#70B325]/20 group-hover:bg-[#70B325] text-[#4E7D1C] dark:text-[#8FE032] group-hover:text-white rounded-xl font-bold flex items-center justify-between transition-all text-xs">
                       <span>{userVotes.length > 0 ? `Buka ${userVotes.length} Bukti & Riwayat Suara` : 'Lihat Riwayat Suara'}</span>
-                      <span className="text-sm font-black group-hover:translate-x-1 transition-transform">→</span>
+                      <IconChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
 
@@ -250,8 +250,9 @@ export default function UserAuthModal({ isOpen, onClose }) {
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#EBF7E3] dark:bg-[#70B325]/20 text-[#48781B] dark:text-[#8FE032] border border-[#70B325]/20">
                               {v.vote_amount} Suara Sah
                             </span>
-                            <span className="block text-[10px] font-bold text-[#70B325] dark:text-[#8FE032] group-hover:underline">
-                              Lihat Bukti ↗
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#70B325] dark:text-[#8FE032] group-hover:underline">
+                              <span>Lihat Bukti</span>
+                              <IconArrowUpRight className="w-3 h-3" />
                             </span>
                           </div>
                         </div>

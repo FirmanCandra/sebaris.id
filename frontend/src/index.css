@@ -52,8 +52,15 @@
   --shadow-float: 0 12px 28px -4px rgba(0, 0, 0, 0.6);
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -63,14 +70,34 @@ body {
   color: var(--neutral-text-main);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+button, a {
+  touch-action: manipulation;
 }
 
 button, input, select, textarea {
   font: inherit;
 }
 
+input, select, textarea {
+  -webkit-appearance: none;
+}
+
 button {
   cursor: pointer;
+  -webkit-appearance: none;
+}
+
+/* Prevent iOS Safari auto-zoom on input focus */
+@media screen and (max-width: 768px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 /* Accessibility focus styles (WCAG compliance) */
@@ -360,3 +387,45 @@ textarea:focus-visible {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--neutral-text-light);
 }
+
+/* Hide scrollbar with iOS momentum scrolling for horizontal carousels */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* iOS Safari border-radius clipping bug fix */
+.ios-isolate {
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  isolation: isolate;
+  transform: translateZ(0);
+}
+
+/* iOS Safari backdrop-blur fallback support */
+@supports not (backdrop-filter: blur(1px)) {
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl {
+    background-color: rgba(26, 32, 24, 0.95) !important;
+  }
+}
+
+/* Safe area insets for notched iPhones & iPads */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pl-safe {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+.pr-safe {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+

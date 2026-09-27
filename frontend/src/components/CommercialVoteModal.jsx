@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { api, ApiError, resolveStorageUrl } from '../api/client'
 import { useUserAuth } from '../auth/AuthProvider'
 import GoogleSignInButton from './GoogleSignInButton'
@@ -10,6 +10,8 @@ import {
   IconCheckVote,
   IconGift,
   IconCopy,
+  IconChevronRight,
+  IconChevronLeft,
 } from './Icons'
 
 // Common fallback voting packages if category does not define custom packages
@@ -68,37 +70,46 @@ export default function CommercialVoteModal({
   const [checkingPayment, setCheckingPayment] = useState(false)
   const [simulating, setSimulating] = useState(false)
 
-  // Reset when opened
+  const wasOpenRef = useRef(false)
+  const lastFinalistIdRef = useRef(finalist?.id)
+
+  // Reset ONLY when modal is newly opened or finalist changes — NEVER on category background polling
   useEffect(() => {
-    if (isOpen) {
+    const isNewOpen = isOpen && !wasOpenRef.current
+    const isDifferentFinalist = finalist?.id && finalist.id !== lastFinalistIdRef.current
+
+    if (isNewOpen || isDifferentFinalist) {
       setStep('select')
       setFieldErrors({})
       setPaymentSession(null)
       setSelectedPackage(defaultPackageAmount)
       setCustomAmount('')
-      if (category?.allow_free_vote === false) {
-        setVoteMode('paid')
-      } else {
-        setVoteMode('free')
-      }
+      setVoteMode(category?.allow_free_vote === false ? 'paid' : 'free')
       setForm({
         voter_name: user?.name || '',
         voter_contact: user?.email || '',
         message: '',
         is_anonymous: false,
       })
+      lastFinalistIdRef.current = finalist?.id
     }
-  }, [isOpen, category, user, defaultPackageAmount])
+    wasOpenRef.current = isOpen
+  }, [isOpen, finalist?.id])
 
-  // Payment Countdown Timer
+  // Payment Countdown Timer (stable interval without recreating every second)
   useEffect(() => {
-    if (step === 'payment' && paymentSession && paymentTimer > 0) {
-      const interval = setInterval(() => {
-        setPaymentTimer((prev) => (prev > 0 ? prev - 1 : 0))
-      }, 1000)
-      return () => clearInterval(interval)
-    }
-  }, [step, paymentSession, paymentTimer])
+    if (step !== 'payment' || !paymentSession) return
+    const interval = setInterval(() => {
+      setPaymentTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [step, paymentSession])
 
   // Realtime Auto-Polling Payment Status
   useEffect(() => {
@@ -250,7 +261,7 @@ export default function CommercialVoteModal({
       aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-xs animate-fadeIn overflow-y-auto"
     >
-      <div className="bg-white dark:bg-[#151C14] text-[#262A25] dark:text-gray-100 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-gray-100 dark:border-white/10 relative my-auto max-h-[92vh] overflow-y-auto transition-colors">
+      <div className="bg-white dark:bg-[#151C14] text-[#262A25] dark:text-gray-100 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-gray-100 dark:border-white/10 relative my-auto max-h-[90dvh] overflow-y-auto transition-colors ios-isolate">
         {/* Close Button */}
         <button
           type="button"
@@ -569,7 +580,8 @@ export default function CommercialVoteModal({
                 ) : (
                   <>
                     <IconCheck className="w-4 h-4 stroke-3" />
-                    <span>{voteMode === 'free' ? 'Konfirmasi Vote' : 'Lanjut Bayar →'}</span>
+                    <span>{voteMode === 'free' ? 'Konfirmasi Vote' : 'Lanjut Bayar'}</span>
+                    {voteMode !== 'free' && <IconChevronRight className="w-4 h-4" />}
                   </>
                 )}
               </button>
@@ -703,9 +715,10 @@ export default function CommercialVoteModal({
               <button
                 type="button"
                 onClick={() => setStep('select')}
-                className="w-full text-center text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 py-1 cursor-pointer"
+                className="w-full text-center text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 py-1 cursor-pointer inline-flex items-center justify-center gap-1"
               >
-                ← Ubah Paket atau Metode Lain
+                <IconChevronLeft className="w-3.5 h-3.5" />
+                <span>Ubah Paket atau Metode Lain</span>
               </button>
             </div>
           </div>

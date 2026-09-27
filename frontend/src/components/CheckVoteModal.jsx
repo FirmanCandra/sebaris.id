@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { IconClose, IconCheck, IconSearch, IconCheckVote } from './Icons'
+import { IconClose, IconCheck, IconSearch, IconCheckVote, IconFileText } from './Icons'
 import { api } from '../api/client'
 import EReceiptModal from './EReceiptModal'
 
@@ -148,9 +148,10 @@ export default function CheckVoteModal({ isOpen, onClose, initialQuery = '' }) {
                       <button
                         type="button"
                         onClick={() => setSelectedReceipt(vote)}
-                        className="text-xs font-bold text-[#70B325] hover:underline cursor-pointer"
+                        className="text-xs font-bold text-[#70B325] hover:underline cursor-pointer inline-flex items-center gap-1"
                       >
-                        Lihat E-Receipt 📄
+                        <IconFileText className="w-3.5 h-3.5" />
+                        <span>Lihat E-Receipt</span>
                       </button>
                     </div>
                   </div>

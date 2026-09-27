@@ -12,7 +12,10 @@ class PublicEventController extends Controller
     {
         return EventResource::collection(
             Event::query()
-                ->where('status', 'active')
+                ->withCount('categories')
+                ->with(['categories' => function ($query) {
+                    $query->ordered()->withCount('finalists');
+                }])
                 ->orderBy('start_date')
                 ->get(),
         );

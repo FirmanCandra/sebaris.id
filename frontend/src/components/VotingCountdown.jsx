@@ -1,14 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { IconClock } from './Icons'
 
 export default function VotingCountdown({ endDate, status = 'active', onExpire }) {
   const [timeLeft, setTimeLeft] = useState(null)
   const [isExpired, setIsExpired] = useState(false)
 
+  const lastExpiredRef = useRef(null)
+
   useEffect(() => {
     if (!endDate || status === 'inactive') {
       setIsExpired(true)
-      if (onExpire) onExpire(true)
+      if (lastExpiredRef.current !== true) {
+        lastExpiredRef.current = true
+        if (onExpire) onExpire(true)
+      }
       return
     }
 
@@ -21,7 +26,10 @@ export default function VotingCountdown({ endDate, status = 'active', onExpire }
       if (diff <= 0) {
         setIsExpired(true)
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-        if (onExpire) onExpire(true)
+        if (lastExpiredRef.current !== true) {
+          lastExpiredRef.current = true
+          if (onExpire) onExpire(true)
+        }
         return
       }
 
@@ -32,7 +40,10 @@ export default function VotingCountdown({ endDate, status = 'active', onExpire }
       const seconds = Math.floor((diff % (1000 * 60)) / 1000)
 
       setTimeLeft({ days, hours, minutes, seconds })
-      if (onExpire) onExpire(false)
+      if (lastExpiredRef.current !== false) {
+        lastExpiredRef.current = false
+        if (onExpire) onExpire(false)
+      }
     }
 
     calculateTime()

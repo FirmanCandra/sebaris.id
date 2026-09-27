@@ -71,7 +71,7 @@ export function AuthProvider({ children }) {
   }, [loadUserData, loadUserVotes])
 
   // Universal Login (Email + Password) - automatically handles Admin or User
-  async function login(credentials) {
+  const login = useCallback(async (credentials) => {
     const payload = await api('/auth/login', { method: 'POST', body: credentials })
     const role = payload.role || 'user'
     const userData = payload.user?.data || payload.user
@@ -90,20 +90,20 @@ export function AuthProvider({ children }) {
     }
 
     return payload
-  }
+  }, [])
 
   // User manual registration
-  async function register(data) {
+  const register = useCallback(async (data) => {
     const payload = await api('/auth/register', { method: 'POST', body: data })
     const uData = payload.user?.data || payload.user
     localStorage.setItem('sebaris.user.token', payload.token)
     setUser(uData)
     setUserToken(payload.token)
     return payload
-  }
+  }, [])
 
   // Universal Google Login (User or Admin, with automatic notification email)
-  async function loginWithGoogle(credential) {
+  const loginWithGoogle = useCallback(async (credential) => {
     const payload = await api('/auth/google-login', {
       method: 'POST',
       body: { credential },
@@ -125,10 +125,10 @@ export function AuthProvider({ children }) {
     }
 
     return payload
-  }
+  }, [])
 
   // Admin logout
-  async function logout() {
+  const logout = useCallback(async () => {
     if (token) {
       try {
         await api('/admin/logout', { method: 'POST', token })
@@ -139,10 +139,10 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('sebaris.admin.token')
     setAdmin(null)
     setToken(null)
-  }
+  }, [token])
 
   // Public User logout
-  async function logoutUser() {
+  const logoutUser = useCallback(async () => {
     if (userToken) {
       try {
         await api('/user/logout', { method: 'POST', token: userToken })
@@ -154,7 +154,7 @@ export function AuthProvider({ children }) {
     setUser(null)
     setUserToken(null)
     setUserVotes([])
-  }
+  }, [userToken])
 
   return (
     <AuthContext.Provider

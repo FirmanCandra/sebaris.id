@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Link, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
 import GoogleOneTap from './components/GoogleOneTap'
 import ResourcePage from './components/ResourcePage'
@@ -11,17 +11,119 @@ import CategoryVotingPage from './pages/CategoryVotingPage'
 import NotFoundPage from './pages/NotFoundPage'
 import EmbedVotingPage from './pages/EmbedVotingPage'
 import AdminManagementPage from './pages/AdminManagementPage'
+import EventWorkspacePage from './pages/EventWorkspacePage'
 import EmbedCodeModal from './components/EmbedCodeModal'
 import VotePackagesModal from './components/VotePackagesModal'
 import AdjustVoteModal from './components/AdjustVoteModal'
+import {
+  IconChevronRight,
+  IconLayers,
+  IconCrown,
+  IconMedal,
+  IconSnowflake,
+  IconLockOpen,
+  IconCoins,
+  IconGlobe,
+  IconScale,
+  IconDownload,
+  IconCheck,
+} from './components/Icons'
 import { resolveStorageUrl } from './api/client'
+
+const events = {
+  title: 'Event / Ajang',
+  description: 'Kelola induk ajang/event yang menaungi beberapa tingkatan kategori pemilihan (Premier, Sekunder, Tersier).',
+  endpoint: '/admin/events',
+  fields: [
+    { name: 'name', label: 'Nama Event / Ajang' },
+    { name: 'start_date', label: 'Tanggal Mulai', type: 'date' },
+    { name: 'end_date', label: 'Tanggal Selesai', type: 'date' },
+    {
+      name: 'status',
+      label: 'Status Event',
+      type: 'select',
+      options: [
+        { value: 'active', label: 'Aktif' },
+        { value: 'inactive', label: 'Nonaktif / Selesai' },
+      ],
+    },
+  ],
+  columns: [
+    {
+      key: 'name',
+      label: 'Nama Event',
+      render: (item) => (
+        <Link
+          to={`/admin/events/${item.id}`}
+          className="group block no-underline"
+          title="Klik untuk membuka dan mengelola event ini"
+        >
+          <span className="font-extrabold text-sm text-[var(--neutral-text-main)] group-hover:text-[var(--brand-primary)] transition-colors block">
+            {item.name}
+          </span>
+          <span className="text-xs text-gray-500 group-hover:text-[var(--brand-primary)] transition-colors flex items-center gap-1 mt-0.5">
+            <span>{item.categories_count ?? 0} Kategori Terdaftar</span>
+            <span className="text-[var(--brand-primary)] font-bold inline-flex items-center gap-0.5">
+              Buka Event <IconChevronRight className="w-3 h-3" />
+            </span>
+          </span>
+        </Link>
+      ),
+    },
+    {
+      key: 'period',
+      label: 'Periode Event',
+      render: (item) => (
+        <div className="text-xs">
+          <span className="font-semibold text-gray-700 dark:text-gray-300 block">
+            {item.start_date || '-'}
+          </span>
+          <span className="text-gray-400 block">s/d {item.end_date || '-'}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (item) => (
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
+            item.status === 'active'
+              ? 'bg-[#EBF7E3] text-[#48781B]'
+              : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+          }`}
+        >
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${
+              item.status === 'active' ? 'bg-[#70B325] animate-pulse' : 'bg-gray-400'
+            }`}
+          />
+          {item.status === 'active' ? 'Aktif' : 'Nonaktif'}
+        </span>
+      ),
+    },
+  ],
+  options: {},
+}
 
 const categories = {
   title: 'Kategori Voting',
-  description: 'Kelola sesi voting, thumbnail poster, tarif per vote, freeze leaderboard, dan export laporan.',
+  description: 'Kelola sesi voting, penentuan tingkatan (Premier, Sekunder, Tersier), induk event, thumbnail poster, tarif, dan freeze leaderboard.',
   endpoint: '/admin/categories',
   fields: [
-    { name: 'thumbnail', label: 'Poster / Thumbnail Voting', type: 'file' },
+    { name: 'thumbnail', label: 'Poster / Thumbnail Voting (Rasio 3:4 Potret, misal 900x1200 px)', type: 'file' },
+    { name: 'event_id', label: 'Induk Event / Ajang (Pilih Event)', type: 'select', optionsKey: 'events' },
+    {
+      name: 'tier',
+      label: 'Tingkatan Kategori (Tier Order)',
+      type: 'select',
+      options: [
+        { value: 'premier', label: 'Premier (Kategori Utama / Prioritas 1)' },
+        { value: 'sekunder', label: 'Sekunder (Kategori Kedua / Prioritas 2)' },
+        { value: 'tersier', label: 'Tersier (Kategori Ketiga / Prioritas 3)' },
+      ],
+    },
+    { name: 'sort_order', label: 'Urutan Tampilan (1, 2, 3...)', type: 'number' },
     { name: 'name', label: 'Nama Kategori / Sesi Voting' },
     { name: 'organizer', label: 'Penyelenggara' },
     { name: 'start_date', label: 'Tanggal Mulai', type: 'date' },
@@ -51,7 +153,7 @@ const categories = {
       type: 'select',
       options: [
         { value: 0, label: 'Buka Publik (Real-time Terbuka)' },
-        { value: 1, label: 'Bekukan / Sembunyikan Perolehan Suara (Freeze ❄️)' },
+        { value: 1, label: 'Bekukan / Sembunyikan Perolehan Suara (Freeze)' },
       ],
     },
     { name: 'description', label: 'Deskripsi Voting', type: 'textarea' },
@@ -101,6 +203,52 @@ const categories = {
     },
     { key: 'finalists_count', label: 'Jumlah Finalis' },
     {
+      key: 'tier',
+      label: 'Tingkatan (Tier)',
+      render: (item) => {
+        const tier = item.tier || 'premier'
+        const badgeConfig = {
+          premier: {
+            label: 'Premier',
+            icon: IconCrown,
+            cls: 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 border-amber-300 font-extrabold',
+          },
+          sekunder: {
+            label: 'Sekunder',
+            icon: IconMedal,
+            cls: 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 font-bold',
+          },
+          tersier: {
+            label: 'Tersier',
+            icon: IconMedal,
+            cls: 'bg-orange-100 dark:bg-orange-950/60 text-orange-800 dark:text-orange-200 border-orange-300 font-bold',
+          },
+        }
+        const cfg = badgeConfig[tier] || badgeConfig.premier
+        const TierIcon = cfg.icon
+        return (
+          <div className="flex flex-col gap-1 items-start">
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs border ${cfg.cls}`}>
+              <TierIcon className="w-3.5 h-3.5" />
+              {cfg.label}
+            </span>
+            <span className="text-[10px] text-gray-400 font-semibold">
+              Urutan: #{item.sort_order ?? 1}
+            </span>
+          </div>
+        )
+      },
+    },
+    {
+      key: 'event',
+      label: 'Induk Event',
+      render: (item) => (
+        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+          {item.event?.name || '— Standalone'}
+        </span>
+      ),
+    },
+    {
       key: 'pricing',
       label: 'Tarif & Mode',
       render: (item) => (
@@ -108,8 +256,18 @@ const categories = {
           <span className="font-extrabold text-[#70B325] block">
             Rp {(item.price_per_vote || 1000).toLocaleString('id-ID')} / suara
           </span>
-          <span className="text-[10px] text-gray-400 block font-semibold">
-            {item.allow_free_vote ? '✓ Ada Vote Gratis' : '⭐ Full Berbayar'}
+          <span className="text-[10px] text-gray-400 font-semibold flex items-center gap-1 mt-0.5">
+            {item.allow_free_vote ? (
+              <>
+                <IconCheck className="w-3 h-3 text-emerald-500" />
+                <span>Ada Vote Gratis</span>
+              </>
+            ) : (
+              <>
+                <IconCoins className="w-3 h-3 text-amber-500" />
+                <span>Full Berbayar</span>
+              </>
+            )}
           </span>
         </div>
       ),
@@ -119,13 +277,23 @@ const categories = {
       label: 'Freeze Mode',
       render: (item) => (
         <span
-          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
             item.freeze_leaderboard
               ? 'bg-sky-100 text-sky-800 border border-sky-300 font-extrabold'
               : 'bg-gray-100 text-gray-600'
           }`}
         >
-          {item.freeze_leaderboard ? '❄️ Dibekukan' : '🔓 Terbuka'}
+          {item.freeze_leaderboard ? (
+            <>
+              <IconSnowflake className="w-3.5 h-3.5 text-sky-600" />
+              <span>Dibekukan</span>
+            </>
+          ) : (
+            <>
+              <IconLockOpen className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Terbuka</span>
+            </>
+          )}
         </span>
       ),
     },
@@ -162,12 +330,34 @@ const categories = {
           className="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#F4F9EE] hover:bg-[#70B325] text-[#558223] hover:text-white border border-[#D5E6C4] transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
           title="Unduh rekap suara dan data transaksi ke Excel (CSV)"
         >
-          <span>📥 Unduh CSV</span>
+          <IconDownload className="w-3.5 h-3.5" />
+          <span>Unduh CSV</span>
         </button>
       ),
     },
   ],
-  options: {},
+  options: {
+    events: { endpoint: '/admin/events' },
+  },
+}
+
+function EventsAdminPage() {
+  return (
+    <ResourcePage
+      {...events}
+      extraActions={(item) => (
+        <Link
+          to={`/admin/events/${item.id}`}
+          className="px-2.5 py-1 rounded-lg text-xs font-black text-white bg-[#70B325] hover:bg-[#5f991f] transition-all flex items-center gap-1.5 no-underline shadow-2xs cursor-pointer mr-1"
+          title="Buka dan kelola kategori serta finalis di event ini"
+        >
+          <IconLayers className="w-3.5 h-3.5" />
+          <span>Kelola Event</span>
+          <IconChevronRight className="w-3.5 h-3.5" />
+        </Link>
+      )}
+    />
+  )
 }
 
 const finalists = {
@@ -254,7 +444,8 @@ function CategoriesAdminPage() {
               className="px-2 py-1 rounded-lg text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors flex items-center gap-1 cursor-pointer"
               title="Atur paket harga suara voting"
             >
-              <span>💰 Paket</span>
+              <IconCoins className="w-3.5 h-3.5" />
+              <span>Paket</span>
             </button>
             <button
               type="button"
@@ -262,7 +453,8 @@ function CategoriesAdminPage() {
               className="px-2 py-1 rounded-lg text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors flex items-center gap-1 cursor-pointer"
               title="Dapatkan kode widget iframe untuk website"
             >
-              <span>🌐 Embed</span>
+              <IconGlobe className="w-3.5 h-3.5" />
+              <span>Embed</span>
             </button>
           </div>
         )}
@@ -304,7 +496,8 @@ function FinalistsAdminPage() {
             className="px-2 py-1 rounded-lg text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors flex items-center gap-1 cursor-pointer"
             title="Koreksi atau reset perolehan suara"
           >
-            <span>⚖️ Koreksi</span>
+            <IconScale className="w-3.5 h-3.5" />
+            <span>Koreksi</span>
           </button>
         )}
       />
@@ -319,6 +512,110 @@ function FinalistsAdminPage() {
       )}
     </>
   )
+}
+
+const banners = {
+  title: 'Banner Slider (Hero Section)',
+  description: 'Kelola banner gambar landscape yang bergeser di halaman utama. Gunakan gambar berformat landscape rasio 21:9 atau ~3:1 (misal 1920x640 px atau 1200x400 px).',
+  endpoint: '/admin/banners',
+  fields: [
+    { name: 'title', label: 'Nama Banner / Judul Acara (Untuk referensi & alt text)' },
+    {
+      name: 'image',
+      label: 'Gambar Banner (Rasio Landscape 21:9 atau ~3:1, misal 1920x640 px atau 1200x400 px)',
+      type: 'file',
+    },
+    {
+      name: 'link_url',
+      label: 'Link Tujuan saat Banner Diklik (contoh: /voting/puteri-diy-2026 atau https://... atau kosongkan jika hanya gambar)',
+    },
+    { name: 'sort_order', label: 'Urutan Tampilan Slider (1, 2, 3...)', type: 'number' },
+    {
+      name: 'is_active',
+      label: 'Status Tampil di Beranda',
+      type: 'select',
+      options: [
+        { value: 1, label: 'Aktif (Tampilkan di Beranda)' },
+        { value: 0, label: 'Nonaktif (Sembunyikan)' },
+      ],
+    },
+  ],
+  columns: [
+    {
+      key: 'image',
+      label: 'Pratinjau Banner',
+      render: (item) => (
+        <div className="w-36 sm:w-44 aspect-[21/8] rounded-xl overflow-hidden bg-gray-900 border border-[var(--neutral-border)] shadow-xs flex-shrink-0 flex items-center justify-center">
+          {item.image || item.image_url ? (
+            <img
+              src={resolveStorageUrl(item.image_url || item.image)}
+              alt={item.title}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none'
+              }}
+            />
+          ) : (
+            <span className="text-[10px] text-gray-400">Tanpa Gambar</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'title',
+      label: 'Informasi Banner',
+      render: (item) => (
+        <div>
+          <span className="font-extrabold block text-sm text-[var(--neutral-text-main)]">
+            {item.title}
+          </span>
+          {item.link_url ? (
+            <span className="text-xs text-[var(--brand-primary)] flex items-center gap-1 mt-0.5 font-medium truncate max-w-xs">
+              <span>Link: {item.link_url}</span>
+            </span>
+          ) : (
+            <span className="text-xs text-gray-400 italic block mt-0.5">
+              Hanya gambar (tanpa link)
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'sort_order',
+      label: 'Urutan',
+      render: (item) => (
+        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+          #{item.sort_order ?? 1}
+        </span>
+      ),
+    },
+    {
+      key: 'is_active',
+      label: 'Status',
+      render: (item) => (
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
+            item.is_active
+              ? 'bg-[#EBF7E3] text-[#48781B]'
+              : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+          }`}
+        >
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${
+              item.is_active ? 'bg-[#70B325] animate-pulse' : 'bg-gray-400'
+            }`}
+          />
+          {item.is_active ? 'Aktif' : 'Nonaktif'}
+        </span>
+      ),
+    },
+  ],
+  options: {},
+}
+
+function BannersAdminPage() {
+  return <ResourcePage {...banners} />
 }
 
 function ProtectedApp() {
@@ -349,8 +646,11 @@ export default function App() {
         <Route path="/admin" element={<ProtectedApp />}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="events" element={<EventsAdminPage />} />
+          <Route path="events/:eventId" element={<EventWorkspacePage />} />
           <Route path="categories" element={<CategoriesAdminPage />} />
           <Route path="finalists" element={<FinalistsAdminPage />} />
+          <Route path="banners" element={<BannersAdminPage />} />
           <Route path="admins" element={<AdminManagementPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />

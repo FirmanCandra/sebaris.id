@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { IconClose } from './Icons'
+import { IconClose, IconCheck, IconClipboard, IconEye } from './Icons'
 
 export default function EmbedCodeModal({ isOpen, onClose, category }) {
   const [copied, setCopied] = useState(false)
@@ -69,14 +69,31 @@ export default function EmbedCodeModal({ isOpen, onClose, category }) {
               onClick={handleCopy}
               className="flex-1 py-2.5 px-4 bg-[#70B325] hover:bg-[#5E9B1F] text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
             >
-              <span>{copied ? '✓ Kode Tersalin!' : '📋 Salin Kode Embed'}</span>
+              {copied ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <IconCheck className="w-4 h-4" />
+                  <span>Kode Tersalin!</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5">
+                  <IconClipboard className="w-4 h-4" />
+                  <span>Salin Kode Embed</span>
+                </span>
+              )}
             </button>
             <button
               type="button"
               onClick={() => setShowPreview(!showPreview)}
               className="py-2.5 px-4 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
             >
-              {showPreview ? 'Tutup Preview' : '👁️ Preview'}
+              {showPreview ? (
+                'Tutup Preview'
+              ) : (
+                <span className="inline-flex items-center gap-1.5">
+                  <IconEye className="w-4 h-4" />
+                  <span>Preview</span>
+                </span>
+              )}
             </button>
           </div>
 

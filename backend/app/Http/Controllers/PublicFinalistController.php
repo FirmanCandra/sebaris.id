@@ -12,7 +12,6 @@ class PublicFinalistController extends Controller
     protected function resolveCategory(string $idOrSlug): Category
     {
         return Category::query()
-            ->where('status', 'active')
             ->where(function ($query) use ($idOrSlug) {
                 if (is_numeric($idOrSlug)) {
                     $query->where('id', (int) $idOrSlug);

@@ -4,7 +4,7 @@ import { api, resolveStorageUrl } from '../api/client'
 import CommercialVoteModal from '../components/CommercialVoteModal'
 import FinalistDetailModal from '../components/FinalistDetailModal'
 import EReceiptModal from '../components/EReceiptModal'
-import { IconZap, IconSearch, IconTrophy } from '../components/Icons'
+import { IconZap, IconSearch, IconTrophy, IconCamera, IconLock, IconArrowUpRight } from '../components/Icons'
 
 export default function EmbedVotingPage() {
   const { categoryId } = useParams()
@@ -144,8 +144,9 @@ export default function EmbedVotingPage() {
                 {/* Multi-photo badge if available */}
                 {Array.isArray(finalist.extra_photos) && finalist.extra_photos.length > 0 && (
                   <div className="absolute bottom-2 right-2">
-                    <span className="px-1.5 py-0.5 rounded-md bg-black/60 text-[9px] font-bold text-white">
-                      📷 +{finalist.extra_photos.length}
+                    <span className="px-1.5 py-0.5 rounded-md bg-black/60 text-[9px] font-bold text-white inline-flex items-center gap-1">
+                      <IconCamera className="w-3 h-3" />
+                      <span>+{finalist.extra_photos.length}</span>
                     </span>
                   </div>
                 )}
@@ -163,9 +164,14 @@ export default function EmbedVotingPage() {
                   </h3>
                   <div className="flex items-center justify-between text-[11px] mt-0.5">
                     <span className="font-bold text-[#70B325]">
-                      {category.freeze_leaderboard
-                        ? '🔒 Tersembunyi'
-                        : `${(finalist.vote_count || 0).toLocaleString('id-ID')} suara`}
+                      {category.freeze_leaderboard ? (
+                        <span className="inline-flex items-center gap-1">
+                          <IconLock className="w-3 h-3" />
+                          <span>Tersembunyi</span>
+                        </span>
+                      ) : (
+                        `${(finalist.vote_count || 0).toLocaleString('id-ID')} suara`
+                      )}
                     </span>
                     {!category.freeze_leaderboard && (
                       <span className="text-gray-400 font-semibold">{pct}%</span>
@@ -194,9 +200,10 @@ export default function EmbedVotingPage() {
           href={`/categories/${category.slug || category.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#70B325] font-bold hover:underline no-underline"
+          className="text-[#70B325] font-bold hover:underline no-underline inline-flex items-center gap-0.5"
         >
-          Buka Halaman Lengkap ↗
+          <span>Buka Halaman Lengkap</span>
+          <IconArrowUpRight className="w-3 h-3" />
         </a>
       </div>
 

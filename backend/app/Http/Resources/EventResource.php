@@ -16,6 +16,7 @@ class EventResource extends JsonResource
             'end_date' => $this->end_date?->toDateString(),
             'status' => $this->status,
             'categories_count' => $this->whenCounted('categories'),
+            'categories' => CategoryResource::collection($this->whenLoaded('categories')),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];

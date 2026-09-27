@@ -1,3 +1,5 @@
+import { IconSparkles } from './Icons'
+
 export default function HeroIllustration() {
   return (
     <div className="hero-visual-wrapper relative w-full max-w-lg mx-auto lg:max-w-none flex items-center justify-center py-6 select-none" aria-hidden="true">
@@ -7,7 +9,7 @@ export default function HeroIllustration() {
       {/* Decorative floating badge */}
       <div className="absolute -top-1 right-4 lg:right-12 z-30 bg-white text-[#262A25] font-bold text-xs lg:text-sm px-3.5 py-1.5 rounded-full shadow-md border border-[#E2EADA] transform rotate-6 flex items-center gap-1.5 animate-pulse">
         <span className="text-[#70B325]">Suaramu</span> berarti!
-        <span className="text-base leading-none">🌿</span>
+        <IconSparkles className="w-4 h-4 text-[#70B325]" />
       </div>
 
       {/* Main Ballot Card */}

@@ -21,6 +21,9 @@ class CategoryResource extends JsonResource
 
         return [
             'id' => $this->id,
+            'event_id' => $this->event_id,
+            'tier' => $this->tier ?? 'premier',
+            'sort_order' => $this->sort_order ?? 1,
             'name' => $this->name,
             'slug' => $this->slug ?? \Illuminate\Support\Str::slug($this->name),
             'thumbnail' => $thumbnailUrl,
@@ -36,6 +39,35 @@ class CategoryResource extends JsonResource
             'vote_packages'   => $this->vote_packages ?? [],
             'freeze_leaderboard' => (bool) ($this->freeze_leaderboard ?? false),
             'finalists_count' => $this->whenCounted('finalists'),
+            'event' => $this->event ? [
+                'id' => $this->event->id,
+                'name' => $this->event->name,
+                'status' => $this->event->status,
+                'start_date' => $this->event->start_date?->toDateString(),
+                'end_date' => $this->event->end_date?->toDateString(),
+            ] : null,
+            'sibling_categories' => $this->when(
+                $this->event_id !== null,
+                function () {
+                    if ($this->relationLoaded('event') && $this->event && $this->event->relationLoaded('categories')) {
+                        $cats = $this->event->categories;
+                    } else {
+                        $cats = \App\Models\Category::where('event_id', $this->event_id)->ordered()->get();
+                    }
+                    return $cats->map(function ($cat) {
+                        return [
+                            'id' => $cat->id,
+                            'name' => $cat->name,
+                            'slug' => $cat->slug,
+                            'tier' => $cat->tier ?? 'premier',
+                            'sort_order' => $cat->sort_order ?? 1,
+                            'status' => $cat->status,
+                            'is_current' => $cat->id === $this->id,
+                        ];
+                    })->values()->all();
+                },
+                []
+            ),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];

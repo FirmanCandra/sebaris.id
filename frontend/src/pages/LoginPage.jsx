@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import SebarisLogo from '../components/SebarisLogo'
-import { IconChevronRight, IconGoogle, IconCheck } from '../components/Icons'
+import { IconChevronRight, IconChevronLeft, IconGoogle, IconCheck } from '../components/Icons'
 
 export default function LoginPage() {
   const { login, register, loginWithGoogle } = useAuth()
@@ -185,9 +185,10 @@ export default function LoginPage() {
       <div className="w-full max-w-md mb-4 flex justify-between items-center">
         <Link
           to="/"
-          className="text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#70B325] dark:hover:text-[#86C839] transition-colors flex items-center gap-1 no-underline"
+          className="text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-[#70B325] dark:hover:text-[#86C839] transition-colors flex items-center gap-1.5 no-underline"
         >
-          <span>← Kembali ke Beranda</span>
+          <IconChevronLeft className="w-4 h-4" />
+          <span>Kembali ke Beranda</span>
         </Link>
         <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">sebaris.id</span>
       </div>

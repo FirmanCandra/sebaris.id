@@ -18,12 +18,23 @@ class EventController extends Controller
 
     public function store(EventRequest $request): EventResource
     {
-        return new EventResource(Event::create($request->validated()));
+        $data = $request->validated();
+        if (empty($data['status'])) {
+            $data['status'] = 'active';
+        }
+
+        return new EventResource(Event::create($data));
     }
 
     public function show(Event $event): EventResource
     {
-        return new EventResource($event->loadCount('categories'));
+        return new EventResource(
+            $event->load([
+                'categories' => function ($q) {
+                    $q->ordered()->withCount('finalists');
+                },
+            ])->loadCount('categories')
+        );
     }
 
     public function update(EventRequest $request, Event $event): EventResource

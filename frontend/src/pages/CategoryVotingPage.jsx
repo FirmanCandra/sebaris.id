@@ -1,5 +1,5 @@
-import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { api, resolveStorageUrl } from '../api/client'
 import PublicHeader from '../components/PublicHeader'
 import VotingCountdown from '../components/VotingCountdown'
@@ -18,22 +18,36 @@ import {
   IconTrophy,
   IconWhatsApp,
   IconLink,
-  IconCopy,
   IconLock,
   IconChat,
+  IconCrown,
+  IconMedal,
+  IconBuilding,
+  IconCoins,
+  IconTrendingUp,
+  IconCheck,
+  IconSparkles,
+  IconArrowDown,
 } from '../components/Icons'
 
 export default function CategoryVotingPage() {
   const { categoryId } = useParams()
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+
+  const handleCategorySwitch = useCallback((targetCat) => {
+    if (!targetCat) return
+    const currentPrefix = window.location.pathname.startsWith('/voting') ? '/voting' : '/categories'
+    navigate(`${currentPrefix}/${targetCat.slug || targetCat.id}`)
+  }, [navigate])
 
   const [category, setCategory] = useState(null)
   const [finalists, setFinalists] = useState([])
-  const [activeTab, setActiveTab] = useState('finalis') // 'finalis' | 'leaderboard' | 'dukungan' | 'deskripsi'
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [isVotingExpired, setIsVotingExpired] = useState(false)
+  const [activeTab, setActiveTab] = useState('card-leaderboard')
 
   // Wall of Support Messages State
   const [messages, setMessages] = useState([])
@@ -46,8 +60,16 @@ export default function CategoryVotingPage() {
   const [eReceiptData, setEReceiptData] = useState(null)
   const [copiedId, setCopiedId] = useState(null)
 
-  // Fetch category info and finalists
-  const loadData = useCallback(async () => {
+  // Tracking refs to eliminate re-render loops and flicker ("kejang-kejang")
+  const deepLinkHandledRef = useRef(false)
+  const isInitialDataLoadedRef = useRef(false)
+  const isInitialMessagesLoadedRef = useRef(false)
+
+  // Fetch category info and finalists quietly
+  const loadData = useCallback(async (isSilent = false) => {
+    if (!isSilent && !isInitialDataLoadedRef.current) {
+      setLoading(true)
+    }
     try {
       const [catRes, finRes] = await Promise.all([
         api(`/categories/${categoryId}`).catch(() => null),
@@ -55,23 +77,66 @@ export default function CategoryVotingPage() {
       ])
 
       if (catRes?.data) {
-        setCategory(catRes.data)
+        setCategory((prev) => {
+          if (!prev) return catRes.data
+          if (
+            prev.id === catRes.data.id &&
+            prev.name === catRes.data.name &&
+            prev.status === catRes.data.status &&
+            prev.freeze_leaderboard === catRes.data.freeze_leaderboard &&
+            prev.price_per_vote === catRes.data.price_per_vote &&
+            prev.end_date === catRes.data.end_date
+          ) {
+            return prev
+          }
+          return catRes.data
+        })
       }
-      setFinalists(finRes.data || [])
+
+      if (finRes?.data) {
+        setFinalists((prev) => {
+          const next = finRes.data || []
+          if (
+            prev.length === next.length &&
+            prev.every((p, idx) => p.id === next[idx]?.id && p.vote_count === next[idx]?.vote_count)
+          ) {
+            return prev
+          }
+          return next
+        })
+      }
       setError('')
+      isInitialDataLoadedRef.current = true
     } catch (err) {
-      setError(err.message || 'Gagal memuat data kategori')
+      if (!isInitialDataLoadedRef.current) {
+        setError(err.message || 'Gagal memuat data kategori')
+      }
     } finally {
       setLoading(false)
     }
   }, [categoryId])
 
-  const loadMessages = useCallback(async () => {
-    try {
+  // Fetch support messages quietly without flashing loading indicators during background polls
+  const loadMessages = useCallback(async (isSilent = false) => {
+    if (!isSilent && !isInitialMessagesLoadedRef.current) {
       setLoadingMessages(true)
+    }
+    try {
       const query = selectedMessageFinalistId ? `?finalist_id=${selectedMessageFinalistId}` : ''
       const res = await api(`/categories/${categoryId}/messages${query}`)
-      setMessages(res.data || [])
+      const next = res?.data || []
+      setMessages((prev) => {
+        if (
+          prev.length === next.length &&
+          prev.length > 0 &&
+          prev[0]?.id === next[0]?.id &&
+          prev[prev.length - 1]?.id === next[next.length - 1]?.id
+        ) {
+          return prev
+        }
+        return next
+      })
+      isInitialMessagesLoadedRef.current = true
     } catch {
       // Gracefully maintain client resilience
     } finally {
@@ -79,31 +144,46 @@ export default function CategoryVotingPage() {
     }
   }, [categoryId, selectedMessageFinalistId])
 
+  // Reset scroll and state on category change
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-  }, [categoryId])
+    isInitialDataLoadedRef.current = false
+    isInitialMessagesLoadedRef.current = false
+    deepLinkHandledRef.current = false
+    setMessages([])
+    setSearchQuery('')
+    setSelectedMessageFinalistId('')
+    loadData(false)
+    loadMessages(false)
+  }, [categoryId, loadData, loadMessages])
 
+  // Reload messages when message filter changes
   useEffect(() => {
-    loadData()
-    const interval = window.setInterval(loadData, 10000)
+    loadMessages(false)
+  }, [selectedMessageFinalistId, loadMessages])
+
+  // Periodic background polling without flickering ("kejang-kejang")
+  // Completely pauses when any modal is open so user interactions are never interrupted
+  useEffect(() => {
+    if (selectedFinalistForVote || selectedFinalistForDetail || eReceiptData) return
+
+    const interval = window.setInterval(() => {
+      loadData(true)
+      loadMessages(true)
+    }, 12000)
+
     return () => window.clearInterval(interval)
-  }, [loadData])
+  }, [loadData, loadMessages, selectedFinalistForVote, selectedFinalistForDetail, eReceiptData])
 
+  // Handle URL param: ?finalist=123 (direct candidate deep link, run once when finalists loaded)
   useEffect(() => {
-    loadMessages()
-    const interval = window.setInterval(loadMessages, 8000)
-    return () => window.clearInterval(interval)
-  }, [loadMessages])
-
-  // Handle URL param: ?finalist=123 (direct candidate deep link)
-  useEffect(() => {
+    if (deepLinkHandledRef.current) return
     const finalistParam = searchParams.get('finalist')
     if (finalistParam && finalists.length > 0) {
-      const found = finalists.find(
-        (f) => String(f.id) === String(finalistParam)
-      )
+      const found = finalists.find((f) => String(f.id) === String(finalistParam))
       if (found) {
-        setSelectedFinalistForDetail(found)
+        deepLinkHandledRef.current = true
+        setSelectedFinalistForVote(found)
       }
     }
   }, [searchParams, finalists])
@@ -122,12 +202,47 @@ export default function CategoryVotingPage() {
     }
   }, [category?.name, loading])
 
-  // Dynamically update browser address bar to match slug
+  // Dynamically update browser address bar to match slug preserving path prefix
   useEffect(() => {
     if (category?.slug && categoryId !== category.slug) {
-      window.history.replaceState(null, '', `/categories/${category.slug}`)
+      const currentPrefix = window.location.pathname.startsWith('/voting') ? '/voting' : '/categories'
+      window.history.replaceState(null, '', `${currentPrefix}/${category.slug}`)
     }
   }, [category?.slug, categoryId])
+
+  // ScrollSpy listener to update the active tab as user scrolls through sections
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 140
+      const sections = ['card-leaderboard', 'card-finalis', 'card-dukungan', 'card-tentang']
+      
+      for (const sectionId of sections) {
+        const el = document.getElementById(sectionId)
+        if (el) {
+          const top = el.offsetTop
+          const bottom = top + el.offsetHeight
+          if (scrollPosition >= top && scrollPosition <= bottom) {
+            setActiveTab(sectionId)
+            break
+          }
+        }
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Smooth scroll helper for navbar tabs (matching KreenConnect behavior)
+  const scrollToTab = (sectionId) => {
+    setActiveTab(sectionId)
+    const el = document.getElementById(sectionId)
+    if (el) {
+      const scrollOffset = 110
+      const y = el.getBoundingClientRect().top + window.pageYOffset - scrollOffset
+      window.scrollTo({ top: y, behavior: 'smooth' })
+    }
+  }
 
   // Total votes for percentage calculation
   const totalVotes = useMemo(
@@ -135,21 +250,60 @@ export default function CategoryVotingPage() {
     [finalists]
   )
 
-  // Filtered finalists by search query
+  // Determine if voting is ended/closed
+  const isVotingClosed = useMemo(() => {
+    if (!category) return false
+    if (category.status === 'inactive' || category.status === 'ended' || category.status === 'completed') {
+      return true
+    }
+    if (category.event?.status === 'inactive' || category.event?.status === 'ended' || category.event?.status === 'completed') {
+      return true
+    }
+    if (category.end_date) {
+      const end = new Date(category.end_date)
+      end.setHours(23, 59, 59, 999)
+      if (end < new Date()) return true
+    }
+    if (category.event?.end_date) {
+      const end = new Date(category.event.end_date)
+      end.setHours(23, 59, 59, 999)
+      if (end < new Date()) return true
+    }
+    return isVotingExpired
+  }, [category, isVotingExpired])
+
+  // Top 3 candidates and ranks 4+ list (KreenConnect Architecture)
+  const topThreeFinalists = useMemo(() => finalists.slice(0, 3), [finalists])
+  const otherFinalists = useMemo(() => finalists.slice(3), [finalists])
+
+  // When voting is ended/closed, ONLY retain the winners: Rank 1, 2, 3!
+  const activeFinalistPool = useMemo(() => {
+    if (isVotingClosed) {
+      return finalists.slice(0, 3)
+    }
+    return finalists
+  }, [finalists, isVotingClosed])
+
+  // Filtered finalists for the full roster section
   const filteredFinalists = useMemo(() => {
-    if (!searchQuery.trim()) return finalists
+    if (!searchQuery.trim()) return activeFinalistPool
     const q = searchQuery.toLowerCase()
-    return finalists.filter(
+    return activeFinalistPool.filter(
       (f) =>
         f.name.toLowerCase().includes(q) ||
         (f.description && f.description.toLowerCase().includes(q))
     )
-  }, [finalists, searchQuery])
+  }, [activeFinalistPool, searchQuery])
+
+  // Memoized expiration handler to prevent VotingCountdown from triggering re-renders
+  const handleExpire = useCallback((expired) => {
+    setIsVotingExpired((prev) => (prev !== expired ? expired : prev))
+  }, [])
 
   // Share candidate helpers
   function handleShareWhatsApp(finalist) {
     const directUrl = `${window.location.origin}/categories/${category?.slug || categoryId}?finalist=${finalist.id}`
-    const text = `Halo! Yuk dukung kandidat *${finalist.name}* di ajang *${category?.name || 'Voting'}* melalui sebaris.id! 🌟\n\nKlik link ini untuk beri vote secara langsung:\n${directUrl}`
+    const text = `Halo! Yuk dukung kandidat *${finalist.name}* di ajang *${category?.name || 'Voting'}* melalui sebaris.id!\n\nKlik tautan ini untuk beri vote langsung:\n${directUrl}`
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
   }
 
@@ -171,9 +325,8 @@ export default function CategoryVotingPage() {
       {/* Sticky Header */}
       <PublicHeader />
 
-      {/* TOP OFFICIAL EVENT HERO BANNER (KreenConnect Pageant & Competition Stage) */}
+      {/* TOP OFFICIAL EVENT HERO BANNER */}
       <section className="relative bg-gradient-to-br from-[#123E2A] via-[#102D1F] to-[#0A1D14] text-white border-b border-[#2C3529] overflow-hidden -mt-16 sm:-mt-20 pt-20 sm:pt-24 pb-6 sm:pb-8">
-        {/* Subtle background glow */}
         <div className="absolute inset-0 bg-radial from-emerald-500/10 via-transparent to-transparent pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 relative z-10 space-y-5">
@@ -187,6 +340,14 @@ export default function CategoryVotingPage() {
             <Link to="/#voting-section" className="text-gray-300 hover:text-[#D0FE15] transition-colors no-underline">
               Ajang Voting
             </Link>
+            {category?.event?.name && (
+              <>
+                <IconChevronRight className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+                <span className="text-gray-300 truncate max-w-[150px] sm:max-w-none">
+                  {category.event.name}
+                </span>
+              </>
+            )}
             <IconChevronRight className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
             <span className="text-white font-bold truncate">
               {categoryTitle}
@@ -206,9 +367,37 @@ export default function CategoryVotingPage() {
                   Sedang Berlangsung
                 </span>
 
+                {category?.event?.name && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-emerald-200 text-xs font-bold">
+                    <IconBuilding className="w-3.5 h-3.5" />
+                    <span>{category.event.name}</span>
+                  </span>
+                )}
+
+                {category?.tier && (
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black tracking-wide border ${
+                      category.tier === 'premier'
+                        ? 'bg-amber-400/20 border-amber-300/40 text-amber-200'
+                        : category.tier === 'sekunder'
+                        ? 'bg-slate-300/20 border-slate-300/40 text-slate-100'
+                        : 'bg-orange-400/20 border-orange-300/40 text-orange-200'
+                    }`}
+                  >
+                    {category.tier === 'premier' ? (
+                      <IconCrown className="w-3.5 h-3.5 text-amber-300" />
+                    ) : (
+                      <IconMedal className="w-3.5 h-3.5" />
+                    )}
+                    <span>
+                      Kategori {category.tier === 'premier' ? 'Premier' : category.tier === 'sekunder' ? 'Sekunder' : 'Tersier'}
+                    </span>
+                  </span>
+                )}
+
                 {category?.organizer && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-gray-200 text-xs font-semibold">
-                    <span className="text-[#D0FE15] font-black">✓</span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-gray-200 text-xs font-semibold">
+                    <IconCheck className="w-3.5 h-3.5 text-[#D0FE15]" />
                     <span>{category.organizer}</span>
                   </span>
                 )}
@@ -245,7 +434,14 @@ export default function CategoryVotingPage() {
                 <div className="bg-black/35 backdrop-blur-md p-2.5 sm:p-3 rounded-xl border border-white/15 flex flex-col justify-between min-w-0">
                   <span className="text-[10px] uppercase font-bold text-gray-300 block truncate">Total Suara</span>
                   <span className="text-sm sm:text-base lg:text-lg font-black text-[#D0FE15] block mt-0.5 truncate">
-                    {isFrozen ? '🔒 Freeze' : `${totalVotes.toLocaleString('id-ID')} Suara`}
+                    {isFrozen ? (
+                      <span className="inline-flex items-center gap-1 text-amber-300">
+                        <IconLock className="w-3.5 h-3.5" />
+                        <span>Freeze</span>
+                      </span>
+                    ) : (
+                      `${totalVotes.toLocaleString('id-ID')} Suara`
+                    )}
                   </span>
                 </div>
 
@@ -267,11 +463,24 @@ export default function CategoryVotingPage() {
 
             {/* Right Column (4 cols): Embedded Digital Countdown Box */}
             <div className="lg:col-span-4 w-full">
-              {category?.end_date ? (
+              {isVotingClosed ? (
+                <div className="bg-black/40 backdrop-blur-md rounded-2xl p-5 border border-amber-400/40 text-center space-y-2.5 shadow-lg">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-xs font-black uppercase tracking-wider">
+                    <IconTrophy className="w-4 h-4 text-amber-400" />
+                    <span>Ajang Telah Berakhir</span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-black text-white">
+                    Pengumuman Pemenang Sah
+                  </h3>
+                  <p className="text-xs text-gray-300 leading-relaxed">
+                    Periode voting telah resmi selesai. Rekapitulasi suara final telah terkunci dan menetapkan Juara 1, 2, dan 3.
+                  </p>
+                </div>
+              ) : category?.end_date ? (
                 <VotingCountdown
                   endDate={category.end_date}
                   status={category.status}
-                  onExpire={(expired) => setIsVotingExpired(expired)}
+                  onExpire={handleExpire}
                 />
               ) : (
                 <div className="bg-black/30 backdrop-blur-md rounded-2xl p-5 border border-white/15 text-center space-y-2">
@@ -292,95 +501,135 @@ export default function CategoryVotingPage() {
         </div>
       </section>
 
-      {/* STICKY NAVIGATION TABS (Centered Lonjong Floating Capsule) */}
-      <div className="sticky top-16 sm:top-20 z-30 w-full px-3 sm:px-6 pointer-events-none transition-all duration-300 flex justify-center py-2">
-        <nav
-          aria-label="Tab Ajang Pemilihan"
-          className="pointer-events-auto rounded-full backdrop-blur-xl bg-white/85 dark:bg-[#151C14]/90 border border-white/80 dark:border-white/15 p-1 sm:p-1.5 shadow-xl shadow-black/5 dark:shadow-black/35 flex items-center justify-center gap-1 sm:gap-2 max-w-full overflow-x-auto scrollbar-none transition-all"
-        >
-          <button
-            type="button"
-            onClick={() => setActiveTab('finalis')}
-            className={`px-3 sm:px-4 py-2 rounded-full font-extrabold text-xs sm:text-sm transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-              activeTab === 'finalis'
-                ? 'bg-[#70B325] text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-[#70B325] dark:hover:text-[#8FE032] hover:bg-black/5 dark:hover:bg-white/5'
-            }`}
-          >
-            <span>Daftar Finalis</span>
-            <span
-              className={`text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full font-bold ${
-                activeTab === 'finalis'
-                  ? 'bg-white/25 text-white'
-                  : 'bg-black/5 dark:bg-white/10 text-gray-600 dark:text-gray-400'
+      {/* KREENCONNECT-STYLE STICKY SUB-NAVBAR WITH MULTI-CATEGORY TIERED SWITCHER (GAMBAR 2) */}
+      <div className="sticky top-16 sm:top-20 z-30 w-full bg-white/95 dark:bg-[#151C14]/95 backdrop-blur-md border-b border-gray-200 dark:border-white/10 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 py-1">
+            {/* If Sibling Categories exist, render the Tiered Category Switcher Menu as the primary navigation */}
+            {category?.sibling_categories && category.sibling_categories.length > 1 ? (
+              <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1.5 flex-1 min-w-0">
+                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 pl-1 mr-1 flex-shrink-0">
+                  <span>Kategori:</span>
+                </span>
+                {category.sibling_categories.map((sibling) => {
+                  const isCurrent =
+                    sibling.is_current ||
+                    String(sibling.id) === String(category.id) ||
+                    sibling.slug === category.slug
+                  const tier = sibling.tier || 'premier'
+                  const tierName = tier === 'premier' ? 'Premier' : tier === 'sekunder' ? 'Sekunder' : 'Tersier'
+                  const tierBadgeCls =
+                    tier === 'premier'
+                      ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700'
+                      : tier === 'sekunder'
+                      ? 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-600'
+                      : 'bg-orange-100 dark:bg-orange-950/70 text-orange-900 dark:text-orange-200 border-orange-300 dark:border-orange-700'
+
+                  return (
+                    <button
+                      key={sibling.id}
+                      type="button"
+                      onClick={() => handleCategorySwitch(sibling)}
+                      className={`relative px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold tracking-wide transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer flex-shrink-0 border ${
+                        isCurrent
+                          ? 'bg-[#70B325] text-white border-[#70B325] shadow-sm shadow-[#70B325]/25 font-black ring-2 ring-[#70B325]/30'
+                          : 'bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-white/10 hover:border-[#70B325]/50 hover:bg-[#70B325]/10'
+                      }`}
+                    >
+                      {tier === 'premier' ? (
+                        <IconCrown className="w-3.5 h-3.5 text-amber-400" />
+                      ) : (
+                        <IconMedal className="w-3.5 h-3.5 text-slate-300" />
+                      )}
+                      <span className="truncate max-w-[200px] sm:max-w-xs">{sibling.name}</span>
+                      <span
+                        className={`text-[10px] uppercase font-black px-1.5 py-0.5 rounded-md border ${
+                          isCurrent ? 'bg-white/20 text-white border-white/40' : tierBadgeCls
+                        }`}
+                      >
+                        {tierName}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            ) : null}
+
+            {/* Quick Section Anchors: Papan Peringkat | Finalis | Dukungan | Deskripsi */}
+            <nav
+              aria-label="Navigasi Halaman Ajang"
+              className={`flex items-center gap-4 sm:gap-6 overflow-x-auto scrollbar-none flex-shrink-0 ${
+                category?.sibling_categories && category.sibling_categories.length > 1
+                  ? 'border-t md:border-t-0 md:border-l border-gray-200 dark:border-white/10 pt-1.5 md:pt-0 md:pl-5 h-11'
+                  : 'h-12 sm:h-14 justify-center sm:justify-start'
               }`}
             >
-              {finalists.length}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('leaderboard')}
-            className={`px-3 sm:px-4 py-2 rounded-full font-extrabold text-xs sm:text-sm transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-              activeTab === 'leaderboard'
-                ? 'bg-[#70B325] text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-[#70B325] dark:hover:text-[#8FE032] hover:bg-black/5 dark:hover:bg-white/5'
-            }`}
-          >
-            <span>Peringkat &amp; Perolehan</span>
-            {isFrozen && (
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider ${
-                  activeTab === 'leaderboard'
-                    ? 'bg-white/25 text-white'
-                    : 'bg-sky-500/20 text-sky-700 dark:text-sky-300'
+              <button
+                type="button"
+                onClick={() => scrollToTab('card-leaderboard')}
+                className={`h-full border-b-2 font-bold text-xs sm:text-sm tracking-wide transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'card-leaderboard'
+                    ? 'border-[#70B325] text-[#70B325] dark:text-[#8FE032]'
+                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
-                Rahasia
-              </span>
-            )}
-          </button>
+                <IconTrophy className="w-4 h-4" />
+                <span>Papan Peringkat</span>
+              </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('dukungan')}
-            className={`px-3 sm:px-4 py-2 rounded-full font-extrabold text-xs sm:text-sm transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-              activeTab === 'dukungan'
-                ? 'bg-[#70B325] text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-[#70B325] dark:hover:text-[#8FE032] hover:bg-black/5 dark:hover:bg-white/5'
-            }`}
-          >
-            <span>Pesan Pendukung</span>
-            {messages.length > 0 && (
-              <span
-                className={`text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full font-bold ${
-                  activeTab === 'dukungan'
-                    ? 'bg-white/25 text-white'
-                    : 'bg-black/5 dark:bg-white/10 text-gray-600 dark:text-gray-400'
+              <button
+                type="button"
+                onClick={() => scrollToTab('card-finalis')}
+                className={`h-full border-b-2 font-bold text-xs sm:text-sm tracking-wide transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'card-finalis'
+                    ? 'border-[#70B325] text-[#70B325] dark:text-[#8FE032]'
+                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
-                {messages.length}
-              </span>
-            )}
-          </button>
+                <IconUsers className="w-4 h-4" />
+                <span>Finalis</span>
+                <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 font-extrabold">
+                  {finalists.length}
+                </span>
+              </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('deskripsi')}
-            className={`px-3 sm:px-4 py-2 rounded-full font-extrabold text-xs sm:text-sm transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'deskripsi'
-                ? 'bg-[#70B325] text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-[#70B325] dark:hover:text-[#8FE032] hover:bg-black/5 dark:hover:bg-white/5'
-            }`}
-          >
-            Ketentuan &amp; Regulasi
-          </button>
-        </nav>
+              <button
+                type="button"
+                onClick={() => scrollToTab('card-dukungan')}
+                className={`h-full border-b-2 font-bold text-xs sm:text-sm tracking-wide transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'card-dukungan'
+                    ? 'border-[#70B325] text-[#70B325] dark:text-[#8FE032]'
+                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                }`}
+              >
+                <IconChat className="w-4 h-4" />
+                <span>Dukungan</span>
+                {messages.length > 0 && (
+                  <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 font-extrabold">
+                    {messages.length}
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => scrollToTab('card-tentang')}
+                className={`h-full border-b-2 font-bold text-xs sm:text-sm tracking-wide transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'card-tentang'
+                    ? 'border-[#70B325] text-[#70B325] dark:text-[#8FE032]'
+                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                }`}
+              >
+                <IconCalendar className="w-4 h-4" />
+                <span>Deskripsi</span>
+              </button>
+            </nav>
+          </div>
+        </div>
       </div>
 
-      {/* MAIN CONTENT AREA */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full space-y-6">
+      {/* MAIN SINGLE-PAGE CONTINUOUS CONTENT */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 flex-1 w-full space-y-12 sm:space-y-16">
         
         {/* FREEZE NOTIFICATION BANNER */}
         {isFrozen && (
@@ -406,11 +655,12 @@ export default function CategoryVotingPage() {
           </div>
         )}
 
-        {/* WALL OF SUPPORT LIVE STREAM TICKER */}
-        {messages.length > 0 && activeTab !== 'dukungan' && (
+        {/* LIVE SUPPORT TICKER BAR (Clicks down to #card-dukungan) */}
+        {messages.length > 0 && (
           <div
-            onClick={() => setActiveTab('dukungan')}
-            className="bg-white dark:bg-[#1A2018] hover:bg-[#F8FAF6] dark:hover:bg-[#20271E] border border-[#D5E6C4] dark:border-[#2C3529] rounded-2xl p-3 sm:px-4 sm:py-3 shadow-2xs flex items-center justify-between gap-3 cursor-pointer transition-all animate-fadeIn"
+            onClick={() => scrollToTab('card-dukungan')}
+            className="bg-white dark:bg-[#1A2018] hover:bg-[#F8FAF6] dark:hover:bg-[#20271E] border border-[#D5E6C4] dark:border-[#2C3529] rounded-2xl p-3 sm:px-4 sm:py-3 shadow-2xs flex items-center justify-between gap-3 cursor-pointer transition-all"
+            title="Klik untuk langsung membaca pesan pendukung di bawah"
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="flex h-2.5 w-2.5 relative flex-shrink-0">
@@ -427,100 +677,432 @@ export default function CategoryVotingPage() {
                 <span className="italic text-gray-600 dark:text-gray-300">&quot;{messages[0].message}&quot;</span>
               </p>
             </div>
-            <span className="text-xs font-bold text-[#70B325] dark:text-[#86C839] flex-shrink-0 hover:underline">
-              Lihat Semua →
+            <span className="text-xs font-bold text-[#70B325] dark:text-[#86C839] flex-shrink-0 hover:underline inline-flex items-center gap-1">
+              <span>Lihat di Bawah</span>
+              <IconArrowDown className="w-3.5 h-3.5" />
             </span>
           </div>
         )}
 
-        {/* TAB 1: FINALIS (Authentic KreenConnect Competition Card Architecture) */}
-        {activeTab === 'finalis' && (
-          <section className="space-y-6">
+        {/* GLOBAL INITIAL LOADING STATE */}
+        {loading && (
+          <div className="p-16 text-center text-gray-500">
+            <div className="w-8 h-8 border-3 border-[#70B325] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm font-semibold">Memuat data ajang voting...</p>
+          </div>
+        )}
+
+        {/* GLOBAL INITIAL ERROR STATE */}
+        {error && (
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 p-4 rounded-xl text-center max-w-lg mx-auto">
+            <p className="text-sm font-bold">{error}</p>
+            <button
+              type="button"
+              onClick={() => loadData(false)}
+              className="mt-2 text-xs font-bold underline cursor-pointer"
+            >
+              Coba lagi
+            </button>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* SECTION 1: PAPAN PERINGKAT (KREENCONNECT AUTHENTIC PODIUM ARCHITECTURE)   */}
+        {/* ========================================================================= */}
+        {!loading && !error && finalists.length > 0 && (
+          <section id="card-leaderboard" className="scroll-mt-28 space-y-6">
             
-            {/* Search Bar & Filter Row */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="w-full sm:max-w-md relative">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari nama atau nomor urut kandidat..."
-                  className="w-full h-11 pl-10 pr-10 text-xs sm:text-sm bg-white dark:bg-[#1A2018] border border-[#CADDB8] dark:border-[#2C3529] rounded-xl text-[#262A25] dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#70B325] shadow-xs"
-                />
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
-                  <IconSearch className="w-4 h-4 text-gray-400" />
-                </span>
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
-                  >
-                    <IconClose className="w-4 h-4" />
-                  </button>
-                )}
+            {/* Background Container for Leaderboard (Authentic KreenConnect bg-glass & podium) */}
+            <div className="relative rounded-3xl overflow-hidden bg-gradient-to-b from-[#123E2A]/15 via-[#123E2A]/5 to-transparent dark:from-[#123E2A]/30 dark:via-[#102D1F]/10 dark:to-transparent border border-[#70B325]/20 p-4 sm:p-6 lg:p-10">
+              
+              {/* Header Box (bg-glass) */}
+              <div className="max-w-2xl mx-auto rounded-2xl bg-white/75 dark:bg-[#1A2018]/85 backdrop-blur-xl border border-white/60 dark:border-white/10 p-5 sm:p-6 text-center space-y-1.5 shadow-sm">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#262A25] dark:text-white tracking-tight">
+                  Papan Peringkat
+                </h2>
+                <h3 className="text-sm sm:text-base font-bold text-[#70B325] dark:text-[#86C839]">
+                  {categoryTitle}
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {isFrozen
+                    ? 'Perolehan suara sementara dirahasiakan oleh panitia pelaksana.'
+                    : `Total Masuk: ${totalVotes.toLocaleString('id-ID')} suara`}
+                </p>
               </div>
 
-              <div className="text-xs font-bold text-gray-500 dark:text-gray-400 self-end sm:self-center">
-                Menampilkan <strong className="text-gray-900 dark:text-white">{filteredFinalists.length}</strong> finalis
-              </div>
+              {/* TOP 3 PODIUM (KreenConnect 3-Column Podium with Rank 1 Crown & Center Elevation) */}
+              {topThreeFinalists.length > 0 && (
+                <div className="mt-8 max-w-4xl mx-auto">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6 items-end">
+                    
+                    {/* PODIUM COLUMN 1: RANK 2 (Silver - Left) */}
+                    {topThreeFinalists[1] ? (
+                      <div className="flex flex-col items-center justify-end w-full group">
+                        {/* Spacer to keep center Rank 1 visually elevated */}
+                        <div className="h-6 sm:h-10 w-full" />
+                        
+                        <div className="w-full rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#1A2018]/90 backdrop-blur-xl border border-slate-300 dark:border-slate-700/80 p-2 sm:p-4 lg:p-5 flex flex-col justify-between space-y-2 sm:space-y-3 shadow-md hover:shadow-lg transition-all scale-95 sm:scale-100">
+                          {/* Photo with 4:5 aspect ratio */}
+                          <div
+                            onClick={() => setSelectedFinalistForDetail(topThreeFinalists[1])}
+                            className="aspect-[4/5] w-full rounded-lg sm:rounded-xl overflow-hidden bg-gray-100 dark:bg-black/50 cursor-pointer relative"
+                          >
+                            <img
+                              src={resolveStorageUrl(topThreeFinalists[1].photo_url || topThreeFinalists[1].photo)}
+                              alt={topThreeFinalists[1].name}
+                              className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                              onError={(e) => { e.currentTarget.style.display = 'none' }}
+                            />
+                            <div className="absolute top-2 left-2">
+                              <span className="px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-white text-[10px] sm:text-xs font-bold">
+                                #{2}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Candidate Name */}
+                          <div
+                            onClick={() => setSelectedFinalistForDetail(topThreeFinalists[1])}
+                            className="text-[11px] sm:text-sm lg:text-base font-black text-center line-clamp-2 cursor-pointer hover:text-[#70B325] text-gray-900 dark:text-white"
+                          >
+                            {topThreeFinalists[1].name}
+                          </div>
+
+                          {/* Percentage / Vote Stat */}
+                          <div className="text-center font-black text-xs sm:text-base text-gray-700 dark:text-gray-200">
+                            {isFrozen
+                              ? 'Rahasia'
+                              : `${totalVotes > 0 ? ((topThreeFinalists[1].vote_count / totalVotes) * 100).toFixed(1) : 0}%`}
+                          </div>
+
+                          {/* Bottom Row: Vote Button + Silver Medal */}
+                          <div className="flex items-center gap-1.5 sm:gap-2 justify-between">
+                            {isVotingClosed ? (
+                              <div className="flex-1 py-1.5 sm:py-2 px-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-extrabold text-[11px] sm:text-xs rounded-lg text-center border border-slate-300 dark:border-slate-700">
+                                Juara 2
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={isVotingExpired}
+                                onClick={() => setSelectedFinalistForVote(topThreeFinalists[1])}
+                                className="flex-1 py-1.5 sm:py-2 px-2 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-[11px] sm:text-xs rounded-lg transition-all text-center cursor-pointer disabled:cursor-not-allowed"
+                              >
+                                Vote
+                              </button>
+                            )}
+                            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-400 text-slate-800 flex items-center justify-center font-black text-xs sm:text-sm flex-shrink-0 shadow-xs border border-slate-300" title="Juara 2">
+                              <IconMedal className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div />
+                    )}
+
+                    {/* PODIUM COLUMN 2: RANK 1 (Gold Crown - Center Champion) */}
+                    {topThreeFinalists[0] ? (
+                      <div className="flex flex-col items-center justify-end w-full group relative z-10">
+                        {/* Animated Golden Crown on Top */}
+                        <div className="h-8 sm:h-12 flex items-center justify-center -mb-1 animate-bounce">
+                          <IconCrown className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-amber-400 drop-shadow-md" />
+                        </div>
+
+                        <div className="w-full rounded-xl sm:rounded-2xl bg-white/90 dark:bg-[#1A2018] backdrop-blur-xl border-2 border-amber-400 dark:border-amber-400 p-2 sm:p-5 lg:p-6 flex flex-col justify-between space-y-2 sm:space-y-3 shadow-xl shadow-amber-500/15 transition-all scale-100 sm:scale-105">
+                          {/* Photo with 4:5 aspect ratio */}
+                          <div
+                            onClick={() => setSelectedFinalistForDetail(topThreeFinalists[0])}
+                            className="aspect-[4/5] w-full rounded-lg sm:rounded-xl overflow-hidden bg-gray-100 dark:bg-black/50 cursor-pointer relative"
+                          >
+                            <img
+                              src={resolveStorageUrl(topThreeFinalists[0].photo_url || topThreeFinalists[0].photo)}
+                              alt={topThreeFinalists[0].name}
+                              className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                              onError={(e) => { e.currentTarget.style.display = 'none' }}
+                            />
+                            <div className="absolute top-2 left-2">
+                              <span className="px-2 py-0.5 rounded-md bg-amber-500 text-amber-950 text-[10px] sm:text-xs font-black shadow-xs">
+                                Juara 1
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Candidate Name */}
+                          <div
+                            onClick={() => setSelectedFinalistForDetail(topThreeFinalists[0])}
+                            className="text-xs sm:text-base lg:text-lg font-black text-center line-clamp-2 cursor-pointer hover:text-[#70B325] text-gray-900 dark:text-white"
+                          >
+                            {topThreeFinalists[0].name}
+                          </div>
+
+                          {/* Percentage / Vote Stat */}
+                          <div className="text-center font-black text-sm sm:text-lg lg:text-xl text-amber-600 dark:text-amber-400">
+                            {isFrozen
+                              ? 'Rahasia'
+                              : `${totalVotes > 0 ? ((topThreeFinalists[0].vote_count / totalVotes) * 100).toFixed(1) : 0}%`}
+                          </div>
+
+                          {/* Bottom Row: Vote Button + Gold Medal */}
+                          <div className="flex items-center gap-1.5 sm:gap-2 justify-between">
+                            {isVotingClosed ? (
+                              <div className="flex-1 py-1.5 sm:py-2 px-2 bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-black text-xs sm:text-sm rounded-lg text-center shadow-xs">
+                                Juara 1
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={isVotingExpired}
+                                onClick={() => setSelectedFinalistForVote(topThreeFinalists[0])}
+                                className="flex-1 py-1.5 sm:py-2 px-2 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-xs sm:text-sm rounded-lg transition-all text-center cursor-pointer disabled:cursor-not-allowed shadow-xs"
+                              >
+                                Vote
+                              </button>
+                            )}
+                            <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-amber-950 flex items-center justify-center font-black text-sm sm:text-base flex-shrink-0 shadow-sm border border-amber-300" title="Juara 1">
+                              <IconCrown className="w-4 h-4 sm:w-5 sm:h-5 text-amber-950" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div />
+                    )}
+
+                    {/* PODIUM COLUMN 3: RANK 3 (Bronze - Right) */}
+                    {topThreeFinalists[2] ? (
+                      <div className="flex flex-col items-center justify-end w-full group">
+                        {/* Spacer to keep center Rank 1 visually elevated */}
+                        <div className="h-6 sm:h-10 w-full" />
+
+                        <div className="w-full rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#1A2018]/90 backdrop-blur-xl border border-amber-800/40 dark:border-amber-700/60 p-2 sm:p-4 lg:p-5 flex flex-col justify-between space-y-2 sm:space-y-3 shadow-md hover:shadow-lg transition-all scale-95 sm:scale-100">
+                          {/* Photo with 4:5 aspect ratio */}
+                          <div
+                            onClick={() => setSelectedFinalistForDetail(topThreeFinalists[2])}
+                            className="aspect-[4/5] w-full rounded-lg sm:rounded-xl overflow-hidden bg-gray-100 dark:bg-black/50 cursor-pointer relative"
+                          >
+                            <img
+                              src={resolveStorageUrl(topThreeFinalists[2].photo_url || topThreeFinalists[2].photo)}
+                              alt={topThreeFinalists[2].name}
+                              className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                              onError={(e) => { e.currentTarget.style.display = 'none' }}
+                            />
+                            <div className="absolute top-2 left-2">
+                              <span className="px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-white text-[10px] sm:text-xs font-bold">
+                                #{3}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Candidate Name */}
+                          <div
+                            onClick={() => setSelectedFinalistForDetail(topThreeFinalists[2])}
+                            className="text-[11px] sm:text-sm lg:text-base font-black text-center line-clamp-2 cursor-pointer hover:text-[#70B325] text-gray-900 dark:text-white"
+                          >
+                            {topThreeFinalists[2].name}
+                          </div>
+
+                          {/* Percentage / Vote Stat */}
+                          <div className="text-center font-black text-xs sm:text-base text-gray-700 dark:text-gray-200">
+                            {isFrozen
+                              ? 'Rahasia'
+                              : `${totalVotes > 0 ? ((topThreeFinalists[2].vote_count / totalVotes) * 100).toFixed(1) : 0}%`}
+                          </div>
+
+                          {/* Bottom Row: Vote Button + Bronze Medal */}
+                          <div className="flex items-center gap-1.5 sm:gap-2 justify-between">
+                            {isVotingClosed ? (
+                              <div className="flex-1 py-1.5 sm:py-2 px-2 bg-amber-900/20 text-amber-300 font-extrabold text-[11px] sm:text-xs rounded-lg text-center border border-amber-700/50">
+                                Juara 3
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={isVotingExpired}
+                                onClick={() => setSelectedFinalistForVote(topThreeFinalists[2])}
+                                className="flex-1 py-1.5 sm:py-2 px-2 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-[11px] sm:text-xs rounded-lg transition-all text-center cursor-pointer disabled:cursor-not-allowed"
+                              >
+                                Vote
+                              </button>
+                            )}
+                            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-amber-700 to-amber-900 text-amber-100 flex items-center justify-center font-black text-xs sm:text-sm flex-shrink-0 shadow-xs border border-amber-700" title="Juara 3">
+                              <IconMedal className="w-4 h-4 sm:w-5 sm:h-5 text-amber-200" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div />
+                    )}
+
+                  </div>
+                </div>
+              )}
+
+              {/* RANKS 4+ LEADERBOARD ROWS (KreenConnect Authentic Rows under Top 3 - HANYA MUNCUL SAAT VOTING MASIH AKTIF) */}
+              {!isVotingClosed && otherFinalists.length > 0 && (
+                <div className="mt-8 max-w-4xl mx-auto space-y-2.5">
+                  {otherFinalists.map((finalist, idx) => {
+                    const rankNumber = idx + 4
+                    const percentage = totalVotes > 0 ? ((finalist.vote_count / totalVotes) * 100).toFixed(2) : '0'
+
+                    return (
+                      <div
+                        key={finalist.id}
+                        className="p-3 sm:p-4 rounded-xl bg-white/80 dark:bg-[#1A2018]/90 backdrop-blur-md border border-gray-200/70 dark:border-white/10 flex items-center justify-between gap-3 hover:border-[#70B325] transition-all shadow-2xs"
+                      >
+                        {/* Left: Rank Box, Photo, Name */}
+                        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-black/5 dark:bg-white/10 flex items-center justify-center font-black text-sm sm:text-base text-gray-700 dark:text-gray-200 flex-shrink-0">
+                            {isFrozen ? '?' : rankNumber}
+                          </div>
+
+                          <img
+                            loading="lazy"
+                            src={resolveStorageUrl(finalist.photo_url || finalist.photo)}
+                            alt={finalist.name}
+                            onClick={() => setSelectedFinalistForDetail(finalist)}
+                            className="w-10 h-12 sm:w-12 sm:h-14 rounded-lg object-cover flex-shrink-0 cursor-pointer border border-gray-100 dark:border-white/10"
+                            onError={(e) => { e.currentTarget.style.display = 'none' }}
+                          />
+
+                          <div className="min-w-0">
+                            <h4
+                              onClick={() => setSelectedFinalistForDetail(finalist)}
+                              className="font-extrabold text-xs sm:text-base text-gray-900 dark:text-white truncate cursor-pointer hover:text-[#70B325]"
+                            >
+                              {finalist.name}
+                            </h4>
+                            <p className="text-[10px] sm:text-xs text-gray-400 truncate mt-0.5">
+                              {finalist.description || `Finalis Nomor Urut ${rankNumber}`}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Right: Percentage & Vote CTA */}
+                        <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+                          <span className="font-extrabold text-xs sm:text-base text-[#70B325] dark:text-[#86C839]">
+                            {isFrozen ? 'Rahasia' : `${percentage}%`}
+                          </span>
+
+                          <button
+                            type="button"
+                            disabled={isVotingExpired}
+                            onClick={() => setSelectedFinalistForVote(finalist)}
+                            className="w-16 sm:w-20 py-1.5 sm:py-2 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-xs rounded-lg transition-all text-center cursor-pointer disabled:cursor-not-allowed"
+                          >
+                            Vote
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
             </div>
+          </section>
+        )}
 
-            {/* Loading & Error States */}
-            {loading && (
-              <div className="p-16 text-center text-gray-500">
-                <div className="w-8 h-8 border-3 border-[#70B325] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                <p className="text-sm font-semibold">Memuat data finalis...</p>
-              </div>
+        {/* DECORATIVE SEPARATOR DIVIDER (KreenConnect Primo Ornament) */}
+        <div className="flex items-center justify-center gap-3 sm:gap-6 my-6 sm:my-10">
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-[#70B325]/40 to-transparent" />
+          <div className="flex items-center gap-1.5 text-[#70B325] flex-shrink-0">
+            <IconSparkles className="w-5 h-5 text-[#70B325]" />
+          </div>
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-[#70B325]/40 to-transparent" />
+        </div>
+
+        {/* ========================================================================= */}
+        {/* SECTION 2: FINALIS (KREENCONNECT FULL ROSTER CARDS WITH 2-STAT BOX)       */}
+        {/* ========================================================================= */}
+        <section id="card-finalis" className="scroll-mt-28 space-y-6">
+          
+          {/* Section Header */}
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-black text-[#262A25] dark:text-white tracking-tight">
+              {isVotingClosed ? 'Daftar Juara Resmi' : 'Finalis'}
+            </h2>
+            <h3 className="text-sm sm:text-base font-bold text-gray-500 dark:text-gray-400">
+              {categoryTitle}
+            </h3>
+            {isVotingClosed && (
+              <p className="text-xs sm:text-sm text-amber-600 dark:text-amber-400 font-bold max-w-xl mx-auto pt-1">
+                Ajang ini telah resmi berakhir. Hanya finalis Juara 1, 2, dan 3 yang ditampilkan sesuai perolehan suara sah.
+              </p>
             )}
+          </div>
 
-            {error && (
-              <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 p-4 rounded-xl text-center">
-                <p className="text-sm font-bold">{error}</p>
+          {/* Centered Pill Search Bar (KreenConnect Architecture) */}
+          <div className="max-w-xl mx-auto relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari nama atau nomor urut finalis..."
+              className="w-full h-12 pl-11 pr-11 text-xs sm:text-sm bg-white dark:bg-[#1A2018] border border-gray-200 dark:border-white/15 rounded-full text-[#262A25] dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#70B325] shadow-xs transition-colors"
+            />
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+              <IconSearch className="w-4 h-4 text-gray-400" />
+            </span>
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
+                title="Hapus pencarian"
+              >
+                <IconClose className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Empty Search State */}
+          {filteredFinalists.length === 0 && (
+            <div className="bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] rounded-2xl p-12 text-center text-gray-500 max-w-lg mx-auto space-y-3">
+              <IconUsers className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto" />
+              <p className="text-base font-extrabold text-[#262A25] dark:text-white">
+                {searchQuery ? 'Finalis tidak ditemukan' : 'Belum ada finalis terdaftar'}
+              </p>
+              <p className="text-xs text-gray-400">
+                {searchQuery
+                  ? `Tidak ada kandidat yang cocok dengan pencarian "${searchQuery}".`
+                  : 'Penyelenggara belum mendaftarkan kandidat untuk ajang ini.'}
+              </p>
+              {searchQuery && (
                 <button
                   type="button"
-                  onClick={loadData}
-                  className="mt-2 text-xs font-bold underline cursor-pointer"
+                  onClick={() => setSearchQuery('')}
+                  className="btn-primary text-xs font-bold py-2 px-4 mx-auto cursor-pointer"
                 >
-                  Coba lagi
+                  Tampilkan Semua Finalis
                 </button>
-              </div>
-            )}
+              )}
+            </div>
+          )}
 
-            {/* Empty State */}
-            {!loading && !error && filteredFinalists.length === 0 && (
-              <div className="bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] rounded-2xl p-12 text-center text-gray-500 max-w-lg mx-auto">
-                <IconUsers className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                <p className="text-base font-extrabold text-[#262A25] dark:text-white">
-                  {searchQuery ? 'Finalis tidak ditemukan' : 'Belum ada finalis terdaftar'}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  {searchQuery
-                    ? `Tidak ada kandidat yang cocok dengan pencarian "${searchQuery}".`
-                    : 'Penyelenggara belum mendaftarkan kandidat untuk ajang ini.'}
-                </p>
-              </div>
-            )}
+          {/* Complete 3-Column Finalist Cards Grid (KreenConnect Exact Structure) */}
+          {filteredFinalists.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+              {filteredFinalists.map((finalist, index) => {
+                const photoSrc = finalist.photo_url || finalist.photo
+                const percentage =
+                  totalVotes > 0
+                    ? ((finalist.vote_count / totalVotes) * 100).toFixed(1)
+                    : 0
+                const globalRank = finalists.findIndex((f) => f.id === finalist.id) + 1
+                const priceFormatted = (category?.price_per_vote || 1000).toLocaleString('id-ID')
 
-            {/* CONTESTANT CARDS GRID (KreenConnect Professional Pageant Style) */}
-            {!loading && !error && filteredFinalists.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                {filteredFinalists.map((finalist, index) => {
-                  const photoSrc = finalist.photo_url || finalist.photo
-                  const percentage =
-                    totalVotes > 0
-                      ? Math.round((finalist.vote_count / totalVotes) * 100)
-                      : 0
-
-                  return (
-                    <article
-                      key={finalist.id}
-                      className="card-base flex flex-col overflow-hidden bg-white dark:bg-[#1A2018] border border-[#E2EADA] dark:border-[#2C3529] rounded-2xl shadow-xs hover:border-[#70B325] dark:hover:border-[#70B325] hover:shadow-md transition-all group max-w-sm sm:max-w-none mx-auto w-full"
-                    >
-                      {/* Portrait Photo Centerpiece (Aspect 3:4) */}
+                return (
+                  <article
+                    key={finalist.id}
+                    className="card-base flex flex-col justify-between overflow-hidden bg-white dark:bg-[#1A2018] border border-gray-200 dark:border-white/10 rounded-2xl p-3 sm:p-4 shadow-xs hover:border-[#70B325] dark:hover:border-[#70B325] hover:shadow-md transition-all group"
+                  >
+                    <div>
+                      {/* Portrait Image (4:5 Aspect Ratio) */}
                       <div
                         onClick={() => setSelectedFinalistForDetail(finalist)}
-                        className="relative aspect-[3/4] w-full overflow-hidden bg-gray-100 dark:bg-black/50 cursor-pointer"
+                        className="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-gray-100 dark:bg-black/50 cursor-pointer"
                         title="Klik untuk membuka profil lengkap finalis"
                       >
                         {photoSrc ? (
@@ -529,463 +1111,364 @@ export default function CategoryVotingPage() {
                             alt={finalist.name}
                             className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                             loading="lazy"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none'
-                            }}
+                            onError={(e) => { e.currentTarget.style.display = 'none' }}
                           />
                         ) : (
                           <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-emerald-950 to-gray-900 text-center p-4">
                             <div className="w-16 h-16 rounded-full bg-[#70B325]/20 text-[#70B325] flex items-center justify-center font-black text-2xl mb-2">
                               {finalist.name.slice(0, 2).toUpperCase()}
                             </div>
-                            <span className="text-xs font-bold text-gray-300">
-                              Foto Resmi Finalis
-                            </span>
+                            <span className="text-xs font-bold text-gray-300">Foto Resmi Finalis</span>
                           </div>
                         )}
 
-                        {/* Top Left: Candidate Number Badge */}
-                        <div className="absolute top-3 left-3 z-10">
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md text-white border border-white/20 text-xs font-black tracking-wide shadow-sm">
-                            No. {String(index + 1).padStart(2, '0')}
-                          </span>
-                        </div>
-
-                        {/* Top Right: Real-time Rank Badge */}
-                        <div className="absolute top-3 right-3 z-10">
-                          {index === 0 ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-black text-xs shadow-md border border-amber-300">
-                              Juara 1
-                            </span>
-                          ) : index === 1 ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-200 text-slate-800 font-black text-xs shadow-md border border-slate-300">
-                              Peringkat 2
-                            </span>
-                          ) : index === 2 ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-800 text-white font-black text-xs shadow-md border border-amber-700">
-                              Peringkat 3
-                            </span>
+                        {/* Top Left: Candidate Number / Juara Badge */}
+                        <div className="absolute top-2.5 left-2.5 z-10">
+                          {isVotingClosed ? (
+                            globalRank === 1 ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 text-xs font-black shadow-md border border-amber-300">
+                                <IconTrophy className="w-3.5 h-3.5" /> JUARA 1
+                              </span>
+                            ) : globalRank === 2 ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-slate-200 to-slate-400 text-slate-900 text-xs font-black shadow-md border border-slate-300">
+                                <IconMedal className="w-3.5 h-3.5" /> JUARA 2
+                              </span>
+                            ) : globalRank === 3 ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-amber-800 to-amber-900 text-amber-100 text-xs font-black shadow-md border border-amber-700">
+                                <IconMedal className="w-3.5 h-3.5" /> JUARA 3
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-black/75 backdrop-blur-md text-white border border-white/20 text-xs font-black shadow-sm">
+                                No. {String(globalRank).padStart(2, '0')}
+                              </span>
+                            )
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-gray-200 font-bold text-[11px]">
-                              #{index + 1}
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-black/75 backdrop-blur-md text-white border border-white/20 text-xs font-black shadow-sm">
+                              No. {String(globalRank).padStart(2, '0')}
                             </span>
                           )}
                         </div>
-
-                        {/* Bottom Gradient Overlay on Photo with Status Dot */}
-                        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end px-3.5 pb-2.5 justify-between pointer-events-none">
-                          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-white/90 bg-black/50 backdrop-blur-xs px-2.5 py-0.5 rounded-full border border-white/15">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#70B325] animate-ping" />
-                            Finalis Resmi
-                          </span>
-                          <span className="text-[10px] text-gray-300 font-mono">
-                            ID: #{finalist.id}
-                          </span>
-                        </div>
                       </div>
 
-                      {/* Card Body: Information, Vote Stats & Authentic Action Buttons */}
-                      <div className="p-4 flex-1 flex flex-col justify-between space-y-3 bg-white dark:bg-[#1A2018]">
-                        
-                        {/* Name & Short Description */}
-                        <div>
-                          <h3
-                            onClick={() => setSelectedFinalistForDetail(finalist)}
-                            className="font-black text-base sm:text-lg text-[#262A25] dark:text-white group-hover:text-[#70B325] dark:group-hover:text-[#86C839] transition-colors line-clamp-1 cursor-pointer"
-                          >
-                            {finalist.name}
-                          </h3>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2 leading-relaxed">
-                            {finalist.description || 'Kandidat perwakilan resmi yang siap berkontribusi.'}
-                          </p>
-                        </div>
-
-                        {/* Vote Stats Row */}
-                        <div className="space-y-1.5 pt-1 border-t border-gray-100 dark:border-white/10">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="font-extrabold text-[#262A25] dark:text-white">
-                              {isFrozen ? 'Suara Terkunci' : `${finalist.vote_count.toLocaleString('id-ID')} suara`}
-                            </span>
-                            <span className="font-bold text-[#70B325] dark:text-[#86C839] bg-[#F2F8EC] dark:bg-white/5 px-2 py-0.5 rounded-md text-[11px]">
-                              {isFrozen ? 'Dirahasiakan' : `${percentage}% suara`}
-                            </span>
-                          </div>
-
-                          {/* Progress Bar */}
-                          <div className="w-full bg-gray-100 dark:bg-white/10 h-1.5 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all duration-500 ${
-                                isFrozen ? 'bg-sky-400 w-full opacity-40' : 'bg-[#70B325]'
-                              }`}
-                              style={{ width: isFrozen ? '100%' : `${percentage}%` }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Action Buttons: Primary Vote + Secondary Profile/Share Row */}
-                        <div className="space-y-2 pt-1">
-                          
-                          {/* Main Vote CTA Button */}
-                          <button
-                            type="button"
-                            disabled={isVotingExpired}
-                            onClick={() => setSelectedFinalistForVote(finalist)}
-                            className="w-full py-2.5 px-4 bg-[#70B325] hover:bg-[#5F9A1E] disabled:bg-gray-300 dark:disabled:bg-gray-800 text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
-                          >
-                            <IconZap className="w-4 h-4 text-white" />
-                            <span>
-                              {isVotingExpired
-                                ? 'Voting Ditutup'
-                                : `Beri Vote (${finalist.name.split(' ')[0]})`}
-                            </span>
-                          </button>
-
-                          {/* Action Row: Profil, WhatsApp, Salin Link */}
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedFinalistForDetail(finalist)}
-                              className="flex-1 py-1.5 text-[11px] font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 rounded-lg transition-colors cursor-pointer text-center"
-                            >
-                              Lihat Bio
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleShareWhatsApp(finalist)}
-                              className="px-2.5 py-1.5 text-[11px] font-bold text-[#1F8A43] dark:text-[#8FE032] bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/50 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
-                              title="Bagikan ke WhatsApp"
-                            >
-                              <IconWhatsApp className="w-3.5 h-3.5" />
-                              <span>WA</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleCopyLink(finalist)}
-                              className="px-2.5 py-1.5 text-[11px] font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/15 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
-                              title="Salin Link Voting Finalis"
-                            >
-                              {copiedId === finalist.id ? '✓' : <IconLink className="w-3.5 h-3.5" />}
-                            </button>
-                          </div>
-
-                        </div>
-                      </div>
-                    </article>
-                  )
-                })}
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* TAB 2: PEROLEHAN SUARA / LEADERBOARD (KreenConnect Podium Ranking) */}
-        {activeTab === 'leaderboard' && (
-          <section className="space-y-6 max-w-3xl mx-auto">
-            <div className="text-center space-y-1">
-              <h2 className="text-xl sm:text-2xl font-extrabold text-[#262A25] dark:text-white">
-                Peringkat &amp; Perolehan Suara
-              </h2>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                {isFrozen ? (
-                  <span className="text-sky-700 dark:text-sky-300 font-bold">
-                    Angka perolehan suara disembunyikan sementara oleh panitia
-                  </span>
-                ) : (
-                  <>
-                    Total Suara Masuk:{' '}
-                    <strong className="text-gray-900 dark:text-white">
-                      {totalVotes.toLocaleString('id-ID')} suara
-                    </strong>
-                  </>
-                )}
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              {finalists.map((finalist, index) => {
-                const percentage =
-                  totalVotes > 0
-                    ? Math.round((finalist.vote_count / totalVotes) * 100)
-                    : 0
-                const rankColor =
-                  index === 0
-                    ? 'bg-amber-400 text-amber-950 font-black shadow-xs'
-                    : index === 1
-                    ? 'bg-slate-300 text-slate-800 font-black shadow-xs'
-                    : index === 2
-                    ? 'bg-amber-800 text-white font-black shadow-xs'
-                    : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 font-bold'
-
-                return (
-                  <div
-                    key={finalist.id}
-                    className="card-base p-4 bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] rounded-2xl flex items-center gap-4 hover:border-[#70B325] dark:hover:border-[#70B325] transition-all"
-                  >
-                    {/* Rank Number / Medal */}
-                    <div
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black flex-shrink-0 ${rankColor}`}
-                    >
-                      {isFrozen ? '?' : index + 1}
-                    </div>
-
-                    {/* Candidate Photo */}
-                    {finalist.photo_url || finalist.photo ? (
-                      <img
-                        src={resolveStorageUrl(finalist.photo_url || finalist.photo)}
-                        alt={finalist.name}
+                      {/* Candidate Name (Centered, 2-line clamp) */}
+                      <h3
                         onClick={() => setSelectedFinalistForDetail(finalist)}
-                        className="w-12 h-14 rounded-xl object-cover border border-gray-200 dark:border-white/15 flex-shrink-0 cursor-pointer"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none'
-                        }}
-                      />
-                    ) : (
-                      <div className="w-12 h-14 rounded-xl bg-[#E9F3DF] dark:bg-white/10 text-[#558223] dark:text-[#86C839] font-bold text-sm flex items-center justify-center flex-shrink-0">
-                        {finalist.name.slice(0, 2).toUpperCase()}
-                      </div>
-                    )}
+                        className="font-bold text-sm sm:text-base text-center mt-3 text-gray-900 dark:text-white line-clamp-2 h-10 flex items-center justify-center cursor-pointer hover:text-[#70B325] transition-colors"
+                      >
+                        {finalist.name}
+                      </h3>
 
-                    {/* Info & Progress */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <div>
-                          <h3
-                            onClick={() => setSelectedFinalistForDetail(finalist)}
-                            className="font-extrabold text-sm text-[#262A25] dark:text-white truncate cursor-pointer hover:text-[#70B325] dark:hover:text-[#86C839]"
-                          >
-                            {finalist.name}
-                          </h3>
-                          <span className="text-xs text-gray-500 dark:text-gray-400 block truncate">
-                            {finalist.description || 'Kandidat'}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <span className="font-extrabold text-sm text-[#70B325] dark:text-[#86C839] block">
-                            {isFrozen ? 'Dirahasiakan' : finalist.vote_count.toLocaleString('id-ID')}
-                          </span>
-                          <span className="text-[10px] text-gray-400 font-semibold block">
-                            {isFrozen ? 'Freeze Mode' : `${percentage}% suara`}
-                          </span>
-                        </div>
+                      {/* Sub-label / Affiliation */}
+                      <div className="text-[11px] text-center text-gray-400 pb-2 border-b border-gray-100 dark:border-white/10 truncate">
+                        {finalist.description || `Kandidat Nomor Urut ${globalRank}`}
                       </div>
 
-                      <div className="w-full bg-gray-100 dark:bg-white/10 h-1.5 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            isFrozen ? 'bg-sky-300 w-full opacity-40' : 'bg-[#70B325]'
-                          }`}
-                          style={{ width: isFrozen ? '100%' : `${percentage}%` }}
-                        />
+                      {/* 2-Column Stat Box (KreenConnect Exact Layout: Harga & Vote) */}
+                      <div className="grid grid-cols-2 rounded-xl bg-gray-50 dark:bg-white/5 p-2.5 my-3 text-center divide-x divide-gray-200 dark:divide-white/10 border border-gray-100 dark:border-white/5">
+                        <div className="pr-2">
+                          <div className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1 mb-0.5">
+                            <IconCoins className="w-3.5 h-3.5 text-amber-500" />
+                            <span>Tarif</span>
+                          </div>
+                          <div className="text-xs sm:text-sm font-extrabold text-gray-900 dark:text-white">
+                            Rp {priceFormatted}
+                          </div>
+                        </div>
+
+                        <div className="pl-2">
+                          <div className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1 mb-0.5">
+                            <IconTrendingUp className="w-3.5 h-3.5 text-[#70B325]" />
+                            <span>Vote</span>
+                          </div>
+                          <div className="text-xs sm:text-sm font-extrabold text-[#70B325] dark:text-[#86C839]">
+                            {isFrozen ? 'Rahasia' : `${percentage}%`}
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Quick Action Button */}
-                    <button
-                      type="button"
-                      disabled={isVotingExpired}
-                      onClick={() => setSelectedFinalistForVote(finalist)}
-                      className="px-3.5 py-2 bg-[#F2F9EC] dark:bg-white/10 hover:bg-[#70B325] dark:hover:bg-[#70B325] disabled:bg-gray-100 text-[#558223] dark:text-[#86C839] hover:text-white dark:hover:text-white disabled:text-gray-400 font-bold text-xs rounded-xl transition-all flex-shrink-0 cursor-pointer"
-                    >
-                      Vote
-                    </button>
-                  </div>
+                    {/* Action Buttons Row */}
+                    <div className="space-y-2 pt-1">
+                      {/* Secondary Action: Lihat Detail Finalis */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedFinalistForDetail(finalist)}
+                        className="w-full py-2 px-3 text-xs font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 rounded-xl transition-colors cursor-pointer text-center"
+                      >
+                        Lihat Detail Finalis
+                      </button>
+
+                      {/* Primary Action: Vote or Juara Terpilih */}
+                      {isVotingClosed ? (
+                        <div className="w-full min-h-[42px] py-2 px-3 bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 font-extrabold text-xs sm:text-sm rounded-xl border border-gray-200 dark:border-white/10 flex items-center justify-center gap-1.5 cursor-default shadow-2xs">
+                          <IconTrophy className="w-4 h-4 text-amber-500" />
+                          <span>
+                            {globalRank === 1 ? 'Pemenang Juara 1' : globalRank === 2 ? 'Juara 2 (Runner Up 1)' : 'Juara 3 (Runner Up 2)'}
+                          </span>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={isVotingExpired}
+                          onClick={() => setSelectedFinalistForVote(finalist)}
+                          className="w-full min-h-[42px] py-2 px-3 bg-[#70B325] hover:bg-[#5F9A1E] disabled:bg-gray-300 dark:disabled:bg-gray-800 text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
+                        >
+                          <IconZap className="w-4 h-4 text-white" />
+                          <span>
+                            {isVotingExpired
+                              ? 'Voting Ditutup'
+                              : `Vote ${finalist.name.split(' ')[0]}`}
+                          </span>
+                        </button>
+                      )}
+
+                      {/* Share Quick Buttons */}
+                      <div className="flex items-center gap-1.5 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => handleShareWhatsApp(finalist)}
+                          className="flex-1 py-1 text-[11px] font-bold text-[#1F8A43] dark:text-[#8FE032] bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/50 rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                          title="Bagikan ke WhatsApp"
+                        >
+                          <IconWhatsApp className="w-3 h-3" />
+                          <span>WhatsApp</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyLink(finalist)}
+                          className="px-3 py-1 text-[11px] font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/15 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1"
+                          title="Salin Link Voting Finalis"
+                        >
+                          {copiedId === finalist.id ? (
+                            <span className="inline-flex items-center gap-1 text-emerald-600 font-bold">
+                              <IconCheck className="w-3 h-3" />
+                              <span>Tersalin</span>
+                            </span>
+                          ) : (
+                            <>
+                              <IconLink className="w-3 h-3" />
+                              <span>Salin Link</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                  </article>
                 )
               })}
             </div>
-          </section>
-        )}
+          )}
+        </section>
 
-        {/* TAB 3: WALL OF SUPPORT (PESAN & DOA PENDUKUNG) */}
-        {activeTab === 'dukungan' && (
-          <section className="space-y-6 max-w-4xl mx-auto animate-fadeIn">
-            <div className="text-center space-y-1.5 pt-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#70B325] dark:text-[#86C839] bg-[#EAF5DE] dark:bg-white/10 px-3 py-1 rounded-full">
-                Wall of Support
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#262A25] dark:text-white">
+        {/* ========================================================================= */}
+        {/* SECTION 3: DUKUNGAN (WALL OF SUPPORT / PESAN & DOA PENDUKUNG)             */}
+        {/* ========================================================================= */}
+        <section id="card-dukungan" className="scroll-mt-28 space-y-6 pt-4">
+          
+          {/* Section Header & Filter */}
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 dark:border-white/10 pb-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EAF5DE] dark:bg-white/10 text-[#70B325] dark:text-[#86C839] text-xs font-black uppercase tracking-wider mb-2">
+                <IconChat className="w-3.5 h-3.5" />
+                <span>Wall of Support</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-[#262A25] dark:text-white tracking-tight">
                 Pesan &amp; Doa Pendukung
               </h2>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
-                Dukungan nyata dan pesan semangat dari para pemilih yang mengalir untuk para kandidat favorit.
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Apresiasi dan pesan semangat nyata yang dikirimkan pemilih untuk para kandidat.
               </p>
             </div>
 
-            {/* Filter by Candidate */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] rounded-2xl shadow-2xs">
-              <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                Saring pesan berdasarkan kandidat:
-              </span>
-              <select
-                value={selectedMessageFinalistId}
-                onChange={(e) => setSelectedMessageFinalistId(e.target.value)}
-                className="w-full sm:w-auto text-xs font-bold py-2 px-3 bg-gray-50 dark:bg-black/30 border border-gray-200 dark:border-white/15 rounded-xl text-gray-900 dark:text-white focus:border-[#70B325] focus:outline-none"
-              >
-                <option value="">Semua Finalis ({messages.length} pesan)</option>
-                {finalists.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Messages Grid / List */}
-            {loadingMessages ? (
-              <div className="p-16 text-center text-gray-500">
-                <div className="w-8 h-8 border-3 border-[#70B325] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                <p className="text-sm font-semibold">Memuat pesan dukungan...</p>
-              </div>
-            ) : messages.length === 0 ? (
-              <div className="bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] rounded-2xl p-12 text-center text-gray-500 max-w-lg mx-auto space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-[#EAF5DE] dark:bg-white/10 text-[#70B325] dark:text-[#86C839] flex items-center justify-center mx-auto text-2xl font-black">
-                  💬
-                </div>
-                <div className="space-y-1">
-                  <p className="text-base font-extrabold text-[#262A25] dark:text-white">
-                    Belum ada pesan dukungan
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    Jadilah pemilih pertama yang menuliskan pesan semangat dan doa untuk kandidat!
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('finalis')}
-                  className="btn-primary text-xs font-bold py-2 px-5 mx-auto"
+            {/* Filter by Candidate Dropdown */}
+            {finalists.length > 0 && (
+              <div className="w-full sm:w-auto">
+                <select
+                  value={selectedMessageFinalistId}
+                  onChange={(e) => setSelectedMessageFinalistId(e.target.value)}
+                  className="w-full sm:w-64 h-11 text-xs font-bold py-2 px-3 bg-white dark:bg-[#1A2018] border border-gray-200 dark:border-white/15 rounded-xl text-gray-900 dark:text-white focus:border-[#70B325] focus:outline-none shadow-xs"
                 >
-                  Pilih Finalis &amp; Beri Dukungan
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                {messages.map((item) => (
-                  <div
-                    key={item.id}
-                    className="p-4 bg-white dark:bg-[#1A2018] rounded-2xl border border-[#E2EADA] dark:border-[#2C3529] shadow-2xs hover:shadow-xs transition-all space-y-2.5 flex flex-col justify-between text-left"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-8 h-8 rounded-full bg-[#EAF5DE] dark:bg-white/10 text-[#558223] dark:text-[#86C839] font-black text-xs flex items-center justify-center flex-shrink-0">
-                            {item.voter_name ? item.voter_name.charAt(0).toUpperCase() : 'P'}
-                          </div>
-                          <div className="min-w-0">
-                            <strong className="text-xs font-extrabold text-gray-800 dark:text-white block truncate">
-                              {item.voter_name}
-                            </strong>
-                            <span className="text-[10px] text-gray-400 font-semibold block truncate">
-                              Mendukung: <span className="text-[#70B325] dark:text-[#86C839] font-bold">{item.finalist_name}</span>
-                            </span>
-                          </div>
-                        </div>
-
-                        <span className="text-[10px] font-black text-[#558223] dark:text-[#86C839] bg-[#EAF5DE] dark:bg-white/10 px-2.5 py-0.5 rounded-full flex-shrink-0">
-                          ⚡ {item.vote_amount} Suara
-                        </span>
-                      </div>
-
-                      <p className="text-xs text-gray-600 dark:text-gray-300 italic leading-relaxed pl-10 border-l-2 border-[#70B325]/30">
-                        &quot;{item.message}&quot;
-                      </p>
-                    </div>
-
-                    <div className="pt-2 text-right border-t border-gray-50 dark:border-white/5">
-                      <span className="text-[10px] text-gray-400 font-medium">
-                        {item.time_ago}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  <option value="">Semua Finalis ({messages.length} pesan)</option>
+                  {finalists.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
-          </section>
-        )}
+          </div>
 
-        {/* TAB 4: DESKRIPSI & REGULASI */}
-        {activeTab === 'deskripsi' && (
-          <section className="max-w-3xl mx-auto bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] rounded-2xl p-6 sm:p-8 space-y-6">
-            <div>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E5F2D9] dark:bg-white/10 text-[#4F7E1D] dark:text-[#86C839] font-bold text-xs tracking-wide mb-2">
-                <IconCalendar className="w-3.5 h-3.5 text-[#70B325]" />
-                Informasi Voting
-              </span>
-              <h2 className="text-2xl font-extrabold text-[#262A25] dark:text-white">
-                {categoryTitle}
-              </h2>
-              {category?.organizer && (
-                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Penyelenggara: <strong className="text-gray-900 dark:text-white">{category.organizer}</strong>
-                </p>
-              )}
+          {/* Messages Grid (KreenConnect Card Layout with Message, Divider, & Mascot) */}
+          {loadingMessages && messages.length === 0 ? (
+            <div className="p-12 text-center text-gray-500">
+              <div className="w-8 h-8 border-3 border-[#70B325] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-sm font-semibold">Memuat pesan dukungan...</p>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4 border-y border-gray-100 dark:border-white/10">
-              <div className="space-y-1">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">
-                  Periode Voting
-                </span>
-                <p className="text-sm font-bold text-[#262A25] dark:text-white">
-                  {category?.start_date || 'Segera'} s/d{' '}
-                  {category?.end_date || 'Selesai'}
-                </p>
+          ) : messages.length === 0 ? (
+            <div className="bg-white dark:bg-[#1A2018] border border-gray-200 dark:border-white/10 rounded-2xl p-10 text-center text-gray-500 max-w-lg mx-auto space-y-4 shadow-2xs">
+              <div className="w-12 h-12 rounded-2xl bg-[#EAF5DE] dark:bg-white/10 text-[#70B325] dark:text-[#86C839] flex items-center justify-center mx-auto">
+                <IconChat className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">
-                  Metode Pemilihan &amp; Tarif
-                </span>
-                <p className="text-sm font-bold text-[#70B325] dark:text-[#86C839]">
-                  E-Voting Online ({category?.allow_free_vote !== false ? 'Gratis 1x & ' : ''}Paket Tambahan Rp{' '}
-                  {(category?.price_per_vote || 1000).toLocaleString('id-ID')}/suara)
+                <p className="text-base font-extrabold text-[#262A25] dark:text-white">
+                  Belum Ada Pesan Dukungan
                 </p>
+                <p className="text-xs text-gray-400">
+                  Jadilah pemilih pertama yang menuliskan doa dan pesan semangat untuk kandidat jagoanmu!
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => scrollToTab('card-finalis')}
+                className="btn-primary text-xs font-bold py-2.5 px-5 mx-auto cursor-pointer"
+              >
+                Pilih Finalis &amp; Beri Dukungan
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {messages.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-4 sm:p-5 bg-white dark:bg-[#1A2018] rounded-2xl border border-gray-200 dark:border-white/10 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between space-y-3"
+                >
+                  {/* Top: Message Text */}
+                  <div className="text-xs sm:text-sm text-gray-800 dark:text-gray-200 font-medium leading-relaxed italic">
+                    &quot;{item.message}&quot;
+                  </div>
+
+                  {/* Divider Line */}
+                  <div className="h-px w-full bg-gray-100 dark:bg-white/10" />
+
+                  {/* Bottom: Author Info, Mascot & Timestamp */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#70B325] to-emerald-700 text-white font-black text-xs flex items-center justify-center flex-shrink-0 shadow-xs">
+                        {item.voter_name ? item.voter_name.charAt(0).toUpperCase() : 'P'}
+                      </div>
+                      <div className="min-w-0">
+                        <strong className="text-xs font-bold text-gray-900 dark:text-white block truncate">
+                          {item.voter_name}
+                        </strong>
+                        <span className="text-[10px] text-gray-400 block truncate">
+                          {item.time_ago}
+                        </span>
+                      </div>
+                    </div>
+
+                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-[#558223] dark:text-[#86C839] bg-[#EAF5DE] dark:bg-white/10 px-2.5 py-0.5 rounded-full flex-shrink-0">
+                      <IconZap className="w-3 h-3 text-[#70B325] fill-current" />
+                      <span>{item.vote_amount} Suara</span>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+        </section>
+
+        {/* ========================================================================= */}
+        {/* SECTION 4: DESKRIPSI & REGULASI RESMI (KREENCONNECT EXACT CARD LAYOUT)    */}
+        {/* ========================================================================= */}
+        <section id="card-tentang" className="scroll-mt-28 space-y-6 pt-4">
+          <div className="border-b border-gray-200 dark:border-white/10 pb-4">
+            <h2 className="text-2xl sm:text-3xl font-black text-[#262A25] dark:text-white tracking-tight">
+              Deskripsi
+            </h2>
+          </div>
+
+          <div className="bg-white dark:bg-[#1A2018] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xs">
+            <div className="flex flex-col sm:flex-row gap-6 items-start">
+              {/* Event Poster / Banner Thumbnail */}
+              <div className="w-full sm:w-48 aspect-[4/5] rounded-xl overflow-hidden bg-gradient-to-br from-[#123E2A] to-[#0A1D14] flex-shrink-0 flex items-center justify-center p-3 text-center border border-gray-200 dark:border-white/10">
+                <div className="space-y-1">
+                  <IconTrophy className="w-7 h-7 text-[#70B325] mx-auto" />
+                  <div className="text-xs font-black text-white">{categoryTitle}</div>
+                  <div className="text-[10px] text-gray-300">Official Voting</div>
+                </div>
+              </div>
+
+              {/* Event Details */}
+              <div className="space-y-4 flex-1">
+                <div>
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#E5F2D9] dark:bg-white/10 text-[#4F7E1D] dark:text-[#86C839] text-xs font-bold uppercase tracking-wider mb-2">
+                    Official Competition Event
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
+                    {categoryTitle}
+                  </h3>
+                  {category?.organizer && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Penyelenggara: <strong className="text-gray-900 dark:text-white">{category.organizer}</strong>
+                    </p>
+                  )}
+                </div>
+
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-line">
+                  {category?.description ||
+                    'Ajang pemilihan dan voting online resmi yang diselenggarakan untuk menentukan perwakilan favorit masyarakat secara terbuka, transparan, dan terenkripsi.'}
+                </p>
+
+                {/* Period & Pricing Specs */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-gray-100 dark:border-white/10">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-gray-400 block">Periode Pemilihan</span>
+                    <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
+                      {category?.start_date || 'Segera'} s/d {category?.end_date || 'Selesai'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-gray-400 block">Metode Pemilihan &amp; Tarif</span>
+                    <span className="text-xs sm:text-sm font-bold text-[#70B325] dark:text-[#86C839]">
+                      E-Voting ({category?.allow_free_vote !== false ? '1x Gratis & ' : ''}Rp {(category?.price_per_vote || 1000).toLocaleString('id-ID')}/suara)
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-3">
-              <h3 className="text-sm font-extrabold text-[#262A25] dark:text-white uppercase tracking-wide">
-                Tentang Ajang Ini
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-line">
-                {category?.description ||
-                  'Ajang pemilihan dan voting online resmi yang diselenggarakan untuk menentukan perwakilan favorit masyarakat secara terbuka, transparan, dan terenkripsi.'}
-              </p>
-            </div>
-
-            <div className="bg-[#F8FAF7] dark:bg-black/30 rounded-xl p-4 border border-[#E5EADF] dark:border-white/10 space-y-2">
+            {/* Terms & Regulations List */}
+            <div className="bg-[#F8FAF7] dark:bg-black/30 rounded-xl p-4 sm:p-5 border border-gray-100 dark:border-white/10 space-y-2">
               <h4 className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                Ketentuan &amp; Alur Voting Resmi
+                Ketentuan &amp; Alur Pemilihan Resmi
               </h4>
-              <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1.5 list-disc pl-4">
+              <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1.5 list-disc pl-4 leading-relaxed">
                 <li>
                   {category?.allow_free_vote !== false
-                    ? 'Tersedia 1 suara gratis per kontak WhatsApp/Email atau akun Google terverifikasi.'
-                    : 'Ajang ini sepenuhnya menggunakan sistem paket vote berbayar.'}
+                    ? 'Tersedia 1 kuota vote gratis per akun kontak (WhatsApp/Email) terverifikasi.'
+                    : 'Ajang ini menggunakan sistem pemilihan paket suara sah berbayar.'}
                 </li>
                 <li>
-                  Untuk menambah dukungan, Anda dapat membeli paket suara tambahan via QRIS Dinamis dan Virtual Account Bank.
+                  Untuk menambah dukungan bagi kandidat, Anda dapat membeli paket suara tambahan secara instan melalui QRIS Dinamis dan Virtual Account Bank.
                 </li>
                 <li>
-                  Setiap transaksi akan menerbitkan Bukti Sah E-Receipt ber-ID unik yang dapat diunduh dan dicetak.
+                  Setiap transaksi yang berhasil akan langsung menerbitkan Bukti Sah E-Receipt ber-ID unik yang dapat diunduh dan dicetak secara resmi.
                 </li>
                 <li>
-                  Perolehan suara diperbarui secara real-time dan diproteksi anti kecurangan.
+                  Tabulasi suara diperbarui secara otomatis dan diproteksi dari segala bentuk kecurangan digital dan manipulasi bot.
                 </li>
               </ul>
             </div>
-          </section>
-        )}
+          </div>
+        </section>
 
       </main>
 
       {/* POP-UP 1: COMMERCIAL VOTE MODAL */}
       {selectedFinalistForVote && (
         <CommercialVoteModal
+          key={selectedFinalistForVote.id}
           isOpen={true}
           onClose={() => setSelectedFinalistForVote(null)}
           finalist={selectedFinalistForVote}
           category={category}
           onVoteSuccess={(receipt) => {
             setEReceiptData(receipt)
-            loadData()
+            loadData(true)
+            loadMessages(true)
           }}
         />
       )}
@@ -1001,7 +1484,7 @@ export default function CategoryVotingPage() {
           rank={
             finalists.findIndex((f) => f.id === selectedFinalistForDetail.id) + 1 || 1
           }
-          isVotingExpired={isVotingExpired}
+          isVotingExpired={isVotingClosed}
           onOpenVote={(finalist) => setSelectedFinalistForVote(finalist)}
         />
       )}
