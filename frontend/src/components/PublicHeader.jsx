@@ -61,12 +61,20 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
   }
 
   function handleVoteClick(e) {
+    if (e && e.preventDefault) e.preventDefault()
     if (window.location.pathname === '/') {
-      e.preventDefault()
       const target = document.getElementById('voting-section')
       if (target) {
         target.scrollIntoView({ behavior: 'smooth' })
       }
+    } else {
+      navigate('/')
+      setTimeout(() => {
+        const target = document.getElementById('voting-section')
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' })
+        }
+      }, 150)
     }
     setMobileMenuOpen(false)
   }
@@ -117,17 +125,17 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
             Beranda
           </NavLink>
 
-          <a
-            href="/#voting-section"
+          <button
+            type="button"
             onClick={handleVoteClick}
-            className={`transition-colors duration-200 ${
+            className={`transition-colors duration-200 cursor-pointer ${
               isOverHero || theme === 'dark'
                 ? 'text-white/80 hover:text-white font-medium'
                 : 'text-gray-700 hover:text-[#70B325] font-medium'
             }`}
           >
             Vote
-          </a>
+          </button>
 
           <button
             type="button"
@@ -305,13 +313,13 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
                 Beranda
               </NavLink>
 
-              <a
-                href="/#voting-section"
+              <button
+                type="button"
                 onClick={handleVoteClick}
-                className="flex items-center px-4 py-3 rounded-2xl font-semibold text-sm text-[#262A25] dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 transition-all"
+                className="w-full text-left flex items-center px-4 py-3 rounded-2xl font-semibold text-sm text-[#262A25] dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 transition-all cursor-pointer"
               >
                 Vote
-              </a>
+              </button>
 
               <button
                 type="button"

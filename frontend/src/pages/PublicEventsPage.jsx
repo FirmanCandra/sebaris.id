@@ -94,6 +94,23 @@ export default function PublicEventsPage() {
     ref.current.scrollBy({ left: offset, behavior: 'smooth' })
   }
 
+  // Always ensure the homepage starts at the very top (Hero Banner) on initial mount or refresh
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual'
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+
+    if (window.location.hash) {
+      window.history.replaceState(null, '', window.location.pathname)
+    }
+
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0)
+    }, 50)
+    return () => clearTimeout(timer)
+  }, [])
+
   useEffect(() => {
     Promise.all([
       api('/events').catch(() => ({ data: [] })),
