@@ -332,130 +332,118 @@ export default function CategoryVotingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 relative z-10 space-y-5">
           
           {/* Breadcrumb Row */}
-          <nav className="flex items-center gap-2 text-xs font-semibold text-gray-300/80 truncate">
-            <Link to="/" className="text-gray-300 hover:text-[#D0FE15] transition-colors no-underline">
+          <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
+            <Link to="/" className="hover:text-white transition-colors no-underline">
               Beranda
             </Link>
-            <IconChevronRight className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
-            <Link to="/#voting-section" className="text-gray-300 hover:text-[#D0FE15] transition-colors no-underline">
-              Ajang Voting
-            </Link>
+            <span className="opacity-40">/</span>
             {category?.event?.name && (
               <>
-                <IconChevronRight className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
-                <span className="text-gray-300 truncate max-w-[150px] sm:max-w-none">
-                  {category.event.name}
-                </span>
+                <span className="text-gray-300 truncate max-w-[140px] sm:max-w-xs">{category.event.name}</span>
+                <span className="opacity-40">/</span>
               </>
             )}
-            <IconChevronRight className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
-            <span className="text-white font-bold truncate">
+            <span className="text-emerald-300 font-semibold truncate max-w-[180px] sm:max-w-none">
               {categoryTitle}
             </span>
           </nav>
 
           {/* Event Header Information & Live Countdown Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-center">
             
-            {/* Left Column (8 cols): Event Badges, Title, Organizer, and Metrics */}
-            <div className="lg:col-span-8 space-y-4 text-left">
+            {/* Left Column (8 cols): Event Eyebrow, Title, Tags, and Metrics */}
+            <div className="lg:col-span-8 space-y-3 sm:space-y-3.5 text-left">
               
-              {/* Badges Row */}
-              <div className="flex flex-wrap items-center gap-2.5">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#70B325]/90 text-white text-[11px] font-black tracking-wide uppercase shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-                  Sedang Berlangsung
-                </span>
+              {/* Event Context & Organizer (Subtle Eyebrow, no pill soup) */}
+              {(category?.event?.name || category?.organizer) && (
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-emerald-200/90 font-medium">
+                  {category?.event?.name && (
+                    <span className="font-semibold text-white/95">{category.event.name}</span>
+                  )}
+                  {category?.event?.name && category?.organizer && (
+                    <span className="text-emerald-400/50 hidden sm:inline">•</span>
+                  )}
+                  {category?.organizer && (
+                    <span className="text-gray-300 text-[11px] sm:text-xs">
+                      Oleh <span className="text-white font-medium">{category.organizer}</span>
+                    </span>
+                  )}
+                </div>
+              )}
 
-                {category?.event?.name && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-emerald-200 text-xs font-bold">
-                    <IconBuilding className="w-3.5 h-3.5" />
-                    <span>{category.event.name}</span>
-                  </span>
-                )}
+              {/* Status & Tier Chips (Focused pills, max 2-3) */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[11px] font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  {isVotingClosed ? 'Selesai' : 'Sedang Berlangsung'}
+                </span>
 
                 {category?.tier && (
                   <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black tracking-wide border ${
+                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
                       category.tier === 'premier'
-                        ? 'bg-amber-400/20 border-amber-300/40 text-amber-200'
+                        ? 'bg-amber-400/15 border-amber-300/30 text-amber-200'
                         : category.tier === 'sekunder'
-                        ? 'bg-slate-300/20 border-slate-300/40 text-slate-100'
-                        : 'bg-orange-400/20 border-orange-300/40 text-orange-200'
+                        ? 'bg-slate-300/15 border-slate-300/30 text-slate-200'
+                        : 'bg-orange-400/15 border-orange-300/30 text-orange-200'
                     }`}
                   >
                     {category.tier === 'premier' ? (
-                      <IconCrown className="w-3.5 h-3.5 text-amber-300" />
+                      <IconCrown className="w-3 h-3 text-amber-300" />
                     ) : (
-                      <IconMedal className="w-3.5 h-3.5" />
+                      <IconMedal className="w-3 h-3" />
                     )}
                     <span>
-                      Kategori {category.tier === 'premier' ? 'Premier' : category.tier === 'sekunder' ? 'Sekunder' : 'Tersier'}
+                      {category.tier === 'premier' ? 'Premier' : category.tier === 'sekunder' ? 'Sekunder' : 'Tersier'}
                     </span>
                   </span>
                 )}
 
-                {category?.organizer && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-gray-200 text-xs font-semibold">
-                    <IconCheck className="w-3.5 h-3.5 text-[#D0FE15]" />
-                    <span>{category.organizer}</span>
-                  </span>
-                )}
-
-                {category?.allow_free_vote !== false && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-400/20 border border-amber-300/30 text-amber-300 text-[11px] font-extrabold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                {category?.allow_free_vote !== false && !isVotingClosed && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 border border-white/20 text-gray-200 text-[11px] font-medium">
+                    <IconZap className="w-3 h-3 text-[#D0FE15]" />
                     <span>1x Vote Gratis</span>
                   </span>
                 )}
               </div>
 
               {/* Event Main Title */}
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-snug">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight leading-snug">
                 {categoryTitle}
               </h1>
 
               {/* Event Description Snippet */}
               {category?.description && (
-                <p className="text-xs sm:text-sm text-gray-200/85 max-w-3xl leading-relaxed line-clamp-2">
+                <p className="text-xs sm:text-sm text-gray-300/90 max-w-2xl leading-relaxed line-clamp-2">
                   {category.description}
                 </p>
               )}
 
-              {/* Event Metrics Pills Row */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-1">
-                <div className="bg-black/35 backdrop-blur-md p-2.5 sm:p-3 rounded-xl border border-white/15 flex flex-col justify-between min-w-0">
-                  <span className="text-[10px] uppercase font-bold text-gray-300 block truncate">Finalis Resmi</span>
-                  <span className="text-sm sm:text-base lg:text-lg font-black text-white block mt-0.5 truncate">
-                    {finalists.length} Kandidat
-                  </span>
-                </div>
-
-                <div className="bg-black/35 backdrop-blur-md p-2.5 sm:p-3 rounded-xl border border-white/15 flex flex-col justify-between min-w-0">
-                  <span className="text-[10px] uppercase font-bold text-gray-300 block truncate">Total Suara</span>
-                  <span className="text-sm sm:text-base lg:text-lg font-black text-[#D0FE15] block mt-0.5 truncate">
+              {/* Event Metrics - Sleek Compact Ribbon (Replaces 4 bulky boxes) */}
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 text-xs sm:text-sm">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400 font-medium">Total Suara:</span>
+                  <span className="font-black text-[#D0FE15] text-sm sm:text-base">
                     {isFrozen ? (
-                      <span className="inline-flex items-center gap-1 text-amber-300">
+                      <span className="inline-flex items-center gap-1 text-amber-300 font-bold">
                         <IconLock className="w-3.5 h-3.5" />
-                        <span>Freeze</span>
+                        <span>Dirahasiakan</span>
                       </span>
                     ) : (
                       `${totalVotes.toLocaleString('id-ID')} Suara`
                     )}
                   </span>
                 </div>
-
-                <div className="bg-black/35 backdrop-blur-md p-2.5 sm:p-3 rounded-xl border border-white/15 flex flex-col justify-between min-w-0">
-                  <span className="text-[10px] uppercase font-bold text-gray-300 block truncate">Tarif Tambahan</span>
-                  <span className="text-sm sm:text-base lg:text-lg font-black text-white block mt-0.5 truncate">
-                    Rp {(category?.price_per_vote || 1000).toLocaleString('id-ID')}/vote
-                  </span>
+                <span className="text-white/20 hidden sm:inline">•</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400 font-medium">Kandidat:</span>
+                  <span className="font-bold text-white">{finalists.length} Finalis</span>
                 </div>
-
-                <div className="bg-black/35 backdrop-blur-md p-2.5 sm:p-3 rounded-xl border border-white/15 flex flex-col justify-between min-w-0">
-                  <span className="text-[10px] uppercase font-bold text-gray-300 block truncate">Pembayaran</span>
-                  <span className="text-sm sm:text-base lg:text-lg font-black text-white block mt-0.5 truncate">
-                    QRIS &amp; VA Otomatis
+                <span className="text-white/20 hidden sm:inline">•</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400 font-medium">Biaya:</span>
+                  <span className="font-bold text-white">
+                    Rp {(category?.price_per_vote || 1000).toLocaleString('id-ID')}/vote
                   </span>
                 </div>
               </div>
@@ -715,24 +703,22 @@ export default function CategoryVotingPage() {
             {/* Background Container for Leaderboard (Authentic KreenConnect bg-glass & podium) */}
             <div className="relative rounded-3xl overflow-hidden bg-gradient-to-b from-[#123E2A]/15 via-[#123E2A]/5 to-transparent dark:from-[#123E2A]/30 dark:via-[#102D1F]/10 dark:to-transparent border border-[#70B325]/20 p-4 sm:p-6 lg:p-10">
               
-              {/* Header Box (bg-glass) */}
-              <div className="max-w-2xl mx-auto rounded-2xl bg-white/75 dark:bg-[#1A2018]/85 backdrop-blur-xl border border-white/60 dark:border-white/10 p-5 sm:p-6 text-center space-y-1.5 shadow-sm">
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#262A25] dark:text-white tracking-tight">
-                  Papan Peringkat
+              {/* Header (Clean, no redundant nested glass box) */}
+              <div className="text-center space-y-1 max-w-xl mx-auto mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-black text-[#262A25] dark:text-white tracking-tight flex items-center justify-center gap-2">
+                  <IconTrophy className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                  <span>Papan Peringkat</span>
                 </h2>
-                <h3 className="text-sm sm:text-base font-bold text-[#70B325] dark:text-[#86C839]">
-                  {categoryTitle}
-                </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   {isFrozen
                     ? 'Perolehan suara sementara dirahasiakan oleh panitia pelaksana.'
-                    : `Total Masuk: ${totalVotes.toLocaleString('id-ID')} suara`}
+                    : `Rekapitulasi ${totalVotes.toLocaleString('id-ID')} suara sah masuk`}
                 </p>
               </div>
 
               {/* TOP 3 PODIUM (KreenConnect 3-Column Podium with Rank 1 Crown & Center Elevation) */}
               {topThreeFinalists.length > 0 && (
-                <div className="mt-8 max-w-4xl mx-auto">
+                <div className="mt-6 sm:mt-8 max-w-4xl mx-auto">
                   <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6 items-end">
                     
                     {/* PODIUM COLUMN 1: RANK 2 (Silver - Left) */}
@@ -754,8 +740,9 @@ export default function CategoryVotingPage() {
                               onError={(e) => { e.currentTarget.style.display = 'none' }}
                             />
                             <div className="absolute top-2 left-2">
-                              <span className="px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-white text-[10px] sm:text-xs font-bold">
-                                #{2}
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-xs text-white text-[10px] sm:text-xs font-bold border border-white/20">
+                                <IconMedal className="w-3 h-3 text-slate-300" />
+                                <span>#2</span>
                               </span>
                             </div>
                           </div>
@@ -775,10 +762,10 @@ export default function CategoryVotingPage() {
                               : `${totalVotes > 0 ? ((topThreeFinalists[1].vote_count / totalVotes) * 100).toFixed(1) : 0}%`}
                           </div>
 
-                          {/* Bottom Row: Vote Button + Silver Medal */}
-                          <div className="flex items-center gap-1.5 sm:gap-2 justify-between">
+                          {/* Bottom Row: Full-width Vote Button */}
+                          <div className="w-full pt-0.5">
                             {isVotingClosed ? (
-                              <div className="flex-1 py-1.5 sm:py-2 px-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-extrabold text-[11px] sm:text-xs rounded-lg text-center border border-slate-300 dark:border-slate-700">
+                              <div className="w-full py-1.5 sm:py-2 px-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-extrabold text-[11px] sm:text-xs rounded-lg text-center border border-slate-300 dark:border-slate-700">
                                 Juara 2
                               </div>
                             ) : (
@@ -786,14 +773,11 @@ export default function CategoryVotingPage() {
                                 type="button"
                                 disabled={isVotingExpired}
                                 onClick={() => setSelectedFinalistForVote(topThreeFinalists[1])}
-                                className="flex-1 py-1.5 sm:py-2 px-2 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-[11px] sm:text-xs rounded-lg transition-all text-center cursor-pointer disabled:cursor-not-allowed"
+                                className="w-full py-1.5 sm:py-2 px-2 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-xs sm:text-sm rounded-lg transition-all text-center cursor-pointer disabled:cursor-not-allowed shadow-xs min-h-[36px] sm:min-h-[40px] flex items-center justify-center"
                               >
                                 Vote
                               </button>
                             )}
-                            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-400 text-slate-800 flex items-center justify-center font-black text-xs sm:text-sm flex-shrink-0 shadow-xs border border-slate-300" title="Juara 2">
-                              <IconMedal className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />
-                            </div>
                           </div>
                         </div>
                       </div>
@@ -822,8 +806,9 @@ export default function CategoryVotingPage() {
                               onError={(e) => { e.currentTarget.style.display = 'none' }}
                             />
                             <div className="absolute top-2 left-2">
-                              <span className="px-2 py-0.5 rounded-md bg-amber-500 text-amber-950 text-[10px] sm:text-xs font-black shadow-xs">
-                                Juara 1
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500 text-amber-950 text-[10px] sm:text-xs font-black shadow-xs">
+                                <IconCrown className="w-3 h-3 text-amber-950" />
+                                <span>Juara 1</span>
                               </span>
                             </div>
                           </div>
@@ -843,10 +828,10 @@ export default function CategoryVotingPage() {
                               : `${totalVotes > 0 ? ((topThreeFinalists[0].vote_count / totalVotes) * 100).toFixed(1) : 0}%`}
                           </div>
 
-                          {/* Bottom Row: Vote Button + Gold Medal */}
-                          <div className="flex items-center gap-1.5 sm:gap-2 justify-between">
+                          {/* Bottom Row: Full-width Vote Button */}
+                          <div className="w-full pt-0.5">
                             {isVotingClosed ? (
-                              <div className="flex-1 py-1.5 sm:py-2 px-2 bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-black text-xs sm:text-sm rounded-lg text-center shadow-xs">
+                              <div className="w-full py-1.5 sm:py-2 px-2 bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-black text-xs sm:text-sm rounded-lg text-center shadow-xs">
                                 Juara 1
                               </div>
                             ) : (
@@ -854,14 +839,11 @@ export default function CategoryVotingPage() {
                                 type="button"
                                 disabled={isVotingExpired}
                                 onClick={() => setSelectedFinalistForVote(topThreeFinalists[0])}
-                                className="flex-1 py-1.5 sm:py-2 px-2 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-xs sm:text-sm rounded-lg transition-all text-center cursor-pointer disabled:cursor-not-allowed shadow-xs"
+                                className="w-full py-1.5 sm:py-2 px-2 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-black text-xs sm:text-sm rounded-lg transition-all text-center cursor-pointer disabled:cursor-not-allowed shadow-xs min-h-[36px] sm:min-h-[40px] flex items-center justify-center"
                               >
                                 Vote
                               </button>
                             )}
-                            <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-amber-950 flex items-center justify-center font-black text-sm sm:text-base flex-shrink-0 shadow-sm border border-amber-300" title="Juara 1">
-                              <IconCrown className="w-4 h-4 sm:w-5 sm:h-5 text-amber-950" />
-                            </div>
                           </div>
                         </div>
                       </div>
@@ -888,8 +870,9 @@ export default function CategoryVotingPage() {
                               onError={(e) => { e.currentTarget.style.display = 'none' }}
                             />
                             <div className="absolute top-2 left-2">
-                              <span className="px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-white text-[10px] sm:text-xs font-bold">
-                                #{3}
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-xs text-white text-[10px] sm:text-xs font-bold border border-white/20">
+                                <IconMedal className="w-3 h-3 text-amber-400" />
+                                <span>#3</span>
                               </span>
                             </div>
                           </div>
@@ -909,10 +892,10 @@ export default function CategoryVotingPage() {
                               : `${totalVotes > 0 ? ((topThreeFinalists[2].vote_count / totalVotes) * 100).toFixed(1) : 0}%`}
                           </div>
 
-                          {/* Bottom Row: Vote Button + Bronze Medal */}
-                          <div className="flex items-center gap-1.5 sm:gap-2 justify-between">
+                          {/* Bottom Row: Full-width Vote Button */}
+                          <div className="w-full pt-0.5">
                             {isVotingClosed ? (
-                              <div className="flex-1 py-1.5 sm:py-2 px-2 bg-amber-900/20 text-amber-300 font-extrabold text-[11px] sm:text-xs rounded-lg text-center border border-amber-700/50">
+                              <div className="w-full py-1.5 sm:py-2 px-2 bg-amber-900/20 text-amber-300 font-extrabold text-[11px] sm:text-xs rounded-lg text-center border border-amber-700/50">
                                 Juara 3
                               </div>
                             ) : (
@@ -920,14 +903,11 @@ export default function CategoryVotingPage() {
                                 type="button"
                                 disabled={isVotingExpired}
                                 onClick={() => setSelectedFinalistForVote(topThreeFinalists[2])}
-                                className="flex-1 py-1.5 sm:py-2 px-2 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-[11px] sm:text-xs rounded-lg transition-all text-center cursor-pointer disabled:cursor-not-allowed"
+                                className="w-full py-1.5 sm:py-2 px-2 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-xs sm:text-sm rounded-lg transition-all text-center cursor-pointer disabled:cursor-not-allowed shadow-xs min-h-[36px] sm:min-h-[40px] flex items-center justify-center"
                               >
                                 Vote
                               </button>
                             )}
-                            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-amber-700 to-amber-900 text-amber-100 flex items-center justify-center font-black text-xs sm:text-sm flex-shrink-0 shadow-xs border border-amber-700" title="Juara 3">
-                              <IconMedal className="w-4 h-4 sm:w-5 sm:h-5 text-amber-200" />
-                            </div>
                           </div>
                         </div>
                       </div>
