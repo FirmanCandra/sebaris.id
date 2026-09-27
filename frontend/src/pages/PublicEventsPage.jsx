@@ -854,16 +854,16 @@ export default function PublicEventsPage() {
                       </span>
                     </div>
 
-                    {/* Bottom Golden-Amber / Theme Gradient Overlay */}
-                    <div className="absolute inset-x-0 bottom-0 z-10 pt-24 pb-3.5 px-3.5 sm:pb-4 sm:px-4 bg-gradient-to-t from-[#D6820C] via-[#ECA320]/95 via-45% to-transparent dark:from-[#0E1B06] dark:via-[#162D0A]/95 dark:via-45% dark:to-transparent flex flex-col justify-end space-y-1.5 sm:space-y-2">
+                    {/* Bottom Light Green (Logo Matching) Low-Opacity Gradient Overlay */}
+                    <div className="absolute inset-x-0 bottom-0 z-10 pt-24 pb-3.5 px-3.5 sm:pb-4 sm:px-4 bg-gradient-to-t from-[#D0FE15]/85 via-[#D0FE15]/45 via-45% to-transparent dark:from-[#17240B]/95 dark:via-[#1F330E]/60 dark:via-45% dark:to-transparent backdrop-blur-[2px] flex flex-col justify-end space-y-1.5 sm:space-y-2">
                       <div className="space-y-0.5 sm:space-y-1">
-                        <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-[#173007]/80 dark:text-lime-300 truncate drop-shadow-xs">
+                        <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-[#173007]/85 dark:text-lime-300 truncate drop-shadow-xs">
                           {category.name}
                         </p>
-                        <h3 className="font-black text-sm sm:text-base lg:text-lg text-[#142607] dark:text-white leading-tight truncate group-hover:text-black dark:group-hover:text-lime-200 transition-colors drop-shadow-xs">
+                        <h3 className="font-black text-sm sm:text-base lg:text-lg text-[#173007] dark:text-white leading-tight truncate group-hover:text-black dark:group-hover:text-lime-200 transition-colors drop-shadow-xs">
                           {finalist.name}
                         </h3>
-                        <p className="text-[11px] sm:text-xs font-bold text-[#203D0B] dark:text-gray-200 flex items-center gap-1">
+                        <p className="text-[11px] sm:text-xs font-bold text-[#173007]/90 dark:text-gray-200 flex items-center gap-1">
                           <span>{finalist.vote_count.toLocaleString('id-ID')} suara</span>
                         </p>
                       </div>

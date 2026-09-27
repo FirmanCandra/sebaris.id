@@ -56,7 +56,7 @@ export default function TopVotingSkeleton() {
               </div>
 
               {/* Bottom Gradient Overlay Mockup */}
-              <div className="space-y-2 mt-auto pt-20 -mx-3 -mb-3 sm:-mx-4 sm:-mb-4 p-3 sm:p-4 bg-gradient-to-t from-[#D6820C]/90 via-[#ECA320]/80 via-50% to-transparent dark:from-[#0E1B06] dark:via-[#162D0A]/90 dark:via-50% dark:to-transparent z-10">
+              <div className="space-y-2 mt-auto pt-20 -mx-3 -mb-3 sm:-mx-4 sm:-mb-4 p-3 sm:p-4 bg-gradient-to-t from-[#D0FE15]/80 via-[#D0FE15]/40 via-50% to-transparent dark:from-[#17240B]/90 dark:via-[#1F330E]/60 dark:via-50% dark:to-transparent z-10">
                 <div className="h-3 w-1/2 bg-[#173007]/25 dark:bg-white/20 rounded animate-pulse" />
                 <div className="h-5 w-4/5 bg-[#173007]/35 dark:bg-white/30 rounded-md animate-pulse" />
                 <div className="h-3 w-1/3 bg-[#173007]/20 dark:bg-white/15 rounded animate-pulse" />
