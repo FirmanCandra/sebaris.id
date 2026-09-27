@@ -44,20 +44,23 @@ export default function TopVotingSkeleton() {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="flex-shrink-0 w-[74vw] max-w-[270px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] aspect-[3/4] rounded-2xl overflow-hidden bg-white dark:bg-[#1A2214] border border-[#BCE813]/60 dark:border-white/10 p-3 sm:p-4 flex flex-col justify-between relative shadow-lg"
+              className="flex-shrink-0 w-[74vw] max-w-[270px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden relative shadow-lg border border-[#BCE813]/60 dark:border-white/10 bg-[#17240B] p-3 sm:p-4 flex flex-col justify-between"
             >
               {/* Shimmer sweep */}
-              <div className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-[#EBFD80]/40 dark:via-white/5 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-[#EBFD80]/20 dark:via-white/5 to-transparent pointer-events-none z-20" />
 
-              {/* Top Photo Mockup */}
-              <div className="relative h-[52%] w-full rounded-xl bg-gray-100 dark:bg-white/10 animate-pulse" />
+              {/* Top Badges Mockup */}
+              <div className="flex items-center justify-between z-10">
+                <div className="h-5 w-24 bg-white/30 dark:bg-white/15 rounded-full animate-pulse" />
+                <div className="h-5 w-10 bg-white/30 dark:bg-white/15 rounded-full animate-pulse" />
+              </div>
 
-              {/* Bottom Card Mockup */}
-              <div className="space-y-2 mt-auto pt-2">
-                <div className="h-3 w-3/4 bg-gray-200 dark:bg-white/15 rounded-md animate-pulse" />
-                <div className="h-4 w-4/5 bg-gray-300 dark:bg-white/20 rounded-md animate-pulse" />
-                <div className="h-3 w-1/3 bg-gray-200 dark:bg-white/10 rounded-md animate-pulse" />
-                <div className="h-8 w-full bg-[#173007]/20 dark:bg-[#D0FE15]/30 rounded-xl mt-1 animate-pulse" />
+              {/* Bottom Gradient Overlay Mockup */}
+              <div className="space-y-2 mt-auto pt-20 -mx-3 -mb-3 sm:-mx-4 sm:-mb-4 p-3 sm:p-4 bg-gradient-to-t from-[#D6820C]/90 via-[#ECA320]/80 via-50% to-transparent dark:from-[#0E1B06] dark:via-[#162D0A]/90 dark:via-50% dark:to-transparent z-10">
+                <div className="h-3 w-1/2 bg-[#173007]/25 dark:bg-white/20 rounded animate-pulse" />
+                <div className="h-5 w-4/5 bg-[#173007]/35 dark:bg-white/30 rounded-md animate-pulse" />
+                <div className="h-3 w-1/3 bg-[#173007]/20 dark:bg-white/15 rounded animate-pulse" />
+                <div className="h-8 w-full bg-[#173007]/30 dark:bg-[#D0FE15]/30 rounded-xl sm:rounded-2xl mt-1 animate-pulse" />
               </div>
             </div>
           ))}

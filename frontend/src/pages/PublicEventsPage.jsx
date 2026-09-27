@@ -816,52 +816,54 @@ export default function PublicEventsPage() {
               <div
                 ref={championsSliderRef}
                 className="flex gap-4 sm:gap-5 overflow-x-auto scrollbar-none snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0 pb-3 pt-1"
-              >
-                {champions.map(({ category, finalist, totalVotes, percentage }) => (
+              >                {champions.map(({ category, finalist, totalVotes, percentage }) => (
                   <article
                     key={finalist.id}
-                    className="flex-shrink-0 w-[74vw] max-w-[270px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl overflow-hidden bg-white dark:bg-[#1A2214] border border-[#BCE813]/60 dark:border-white/10 shadow-[0_10px_25px_-5px_rgba(20,40,5,0.15)] hover:shadow-[0_18px_35px_-6px_rgba(20,40,5,0.25)] transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1.5"
+                    className="flex-shrink-0 w-[74vw] max-w-[270px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden relative border border-[#BCE813]/60 dark:border-white/10 shadow-[0_12px_30px_-5px_rgba(20,40,5,0.2)] hover:shadow-[0_20px_40px_-8px_rgba(20,40,5,0.3)] transition-all duration-500 group hover:-translate-y-2 bg-[#17240B]"
                   >
-                    {/* Contestant Portrait Photo (52%) */}
-                    <div className="relative h-[52%] w-full overflow-hidden bg-gray-100 dark:bg-black/40 flex items-center justify-center">
+                    {/* Full-Bleed Portrait Photo */}
+                    <div className="absolute inset-0 w-full h-full bg-gray-900 overflow-hidden">
                       {finalist.photo_url || finalist.photo ? (
                         <img
                           src={resolveStorageUrl(finalist.photo_url || finalist.photo)}
                           alt={finalist.name}
-                          className="w-full h-full object-cover object-top group-hover:scale-108 transition-transform duration-500"
+                          className="w-full h-full object-cover object-top group-hover:scale-108 transition-transform duration-700 ease-out"
                           loading="lazy"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                           }}
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-800 text-amber-400 font-black text-2xl">
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 text-amber-400 font-black text-4xl">
                           {finalist.name.charAt(0)}
                         </div>
                       )}
+                    </div>
 
+                    {/* Top Badges */}
+                    <div className="absolute top-3 inset-x-3 z-10 flex items-center justify-between pointer-events-none">
                       {/* Top-Left #1 Juara Badge */}
-                      <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-black text-[10px] sm:text-[11px] shadow-sm tracking-tight">
-                        <IconCrown className="w-3 h-3 text-amber-950" />
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-black text-[10px] sm:text-[11px] shadow-md tracking-tight backdrop-blur-xs">
+                        <IconCrown className="w-3.5 h-3.5 text-amber-950" />
                         <span>#1 Top Vote</span>
                       </span>
 
                       {/* Top-Right Vote Percentage Pill */}
-                      <span className="absolute top-2.5 right-2.5 inline-flex items-center px-2 py-0.5 rounded-full bg-black/65 backdrop-blur-md border border-white/20 text-white font-extrabold text-[10px] shadow-xs">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white font-black text-[10px] sm:text-[11px] shadow-sm">
                         {percentage}%
                       </span>
                     </div>
 
-                    {/* Candidate Details (48%) */}
-                    <div className="h-[48%] p-3 sm:p-4 flex flex-col justify-between space-y-2 bg-white dark:bg-[#1A2214]">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase tracking-wider text-[#4D7C0F] dark:text-[#A3E635] truncate">
+                    {/* Bottom Golden-Amber / Theme Gradient Overlay */}
+                    <div className="absolute inset-x-0 bottom-0 z-10 pt-24 pb-3.5 px-3.5 sm:pb-4 sm:px-4 bg-gradient-to-t from-[#D6820C] via-[#ECA320]/95 via-45% to-transparent dark:from-[#0E1B06] dark:via-[#162D0A]/95 dark:via-45% dark:to-transparent flex flex-col justify-end space-y-1.5 sm:space-y-2">
+                      <div className="space-y-0.5 sm:space-y-1">
+                        <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-[#173007]/80 dark:text-lime-300 truncate drop-shadow-xs">
                           {category.name}
                         </p>
-                        <h3 className="font-black text-xs sm:text-sm text-[#182611] dark:text-white truncate group-hover:text-[#4D7C0F] dark:group-hover:text-[#A3E635] transition-colors">
+                        <h3 className="font-black text-sm sm:text-base lg:text-lg text-[#142607] dark:text-white leading-tight truncate group-hover:text-black dark:group-hover:text-lime-200 transition-colors drop-shadow-xs">
                           {finalist.name}
                         </h3>
-                        <p className="text-[11px] text-gray-600 dark:text-gray-300 font-semibold flex items-center gap-1">
+                        <p className="text-[11px] sm:text-xs font-bold text-[#203D0B] dark:text-gray-200 flex items-center gap-1">
                           <span>{finalist.vote_count.toLocaleString('id-ID')} suara</span>
                         </p>
                       </div>
@@ -869,7 +871,7 @@ export default function PublicEventsPage() {
                       {/* Fast Vote Button */}
                       <Link
                         to={`/voting/${category.slug || category.id}?finalist=${finalist.id}`}
-                        className="w-full py-2 bg-[#173007] hover:bg-[#23450B] text-[#D2FF0F] dark:bg-[#D2FF0F] dark:hover:bg-[#C2EE08] dark:text-[#173007] font-black text-xs rounded-xl text-center no-underline flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md active:scale-98 transition-all"
+                        className="w-full py-2 sm:py-2.5 bg-[#173007] group-hover:bg-black text-[#D2FF0F] dark:bg-[#D2FF0F] dark:group-hover:bg-[#C2EE08] dark:text-[#173007] font-black text-xs rounded-xl sm:rounded-2xl text-center no-underline flex items-center justify-center gap-1.5 shadow-sm group-hover:shadow-md active:scale-98 transition-all"
                       >
                         <IconZap className="w-3.5 h-3.5" />
                         <span>Dukung Juara 1</span>
