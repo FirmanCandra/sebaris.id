@@ -31,9 +31,8 @@ export default function TopVotingSkeleton() {
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="w-13 h-13 sm:w-18 sm:h-18 lg:w-22 lg:h-22 rounded-2xl bg-[#173007]/15 dark:bg-white/15 animate-pulse flex-shrink-0" />
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
+              <div>
                 <div className="h-6 sm:h-8 w-28 sm:w-36 bg-[#173007]/25 dark:bg-white/30 rounded-lg animate-pulse" />
-                <div className="h-5 w-20 sm:w-24 bg-[#173007]/20 dark:bg-[#D0FE15]/40 rounded-full animate-pulse" />
               </div>
               <div className="h-3.5 w-48 sm:w-80 bg-[#173007]/15 dark:bg-white/20 rounded-md animate-pulse" />
             </div>

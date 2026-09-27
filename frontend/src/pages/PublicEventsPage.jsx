@@ -552,15 +552,10 @@ export default function PublicEventsPage() {
                 loading="eager"
               />
               <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#262A25] dark:text-white">
-                    Highlight Event
-                  </h2>
-                  <span className="px-2.5 py-0.5 rounded-full bg-[#70B325]/15 text-[#558223] dark:text-[#86C839] text-[10px] font-black uppercase tracking-wider">
-                    Sedang Berlangsung
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#262A25] dark:text-white">
+                  Highlight Event
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                   Ajang pemilihan resmi yang sedang aktif dan dapat Anda ikuti sekarang
                 </p>
               </div>
@@ -772,13 +767,10 @@ export default function PublicEventsPage() {
                   loading="eager"
                 />
                 <div>
-                  <h2 className="text-lg sm:text-2xl lg:text-3xl font-black text-[#173007] dark:text-white tracking-tight flex items-center gap-2">
-                    <span>Top Voting</span>
-                    <span className="text-[10px] sm:text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#173007] text-[#D2FF0F] dark:bg-[#D2FF0F] dark:text-[#173007] shadow-xs">
-                      Top Ranking
-                    </span>
+                  <h2 className="text-lg sm:text-2xl lg:text-3xl font-black text-[#173007] dark:text-white tracking-tight">
+                    Top Voting
                   </h2>
-                  <p className="text-xs sm:text-sm text-[#24420D] dark:text-lime-200/80 font-semibold">
+                  <p className="text-xs sm:text-sm text-[#24420D] dark:text-lime-200/80 font-semibold mt-0.5">
                     Kandidat terdepan dengan perolehan suara tertinggi saat ini dari ajang pemilihan aktif
                   </p>
                 </div>
@@ -931,15 +923,10 @@ export default function PublicEventsPage() {
                 loading="eager"
               />
               <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#262A25] dark:text-white">
-                    Event &amp; Kategori yang Sudah Berlalu
-                  </h2>
-                  <span className="px-2.5 py-0.5 rounded-full bg-gray-200 dark:bg-white/10 text-gray-700 dark:text-gray-300 text-[10px] font-black uppercase tracking-wider">
-                    Selesai
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#262A25] dark:text-white">
+                  Event &amp; Kategori yang Sudah Berlalu
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                   Arsip dan riwayat ajang pemilihan yang periode votingnya telah resmi berakhir
                 </p>
               </div>
