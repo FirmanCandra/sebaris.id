@@ -819,10 +819,10 @@ export default function PublicEventsPage() {
               >                {champions.map(({ category, finalist, totalVotes, percentage }) => (
                   <article
                     key={finalist.id}
-                    className="flex-shrink-0 w-[74vw] max-w-[270px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden relative border border-[#BCE813]/60 dark:border-white/10 shadow-[0_12px_30px_-5px_rgba(20,40,5,0.2)] hover:shadow-[0_20px_40px_-8px_rgba(20,40,5,0.3)] transition-all duration-500 group hover:-translate-y-2 bg-[#17240B]"
+                    className="flex-shrink-0 w-[74vw] max-w-[270px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden relative border border-white/60 dark:border-white/10 shadow-[0_12px_30px_-5px_rgba(20,40,5,0.18)] hover:shadow-[0_20px_40px_-8px_rgba(20,40,5,0.28)] transition-all duration-500 group hover:-translate-y-2 bg-white dark:bg-[#1A2214]"
                   >
                     {/* Full-Bleed Portrait Photo */}
-                    <div className="absolute inset-0 w-full h-full bg-gray-900 overflow-hidden">
+                    <div className="absolute inset-0 w-full h-full bg-gray-100 dark:bg-gray-900 overflow-hidden">
                       {finalist.photo_url || finalist.photo ? (
                         <img
                           src={resolveStorageUrl(finalist.photo_url || finalist.photo)}
@@ -834,7 +834,7 @@ export default function PublicEventsPage() {
                           }}
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 text-amber-400 font-black text-4xl">
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 text-amber-400 font-black text-4xl">
                           {finalist.name.charAt(0)}
                         </div>
                       )}
@@ -854,16 +854,16 @@ export default function PublicEventsPage() {
                       </span>
                     </div>
 
-                    {/* Bottom Light Green (Logo Matching) Low-Opacity Gradient Overlay */}
-                    <div className="absolute inset-x-0 bottom-0 z-10 pt-24 pb-3.5 px-3.5 sm:pb-4 sm:px-4 bg-gradient-to-t from-[#D0FE15]/85 via-[#D0FE15]/45 via-45% to-transparent dark:from-[#17240B]/95 dark:via-[#1F330E]/60 dark:via-45% dark:to-transparent backdrop-blur-[2px] flex flex-col justify-end space-y-1.5 sm:space-y-2">
+                    {/* Bottom White Gradient Overlay */}
+                    <div className="absolute inset-x-0 bottom-0 z-10 pt-24 pb-3.5 px-3.5 sm:pb-4 sm:px-4 bg-gradient-to-t from-white via-white/95 via-45% to-transparent dark:from-[#1A2214] dark:via-[#1A2214]/95 dark:via-45% dark:to-transparent flex flex-col justify-end space-y-1.5 sm:space-y-2">
                       <div className="space-y-0.5 sm:space-y-1">
-                        <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-[#173007]/85 dark:text-lime-300 truncate drop-shadow-xs">
+                        <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-[#4D7C0F] dark:text-[#A3E635] truncate">
                           {category.name}
                         </p>
-                        <h3 className="font-black text-sm sm:text-base lg:text-lg text-[#173007] dark:text-white leading-tight truncate group-hover:text-black dark:group-hover:text-lime-200 transition-colors drop-shadow-xs">
+                        <h3 className="font-black text-sm sm:text-base lg:text-lg text-[#182611] dark:text-white leading-tight truncate group-hover:text-[#4D7C0F] dark:group-hover:text-[#A3E635] transition-colors">
                           {finalist.name}
                         </h3>
-                        <p className="text-[11px] sm:text-xs font-bold text-[#173007]/90 dark:text-gray-200 flex items-center gap-1">
+                        <p className="text-[11px] sm:text-xs font-semibold text-gray-500 dark:text-gray-300 flex items-center gap-1">
                           <span>{finalist.vote_count.toLocaleString('id-ID')} suara</span>
                         </p>
                       </div>
@@ -871,7 +871,7 @@ export default function PublicEventsPage() {
                       {/* Fast Vote Button */}
                       <Link
                         to={`/voting/${category.slug || category.id}?finalist=${finalist.id}`}
-                        className="w-full py-2 sm:py-2.5 bg-[#173007] group-hover:bg-black text-[#D2FF0F] dark:bg-[#D2FF0F] dark:group-hover:bg-[#C2EE08] dark:text-[#173007] font-black text-xs rounded-xl sm:rounded-2xl text-center no-underline flex items-center justify-center gap-1.5 shadow-sm group-hover:shadow-md active:scale-98 transition-all"
+                        className="w-full py-2 sm:py-2.5 bg-[#173007] hover:bg-[#23450B] text-[#D2FF0F] dark:bg-[#D2FF0F] dark:hover:bg-[#C2EE08] dark:text-[#173007] font-black text-xs rounded-xl sm:rounded-2xl text-center no-underline flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md active:scale-98 transition-all"
                       >
                         <IconZap className="w-3.5 h-3.5" />
                         <span>Dukung Juara 1</span>
