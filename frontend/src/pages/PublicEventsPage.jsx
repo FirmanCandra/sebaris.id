@@ -4,6 +4,8 @@ import { api, resolveStorageUrl } from '../api/client'
 import PublicHeader from '../components/PublicHeader'
 import CheckVoteModal from '../components/CheckVoteModal'
 import SebarisLogo from '../components/SebarisLogo'
+import HeroBannerSkeleton from '../components/HeroBannerSkeleton'
+import HighlightCardsSkeleton from '../components/HighlightCardsSkeleton'
 import heroBg from '../assets/hero-bg.jpg'
 import {
   IconFlame,
@@ -77,7 +79,8 @@ export default function PublicEventsPage() {
   const [backendEvents, setBackendEvents] = useState([])
   const [backendCategories, setBackendCategories] = useState([])
   const [backendBanners, setBackendBanners] = useState([])
-  const [_loadingCategories, setLoadingCategories] = useState(true)
+  const [loadingData, setLoadingData] = useState(true)
+  const [loadedBannerImages, setLoadedBannerImages] = useState({})
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0)
   const [isBannerPaused, setIsBannerPaused] = useState(false)
   const [touchStartX, setTouchStartX] = useState(null)
@@ -131,7 +134,7 @@ export default function PublicEventsPage() {
       .catch(() => {
         // Backend offline or empty: gracefully maintain client resilience
       })
-      .finally(() => setLoadingCategories(false))
+      .finally(() => setLoadingData(false))
   }, [])
 
   // Separate active categories (Highlight) and past categories (Sudah Berlalu)
@@ -363,8 +366,10 @@ export default function PublicEventsPage() {
       {/* =========================================================================
           HERO BANNER CAROUSEL (Banner Gambar Murni Sesuai Kreenconnect.com)
           ========================================================================= */}
-      {heroBanners.length > 0 && (
-        <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-3 sm:pt-6 pb-1 w-full">
+      {loadingData ? (
+        <HeroBannerSkeleton />
+      ) : heroBanners.length > 0 ? (
+        <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-3 sm:pt-6 pb-1 w-full animate-fadeIn">
           <div
             className="relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-sm bg-gray-900 border border-[#E5EADF] dark:border-[#2C3529] aspect-[16/9] sm:aspect-[21/9] lg:aspect-[24/8] flex items-center group select-none ios-isolate"
             onMouseEnter={() => setIsBannerPaused(true)}
@@ -378,14 +383,30 @@ export default function PublicEventsPage() {
               style={{ transform: `translateX(-${currentBannerIndex * 100}%)` }}
             >
               {heroBanners.map((banner, idx) => {
+                const isImageLoaded = Boolean(loadedBannerImages[banner.id || idx])
+
                 const imageElement = (
-                  <img
-                    src={banner.image}
-                    alt={banner.title || 'Banner Event Sebaris'}
-                    className="w-full h-full object-cover object-center"
-                    draggable={false}
-                    loading={idx === 0 ? 'eager' : 'lazy'}
-                  />
+                  <div className="relative w-full h-full bg-[#E6ECE1] dark:bg-black/50 overflow-hidden">
+                    {/* Shimmer Placeholder before image finishes loading */}
+                    {!isImageLoaded && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-[#E6ECE1]/90 dark:bg-white/5">
+                        <div className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/50 dark:via-white/10 to-transparent pointer-events-none" />
+                      </div>
+                    )}
+                    <img
+                      src={banner.image}
+                      alt={banner.title || 'Banner Event Sebaris'}
+                      className={`w-full h-full object-cover object-center transition-opacity duration-700 ease-out ${
+                        isImageLoaded ? 'opacity-100' : 'opacity-0'
+                      }`}
+                      draggable={false}
+                      loading={idx === 0 ? 'eager' : 'lazy'}
+                      fetchPriority={idx === 0 ? 'high' : 'auto'}
+                      onLoad={() => {
+                        setLoadedBannerImages((prev) => ({ ...prev, [banner.id || idx]: true }))
+                      }}
+                    />
+                  </div>
                 )
 
                 return (
@@ -469,7 +490,7 @@ export default function PublicEventsPage() {
             )}
           </div>
         </section>
-      )}
+      ) : null}
 
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-10 space-y-8 sm:space-y-12 flex-1 w-full">
@@ -512,7 +533,9 @@ export default function PublicEventsPage() {
           </div>
 
           {/* Highlight Voting Cards Carousel / Slider */}
-          {filteredHighlights.length === 0 ? (
+          {loadingData ? (
+            <HighlightCardsSkeleton />
+          ) : filteredHighlights.length === 0 ? (
             <div className="py-16 px-6 text-center bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] rounded-2xl flex flex-col items-center justify-center">
               <div className="w-14 h-14 rounded-2xl bg-[#F2F8EC] dark:bg-white/5 text-[#70B325] flex items-center justify-center mb-3">
                 <IconFlame className="w-7 h-7" />
