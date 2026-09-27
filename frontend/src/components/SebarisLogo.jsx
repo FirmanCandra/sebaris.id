@@ -1,6 +1,7 @@
 import logoDark from '../assets/logo-sebaris-dark.png'
 import logoWhite from '../assets/logo-sebaris-white.png'
 import logoMark from '../assets/logo.png'
+import logoMarkBlack from '../assets/logo-black.png'
 
 export default function SebarisLogo({
   variant = 'default',
@@ -10,9 +11,10 @@ export default function SebarisLogo({
 }) {
   if (iconOnly) {
     const iconHeight = size === 'sm' ? 'h-6' : size === 'lg' ? 'h-10' : 'h-8'
+    const iconSrc = variant === 'white' ? logoMark : logoMarkBlack
     return (
       <img
-        src={logoMark}
+        src={iconSrc}
         alt="sebaris.id icon"
         className={`${iconHeight} w-auto object-contain select-none ${className}`}
         loading="eager"
