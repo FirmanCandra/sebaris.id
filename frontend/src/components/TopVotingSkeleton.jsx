@@ -28,10 +28,8 @@ export default function TopVotingSkeleton() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-6 relative z-10 space-y-4 sm:space-y-6">
         {/* Header with Trophy Icon */}
         <div className="flex items-center justify-between gap-3 border-b border-[#173007]/15 dark:border-white/15 pb-3 sm:pb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-[#173007]/20 dark:bg-white/20 flex items-center justify-center animate-pulse flex-shrink-0">
-              <span className="w-6 h-6 sm:w-7 sm:h-7 bg-[#173007]/30 dark:bg-white/30 rounded-full" />
-            </div>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-13 h-13 sm:w-18 sm:h-18 lg:w-22 lg:h-22 rounded-2xl bg-[#173007]/15 dark:bg-white/15 animate-pulse flex-shrink-0" />
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <div className="h-6 sm:h-8 w-28 sm:w-36 bg-[#173007]/25 dark:bg-white/30 rounded-lg animate-pulse" />

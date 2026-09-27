@@ -544,15 +544,13 @@ export default function PublicEventsPage() {
           
           {/* Section Header */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5 sm:gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white dark:bg-white/5 border border-orange-200/80 dark:border-white/10 shadow-xs flex items-center justify-center p-1.5 flex-shrink-0">
-                <img
-                  src={iconSectionHighlight}
-                  alt="Highlight Event Logo"
-                  className="w-full h-full object-contain select-none"
-                  loading="eager"
-                />
-              </div>
+            <div className="flex items-center gap-3 sm:gap-4">
+              <img
+                src={iconSectionHighlight}
+                alt="Highlight Event Logo"
+                className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 object-contain select-none flex-shrink-0 drop-shadow-sm hover:scale-105 transition-transform duration-300"
+                loading="eager"
+              />
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#262A25] dark:text-white">
@@ -766,15 +764,13 @@ export default function PublicEventsPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-6 relative z-10 space-y-4 sm:space-y-6">
             {/* Header with Trophy Icon */}
             <div className="flex items-center justify-between gap-3 border-b border-[#173007]/15 dark:border-white/15 pb-3 sm:pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-[#173007] dark:bg-white/10 border border-[#173007]/20 dark:border-white/20 flex items-center justify-center p-1.5 shadow-md flex-shrink-0">
-                  <img
-                    src={iconSectionTopVoting}
-                    alt="Top Voting Logo"
-                    className="w-full h-full object-contain select-none filter drop-shadow-xs"
-                    loading="eager"
-                  />
-                </div>
+              <div className="flex items-center gap-3 sm:gap-4">
+                <img
+                  src={iconSectionTopVoting}
+                  alt="Top Voting Logo"
+                  className="w-13 h-13 sm:w-18 sm:h-18 lg:w-22 lg:h-22 object-contain select-none flex-shrink-0 drop-shadow-md hover:scale-105 transition-transform duration-300"
+                  loading="eager"
+                />
                 <div>
                   <h2 className="text-lg sm:text-2xl lg:text-3xl font-black text-[#173007] dark:text-white tracking-tight flex items-center gap-2">
                     <span>Top Voting</span>
@@ -927,15 +923,13 @@ export default function PublicEventsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12 w-full">
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5 sm:gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white dark:bg-white/5 border border-gray-200/80 dark:border-white/10 shadow-xs flex items-center justify-center p-1.5 flex-shrink-0">
-                <img
-                  src={iconSectionPastEvents}
-                  alt="Event Selesai Logo"
-                  className="w-full h-full object-contain select-none"
-                  loading="eager"
-                />
-              </div>
+            <div className="flex items-center gap-3 sm:gap-4">
+              <img
+                src={iconSectionPastEvents}
+                alt="Event Selesai Logo"
+                className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 object-contain select-none flex-shrink-0 drop-shadow-sm hover:scale-105 transition-transform duration-300"
+                loading="eager"
+              />
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#262A25] dark:text-white">
