@@ -6,6 +6,7 @@ import CheckVoteModal from '../components/CheckVoteModal'
 import SebarisLogo from '../components/SebarisLogo'
 import HeroBannerSkeleton from '../components/HeroBannerSkeleton'
 import HighlightCardsSkeleton from '../components/HighlightCardsSkeleton'
+import TopVotingSkeleton from '../components/TopVotingSkeleton'
 import heroBg from '../assets/hero-bg.jpg'
 import {
   IconFlame,
@@ -76,6 +77,7 @@ const CACHE_KEYS = {
   EVENTS: 'sebaris_cache_events',
   CATEGORIES: 'sebaris_cache_categories',
   BANNERS: 'sebaris_cache_banners',
+  CHAMPIONS: 'sebaris_cache_champions',
 }
 
 function getLocalCache(key) {
@@ -104,6 +106,7 @@ export default function PublicEventsPage() {
   const [backendEvents, setBackendEvents] = useState(() => getLocalCache(CACHE_KEYS.EVENTS) || [])
   const [backendCategories, setBackendCategories] = useState(() => getLocalCache(CACHE_KEYS.CATEGORIES) || [])
   const [backendBanners, setBackendBanners] = useState(() => getLocalCache(CACHE_KEYS.BANNERS) || [])
+  const [champions, setChampions] = useState(() => getLocalCache(CACHE_KEYS.CHAMPIONS) || [])
   
   const hasCachedDataRef = useRef(
     Boolean(
@@ -112,13 +115,15 @@ export default function PublicEventsPage() {
     )
   )
 
+  const hasCachedChampionsRef = useRef(Boolean(getLocalCache(CACHE_KEYS.CHAMPIONS)?.length > 0))
+
   const [loadingData, setLoadingData] = useState(() => !hasCachedDataRef.current)
+  const [loadingChampions, setLoadingChampions] = useState(() => !hasCachedChampionsRef.current)
   const [loadedBannerImages, setLoadedBannerImages] = useState({})
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0)
   const [isBannerPaused, setIsBannerPaused] = useState(false)
   const [touchStartX, setTouchStartX] = useState(null)
   const [touchStartY, setTouchStartY] = useState(null)
-  const [champions, setChampions] = useState([])
 
   const highlightsSliderRef = useRef(null)
   const championsSliderRef = useRef(null)
@@ -182,42 +187,28 @@ export default function PublicEventsPage() {
   const activeCategories = backendCategories.filter((cat) => !isCategoryPast(cat))
   const pastCategories = backendCategories.filter((cat) => isCategoryPast(cat))
 
-  // Fetch #1 leading candidates across active categories for "Top Voting" spotlight
+  // Fetch #1 leading candidates across active categories via single fast endpoint
   useEffect(() => {
-    if (backendCategories.length === 0) return
     let isMounted = true
 
-    const targetCats = activeCategories.length > 0 ? activeCategories : backendCategories
-
-    Promise.all(
-      targetCats.slice(0, 6).map(async (cat) => {
-        try {
-          const res = await api(`/categories/${cat.id}/leaderboard`)
-          if (Array.isArray(res.data) && res.data.length > 0) {
-            const leader = res.data[0]
-            const totalVotes = res.data.reduce((sum, f) => sum + (f.vote_count || 0), 0)
-            return {
-              category: cat,
-              finalist: leader,
-              totalVotes,
-              percentage: totalVotes > 0 ? Math.round((leader.vote_count / totalVotes) * 100) : 0,
-            }
-          }
-          return null
-        } catch {
-          return null
+    api('/top-champions')
+      .then((res) => {
+        if (isMounted && Array.isArray(res?.data) && res.data.length > 0) {
+          setChampions(res.data)
+          setLocalCache(CACHE_KEYS.CHAMPIONS, res.data)
         }
       })
-    ).then((results) => {
-      if (isMounted) {
-        setChampions(results.filter(Boolean))
-      }
-    })
+      .catch(() => {
+        // Fallback resilient client
+      })
+      .finally(() => {
+        if (isMounted) setLoadingChampions(false)
+      })
 
     return () => {
       isMounted = false
     }
-  }, [backendCategories, activeCategories.length])
+  }, [])
 
   function handleOpenCheckVoteModal(code = '') {
     setCheckVoteModalQuery(code)
@@ -734,7 +725,9 @@ export default function PublicEventsPage() {
         {/* =========================================================================
             2. KEDUA: TOP VOTING (Dukung Terus Juara 1 Kamu)
             ========================================================================= */}
-        {champions.length > 0 && (
+        {loadingChampions ? (
+          <TopVotingSkeleton />
+        ) : champions.length > 0 ? (
           <section className="bg-gradient-to-r from-[#FFFDF6] via-[#FDF7EA] to-[#FBF0D9] dark:from-[#21281A] dark:via-[#1D2418] dark:to-[#181E14] border border-amber-300/60 dark:border-amber-500/30 rounded-3xl p-4 sm:p-7 shadow-xs space-y-4 sm:space-y-5 overflow-hidden">
             
             {/* Header with Trophy Icon */}
@@ -869,7 +862,7 @@ export default function PublicEventsPage() {
               )}
             </div>
           </section>
-        )}
+        ) : null}
 
         {/* =========================================================================
             3. KETIGA: EVENT / KATEGORI YANG SUDAH BERLALU

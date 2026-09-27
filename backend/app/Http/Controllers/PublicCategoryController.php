@@ -41,4 +41,63 @@ class PublicCategoryController extends Controller
 
         return new CategoryResource($category->loadCount('finalists'));
     }
+
+    /**
+     * Efficiently get top #1 leading finalists across active categories in a single query.
+     */
+    public function topChampions(): \Illuminate\Http\JsonResponse
+    {
+        $champions = Cache::remember('public.categories.top_champions', 15, function () {
+            $categories = Category::query()
+                ->where('status', 'active')
+                ->where(function ($q) {
+                    $q->whereNull('event_id')
+                      ->orWhereHas('event', function ($sq) {
+                          $sq->where('status', 'active');
+                      });
+                })
+                ->with(['event', 'finalists' => function ($q) {
+                    $q->orderByDesc('vote_count')->orderBy('name');
+                }])
+                ->ordered()
+                ->take(8)
+                ->get();
+
+            $result = [];
+            foreach ($categories as $cat) {
+                $finalists = $cat->finalists;
+                if ($finalists->isEmpty()) continue;
+                $leader = $finalists->first();
+                $totalVotes = $finalists->sum('vote_count');
+                $pct = $totalVotes > 0 ? (int) round(($leader->vote_count / $totalVotes) * 100) : 0;
+
+                $result[] = [
+                    'category' => [
+                        'id' => $cat->id,
+                        'name' => $cat->name,
+                        'slug' => $cat->slug,
+                        'tier' => $cat->tier,
+                        'event' => $cat->event ? [
+                            'id' => $cat->event->id,
+                            'name' => $cat->event->name,
+                        ] : null,
+                    ],
+                    'finalist' => [
+                        'id' => $leader->id,
+                        'name' => $leader->name,
+                        'number' => $leader->number,
+                        'photo' => $leader->photo,
+                        'photo_url' => $leader->photo_url,
+                        'vote_count' => $leader->vote_count,
+                    ],
+                    'totalVotes' => $totalVotes,
+                    'percentage' => $pct,
+                ];
+            }
+            return $result;
+        });
+
+        return response()->json(['data' => $champions]);
+    }
 }
+

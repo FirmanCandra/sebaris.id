@@ -57,6 +57,7 @@ Route::get('deploy-migrate', function (\Illuminate\Http\Request $request) {
 
 Route::get('events', [PublicEventController::class, 'index']);
 Route::get('categories', [PublicCategoryController::class, 'index']);
+Route::get('top-champions', [PublicCategoryController::class, 'topChampions']);
 Route::get('categories/{category}', [PublicCategoryController::class, 'show']);
 Route::get('categories/{category}/finalists', [PublicFinalistController::class, 'index']);
 Route::get('categories/{category}/leaderboard', [PublicFinalistController::class, 'leaderboard']);
