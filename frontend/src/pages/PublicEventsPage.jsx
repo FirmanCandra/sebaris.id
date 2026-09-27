@@ -531,12 +531,13 @@ export default function PublicEventsPage() {
       ) : null}
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-10 space-y-8 sm:space-y-12 flex-1 w-full">
+      <main className="flex-1 w-full flex flex-col">
         
         {/* =========================================================================
             1. PERTAMA: HIGHLIGHT EVENT / KATEGORI
             ========================================================================= */}
-        <section id="voting-section" className="space-y-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 sm:pt-10 pb-4 sm:pb-6 w-full">
+          <section id="voting-section" className="space-y-4">
           
           {/* Section Header */}
           <div className="flex items-center justify-between">
@@ -721,29 +722,54 @@ export default function PublicEventsPage() {
             </div>
           )}
         </section>
+      </div>
 
-        {/* =========================================================================
-            2. KEDUA: TOP VOTING (Dukung Terus Juara 1 Kamu)
-            ========================================================================= */}
-        {loadingChampions ? (
-          <TopVotingSkeleton />
-        ) : champions.length > 0 ? (
-          <section className="bg-gradient-to-r from-[#FFFDF6] via-[#FDF7EA] to-[#FBF0D9] dark:from-[#21281A] dark:via-[#1D2418] dark:to-[#181E14] border border-amber-300/60 dark:border-amber-500/30 rounded-3xl p-4 sm:p-7 shadow-xs space-y-4 sm:space-y-5 overflow-hidden">
-            
+      {/* =========================================================================
+          2. KEDUA: TOP VOTING (Kandidat Juara Terdepan - Organic Green Wave)
+          ========================================================================= */}
+      {loadingChampions ? (
+        <TopVotingSkeleton />
+      ) : champions.length > 0 ? (
+        <section className="w-full relative overflow-hidden bg-gradient-to-br from-[#244C12] via-[#356B19] to-[#204410] dark:from-[#0E1A0A] dark:via-[#162E10] dark:to-[#0F200B] transition-colors select-none">
+          {/* Top Wave Transition (Page background #F8FAF7 / #121612 into lush green) */}
+          <div className="w-full overflow-hidden leading-none select-none pointer-events-none">
+            <svg
+              viewBox="0 0 1440 74"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-full h-7 sm:h-12 lg:h-16 block text-[#F8FAF7] dark:text-[#121612] fill-current"
+              preserveAspectRatio="none"
+            >
+              <path d="M0,0 L1440,0 L1440,32 C1200,68 960,10 720,45 C480,80 240,18 0,42 Z" />
+            </svg>
+          </div>
+
+          {/* Subtle Liquid Wave Accents in Background */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-10 dark:opacity-15">
+            <svg className="absolute w-[200%] h-full -left-1/2 top-0" viewBox="0 0 1440 400" fill="none" preserveAspectRatio="none">
+              <path d="M0,160 C320,300 420,60 740,200 C1060,340 1200,120 1440,220 L1440,400 L0,400 Z" fill="white" />
+            </svg>
+            <svg className="absolute w-[200%] h-full -left-1/4 top-10" viewBox="0 0 1440 400" fill="none" preserveAspectRatio="none">
+              <path d="M0,220 C280,100 520,320 800,180 C1080,40 1260,260 1440,140 L1440,400 L0,400 Z" fill="#D0FE15" />
+            </svg>
+          </div>
+
+          {/* Inner Content */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-6 relative z-10 space-y-4 sm:space-y-6">
             {/* Header with Trophy Icon */}
-            <div className="flex items-center justify-between gap-2 border-b border-amber-200/60 dark:border-amber-500/20 pb-3 sm:pb-4">
+            <div className="flex items-center justify-between gap-3 border-b border-white/15 pb-3 sm:pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-400 text-amber-950 flex items-center justify-center font-black text-xl shadow-xs flex-shrink-0">
-                  <IconTrophy className="w-5 h-5" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-[#D0FE15] to-[#86C839] text-[#1E3808] flex items-center justify-center font-black text-xl shadow-lg flex-shrink-0">
+                  <IconTrophy className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div>
-                  <h2 className="text-lg sm:text-2xl font-black text-[#262A25] dark:text-white tracking-tight flex items-center gap-2">
+                  <h2 className="text-lg sm:text-2xl lg:text-3xl font-black text-white tracking-tight flex items-center gap-2">
                     <span>Top Voting</span>
-                    <span className="text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-amber-400/90 text-amber-950">
+                    <span className="text-[10px] sm:text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-[#D0FE15] text-[#1E3808] shadow-xs">
                       Top Ranking
                     </span>
                   </h2>
-                  <p className="text-xs text-gray-600 dark:text-gray-300">
+                  <p className="text-xs sm:text-sm text-emerald-100/90 dark:text-emerald-200/80 font-medium">
                     Kandidat terdepan dengan perolehan suara tertinggi saat ini dari ajang pemilihan aktif
                   </p>
                 </div>
@@ -752,7 +778,7 @@ export default function PublicEventsPage() {
               {champions.length > 0 && (
                 <Link
                   to={`/voting/${champions[0]?.category.slug || champions[0]?.category.id}`}
-                  className="hidden sm:inline-flex items-center gap-1 text-sm font-black text-amber-700 dark:text-amber-400 hover:underline whitespace-nowrap"
+                  className="hidden sm:inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-[#D0FE15] hover:text-white transition-colors bg-white/10 hover:bg-white/20 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 whitespace-nowrap"
                 >
                   <span>Lihat Lebih Banyak</span>
                   <IconChevronRight className="w-4 h-4" />
@@ -766,7 +792,7 @@ export default function PublicEventsPage() {
                 <button
                   type="button"
                   onClick={() => scrollSlider(championsSliderRef, 'left')}
-                  className="hidden sm:flex absolute -left-3.5 lg:-left-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white dark:bg-[#1A2018] shadow-md border border-amber-200 dark:border-[#2C3529] text-amber-950 dark:text-gray-200 items-center justify-center hover:bg-amber-50 dark:hover:bg-white/10 hover:scale-105 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100"
+                  className="hidden sm:flex absolute -left-3.5 lg:-left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white dark:bg-[#1E261B] shadow-xl border border-white/60 dark:border-white/10 text-gray-800 dark:text-gray-100 items-center justify-center hover:bg-gray-50 dark:hover:bg-white/10 hover:scale-108 active:scale-95 transition-all cursor-pointer opacity-95 hover:opacity-100"
                   aria-label="Geser ke kiri"
                 >
                   <IconChevronLeft className="w-5 h-5" />
@@ -778,7 +804,7 @@ export default function PublicEventsPage() {
                 <button
                   type="button"
                   onClick={() => scrollSlider(championsSliderRef, 'right')}
-                  className="hidden sm:flex absolute -right-3.5 lg:-right-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white dark:bg-[#1A2018] shadow-md border border-amber-200 dark:border-[#2C3529] text-amber-950 dark:text-gray-200 items-center justify-center hover:bg-amber-50 dark:hover:bg-white/10 hover:scale-105 active:scale-95 transition-all cursor-pointer opacity-90 hover:opacity-100"
+                  className="hidden sm:flex absolute -right-3.5 lg:-right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white dark:bg-[#1E261B] shadow-xl border border-white/60 dark:border-white/10 text-gray-800 dark:text-gray-100 items-center justify-center hover:bg-gray-50 dark:hover:bg-white/10 hover:scale-108 active:scale-95 transition-all cursor-pointer opacity-95 hover:opacity-100"
                   aria-label="Geser ke kanan"
                 >
                   <IconChevronRight className="w-5 h-5" />
@@ -793,7 +819,7 @@ export default function PublicEventsPage() {
                 {champions.map(({ category, finalist, totalVotes, percentage }) => (
                   <article
                     key={finalist.id}
-                    className="flex-shrink-0 w-[74vw] max-w-[270px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl overflow-hidden bg-white dark:bg-[#1A2018] border border-amber-200 dark:border-amber-500/30 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+                    className="flex-shrink-0 w-[74vw] max-w-[270px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl overflow-hidden bg-white dark:bg-[#1E261B] border border-white/70 dark:border-white/10 shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1"
                   >
                     {/* Contestant Portrait Photo (52%) */}
                     <div className="relative h-[52%] w-full overflow-hidden bg-gray-100 dark:bg-black/40 flex items-center justify-center">
@@ -801,46 +827,50 @@ export default function PublicEventsPage() {
                         <img
                           src={resolveStorageUrl(finalist.photo_url || finalist.photo)}
                           alt={finalist.name}
-                          className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-cover object-top group-hover:scale-108 transition-transform duration-500"
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-950 to-gray-900 text-amber-300 font-black text-3xl">
-                          {finalist.name.slice(0, 2).toUpperCase()}
+                        <div className="w-full h-full flex items-center justify-center bg-gray-800 text-amber-400 font-black text-2xl">
+                          {finalist.name.charAt(0)}
                         </div>
                       )}
 
-                      {/* Top Crown Badge */}
-                      <span className="absolute top-2.5 left-2.5 bg-amber-400 text-amber-950 text-[10px] font-black px-2 py-0.5 rounded-lg shadow-sm inline-flex items-center gap-1">
+                      {/* Top-Left #1 Juara Badge */}
+                      <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-black text-[10px] sm:text-[11px] shadow-sm tracking-tight">
                         <IconCrown className="w-3 h-3 text-amber-950" />
                         <span>#1 Top Vote</span>
                       </span>
 
-                      {/* Top Right Percentage Pill */}
-                      <span className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-md text-amber-300 font-extrabold text-[10px] px-2 py-0.5 rounded-full border border-white/20">
+                      {/* Top-Right Vote Percentage Pill */}
+                      <span className="absolute top-2.5 right-2.5 inline-flex items-center px-2 py-0.5 rounded-full bg-black/65 backdrop-blur-md border border-white/20 text-white font-extrabold text-[10px] shadow-xs">
                         {percentage}%
                       </span>
                     </div>
 
                     {/* Candidate Details (48%) */}
-                    <div className="h-[48%] p-3 sm:p-3.5 flex flex-col justify-between space-y-1.5 bg-white dark:bg-[#1A2018]">
+                    <div className="h-[48%] p-3 sm:p-4 flex flex-col justify-between space-y-2 bg-white dark:bg-[#1E261B]">
                       <div className="space-y-1">
-                        <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider block truncate">
+                        <p className="text-[10px] font-extrabold uppercase tracking-wider text-[#558223] dark:text-[#86C839] truncate">
                           {category.name}
-                        </span>
-                        <h3 className="font-black text-xs sm:text-sm text-[#262A25] dark:text-white truncate">
+                        </p>
+                        <h3 className="font-black text-xs sm:text-sm text-[#262A25] dark:text-white truncate group-hover:text-[#558223] dark:group-hover:text-[#86C839] transition-colors">
                           {finalist.name}
                         </h3>
-                        <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
-                          {finalist.vote_count.toLocaleString('id-ID')} suara
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400 font-semibold flex items-center gap-1">
+                          <span>{finalist.vote_count.toLocaleString('id-ID')} suara</span>
                         </p>
                       </div>
 
                       {/* Fast Vote Button */}
                       <Link
                         to={`/voting/${category.slug || category.id}?finalist=${finalist.id}`}
-                        className="w-full py-1.5 sm:py-2 bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-xs rounded-xl text-center no-underline flex items-center justify-center gap-1 shadow-xs active:scale-98 transition-all"
+                        className="w-full py-2 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-black text-xs rounded-xl text-center no-underline flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md active:scale-98 transition-all"
                       >
-                        <IconZap className="w-3.5 h-3.5" />
+                        <IconZap className="w-3.5 h-3.5 text-[#D0FE15]" />
                         <span>Dukung Juara 1</span>
                       </Link>
                     </div>
@@ -853,21 +883,36 @@ export default function PublicEventsPage() {
                 <div className="sm:hidden flex items-center justify-center pt-3 pb-1">
                   <Link
                     to={`/voting/${champions[0]?.category.slug || champions[0]?.category.id}`}
-                    className="inline-flex items-center gap-1 text-sm font-black text-amber-700 dark:text-amber-400 hover:underline"
+                    className="inline-flex items-center gap-1 text-xs font-black text-[#D0FE15] hover:underline bg-white/10 px-3 py-1.5 rounded-full border border-white/20"
                   >
                     <span>Lihat Lebih Banyak</span>
-                    <IconChevronRight className="w-4 h-4" />
+                    <IconChevronRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               )}
             </div>
-          </section>
-        ) : null}
+          </div>
 
-        {/* =========================================================================
-            3. KETIGA: EVENT / KATEGORI YANG SUDAH BERLALU
-            ========================================================================= */}
-        <section className="space-y-4 pt-2">
+          {/* Bottom Wave Transition */}
+          <div className="w-full overflow-hidden leading-none select-none pointer-events-none">
+            <svg
+              viewBox="0 0 1440 74"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-full h-7 sm:h-12 lg:h-16 block text-[#F8FAF7] dark:text-[#121612] fill-current"
+              preserveAspectRatio="none"
+            >
+              <path d="M0,74 L1440,74 L1440,42 C1200,12 960,65 720,28 C480,-8 240,55 0,32 Z" />
+            </svg>
+          </div>
+        </section>
+      ) : null}
+
+      {/* =========================================================================
+          3. KETIGA: EVENT / KATEGORI YANG SUDAH BERLALU
+          ========================================================================= */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12 w-full">
+        <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 flex items-center justify-center">
@@ -1021,8 +1066,9 @@ export default function PublicEventsPage() {
             </div>
           )}
         </section>
+      </div>
 
-      </main>
+    </main>
 
       {/* Brand Footer */}
       <footer className="mt-16 bg-white dark:bg-[#121612] border-t border-[#E5EADF] dark:border-[#2C3529] py-10 transition-colors">
