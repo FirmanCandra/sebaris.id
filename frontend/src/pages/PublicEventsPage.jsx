@@ -8,6 +8,9 @@ import HeroBannerSkeleton from '../components/HeroBannerSkeleton'
 import HighlightCardsSkeleton from '../components/HighlightCardsSkeleton'
 import TopVotingSkeleton from '../components/TopVotingSkeleton'
 import heroBg from '../assets/hero-bg.jpg'
+import iconSectionHighlight from '../assets/icon-section-highlight.png'
+import iconSectionTopVoting from '../assets/icon-section-topvoting.png'
+import iconSectionPastEvents from '../assets/icon-section-pastevents.png'
 import {
   IconFlame,
   IconClock,
@@ -541,9 +544,14 @@ export default function PublicEventsPage() {
           
           {/* Section Header */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 flex items-center justify-center">
-                <IconFlame className="w-5 h-5" />
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white dark:bg-white/5 border border-orange-200/80 dark:border-white/10 shadow-xs flex items-center justify-center p-1.5 flex-shrink-0">
+                <img
+                  src={iconSectionHighlight}
+                  alt="Highlight Event Logo"
+                  className="w-full h-full object-contain select-none"
+                  loading="eager"
+                />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -759,8 +767,13 @@ export default function PublicEventsPage() {
             {/* Header with Trophy Icon */}
             <div className="flex items-center justify-between gap-3 border-b border-[#173007]/15 dark:border-white/15 pb-3 sm:pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#173007] text-[#D2FF0F] dark:bg-[#D2FF0F] dark:text-[#173007] flex items-center justify-center font-black text-xl shadow-md flex-shrink-0">
-                  <IconTrophy className="w-5 h-5 sm:w-6 sm:h-6" />
+                <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-[#173007] dark:bg-white/10 border border-[#173007]/20 dark:border-white/20 flex items-center justify-center p-1.5 shadow-md flex-shrink-0">
+                  <img
+                    src={iconSectionTopVoting}
+                    alt="Top Voting Logo"
+                    className="w-full h-full object-contain select-none filter drop-shadow-xs"
+                    loading="eager"
+                  />
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-2xl lg:text-3xl font-black text-[#173007] dark:text-white tracking-tight flex items-center gap-2">
@@ -914,9 +927,14 @@ export default function PublicEventsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12 w-full">
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 flex items-center justify-center">
-                <IconClock className="w-5 h-5" />
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white dark:bg-white/5 border border-gray-200/80 dark:border-white/10 shadow-xs flex items-center justify-center p-1.5 flex-shrink-0">
+                <img
+                  src={iconSectionPastEvents}
+                  alt="Event Selesai Logo"
+                  className="w-full h-full object-contain select-none"
+                  loading="eager"
+                />
               </div>
               <div>
                 <div className="flex items-center gap-2">
