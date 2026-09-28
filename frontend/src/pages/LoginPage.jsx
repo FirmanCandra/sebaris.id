@@ -12,6 +12,9 @@ import {
   IconEyeOff,
   IconSun,
   IconMoon,
+  IconLock,
+  IconShieldCheck,
+  IconCheckVote,
 } from '../components/Icons'
 
 export default function LoginPage() {
@@ -194,10 +197,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-between bg-[#F8FAF7] dark:bg-[#0C110D] text-[#262A25] dark:text-[#F3F5F1] transition-colors duration-300 px-4 py-6 sm:py-10">
+    <div className="min-h-screen w-full flex flex-col justify-between bg-[#F7F9F6] dark:bg-[#0A0F0B] text-[#262A25] dark:text-[#F3F5F1] transition-colors duration-300 p-4 sm:p-6 lg:p-10">
       
-      {/* 1. Top Bar: Back Link & Theme Toggle */}
-      <header className="w-full max-w-[460px] mx-auto flex items-center justify-between">
+      {/* 1. Top Navigation Bar */}
+      <header className="w-full max-w-[1080px] mx-auto flex items-center justify-between pb-4 sm:pb-6">
         <Link
           to="/"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-[#70B325] dark:hover:text-[#8FE032] transition-colors"
@@ -209,7 +212,7 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={toggleTheme}
-          className="w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer bg-white dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700/80 text-neutral-700 dark:text-amber-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 shadow-2xs"
+          className="w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-amber-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 shadow-2xs"
           aria-label="Ubah Tema Tampilan"
           title={`Ganti ke mode ${theme === 'dark' ? 'terang' : 'gelap'}`}
         >
@@ -221,25 +224,105 @@ export default function LoginPage() {
         </button>
       </header>
 
-      {/* 2. Main Centered Card Container */}
-      <main className="w-full max-w-[460px] mx-auto my-auto py-6 sm:py-8">
+      {/* 2. Main Dual-Card Layout Container */}
+      <main className="w-full max-w-[1080px] mx-auto my-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch py-2 sm:py-4">
         
-        {/* Brand Logo centered above Card */}
-        <div className="flex flex-col items-center justify-center mb-6">
-          <Link
-            to="/"
-            className="inline-block focus:outline-none focus:ring-2 focus:ring-[#70B325] rounded-xl p-1"
-            aria-label="Sebaris.id Beranda"
-          >
-            <SebarisLogo size="lg" variant={theme === 'dark' ? 'white' : 'default'} />
-          </Link>
-        </div>
-
-        {/* The Auth Card */}
-        <div className="bg-white dark:bg-[#141A15] border border-neutral-200/90 dark:border-neutral-800/90 rounded-2xl shadow-xl shadow-neutral-900/5 p-6 sm:p-8 space-y-6">
+        {/* =========================================================================
+            LEFT CARD: EDITORIAL & BRAND MISSION CARD
+            ========================================================================= */}
+        <aside aria-label="Informasi Platform Sebaris.id" className="hidden lg:flex lg:col-span-5 bg-[#141B15] text-white rounded-3xl p-8 xl:p-10 border border-[#232F24] shadow-xl flex-col justify-between select-none">
           
-          {/* Card Heading */}
-          <div className="space-y-1.5 text-center">
+          {/* Card Header: Brand Logo & Platform Badge */}
+          <div>
+            <Link to="/" className="inline-block focus:outline-none" aria-label="Sebaris.id Beranda">
+              <SebarisLogo size="md" variant="white" />
+            </Link>
+            <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white/5 border border-white/10 text-xs font-medium text-emerald-400">
+              <span>Sistem E-Voting Resmi</span>
+            </div>
+          </div>
+
+          {/* Card Body: Headline & 3 Key Value Pillars */}
+          <div className="my-auto py-6 space-y-6">
+            <div className="space-y-2.5">
+              <h2 className="text-xl xl:text-2xl font-bold tracking-tight text-white leading-snug">
+                Pemungutan suara digital yang aman, terbuka, dan akuntabel.
+              </h2>
+              <p className="text-xs xl:text-sm text-neutral-300 leading-relaxed">
+                Mendukung pemilihan organisasi, institusi pendidikan, dan ajang penghargaan dengan integritas data yang terjamin.
+              </p>
+            </div>
+
+            {/* Authentic Core Features */}
+            <div className="space-y-4 pt-2">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mt-0.5 flex-shrink-0">
+                  <IconShieldCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-semibold text-white">
+                    Otentikasi Pemilih Sah
+                  </h3>
+                  <p className="text-xs text-neutral-400 mt-0.5 leading-relaxed">
+                    Verifikasi email resmi dan Google Sign-In untuk memastikan prinsip satu suara sah untuk satu pemilih.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mt-0.5 flex-shrink-0">
+                  <IconLock className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-semibold text-white">
+                    Kerahasiaan Hak Pilih
+                  </h3>
+                  <p className="text-xs text-neutral-400 mt-0.5 leading-relaxed">
+                    Pilihan disimpan secara aman dalam bilik suara terenkripsi tanpa intervensi pihak luar.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mt-0.5 flex-shrink-0">
+                  <IconCheckVote className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-semibold text-white">
+                    Tanda Terima Resmi
+                  </h3>
+                  <p className="text-xs text-neutral-400 mt-0.5 leading-relaxed">
+                    Setiap voting menghasilkan kode referensi digital sebagai bukti suara telah tercatat.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Card Footer: Simple Editorial Quote */}
+          <div className="pt-6 border-t border-white/10 text-xs text-neutral-400">
+            <p className="italic text-neutral-300">
+              &ldquo;Kemudahan akses dan transparansi adalah fondasi kepercayaan dalam setiap proses pemilihan.&rdquo;
+            </p>
+            <p className="font-semibold text-white mt-1.5">
+              Komitmen Sebaris.id
+            </p>
+          </div>
+
+        </aside>
+
+        {/* =========================================================================
+            RIGHT CARD: AUTHENTICATION FORM CARD
+            ========================================================================= */}
+        <section aria-label="Formulir Autentikasi" className="lg:col-span-7 bg-white dark:bg-[#141A15] border border-neutral-200/90 dark:border-neutral-800/90 rounded-3xl p-6 sm:p-8 xl:p-10 shadow-xl flex flex-col justify-between space-y-6">
+          
+          {/* Brand Logo for Mobile */}
+          <div className="lg:hidden flex items-center justify-center pb-1">
+            <SebarisLogo size="md" variant={theme === 'dark' ? 'white' : 'default'} />
+          </div>
+
+          {/* Heading */}
+          <div className="space-y-1.5 text-center sm:text-left">
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
               {authMode === 'login' ? 'Masuk ke Akun' : 'Daftar Akun Baru'}
             </h1>
@@ -289,7 +372,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Google SSO Section */}
+          {/* Google SSO Container */}
           <div className="space-y-3">
             <div className="flex justify-center w-full min-h-[44px]">
               {/* Google official rendered button container */}
@@ -549,17 +632,17 @@ export default function LoginPage() {
             )}
           </div>
 
-        </div>
+          {/* Legal Disclaimer */}
+          <div className="pt-2 text-center text-[11px] text-neutral-400 dark:text-neutral-500 border-t border-neutral-100 dark:border-neutral-800/80">
+            Dengan melanjutkan, Anda menyetujui Ketentuan Layanan dan Kebijakan Privasi Sebaris.id.
+          </div>
 
-        {/* Legal Disclaimer below card */}
-        <div className="w-full max-w-[460px] mx-auto pt-6 text-center text-[11px] text-neutral-400 dark:text-neutral-500">
-          Dengan melanjutkan, Anda menyetujui Ketentuan Layanan dan Kebijakan Privasi Sebaris.id.
-        </div>
+        </section>
 
       </main>
 
       {/* 3. Bottom Footer Note */}
-      <footer className="w-full max-w-[460px] mx-auto text-center text-[11px] text-neutral-400 dark:text-neutral-600 select-none py-2">
+      <footer className="w-full max-w-[1080px] mx-auto text-center text-[11px] text-neutral-400 dark:text-neutral-600 select-none py-2">
         <span>Sebaris.id &bull; Platform Pemilihan Digital Resmi</span>
       </footer>
 
