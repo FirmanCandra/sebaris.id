@@ -318,6 +318,14 @@ export default function CategoryVotingPage() {
     category?.name || (loading ? 'Memuat data voting...' : 'Kategori Voting')
 
   const isFrozen = Boolean(category?.freeze_leaderboard)
+  const posterSrc = useMemo(() => {
+    return resolveStorageUrl(
+      category?.thumbnail ||
+      category?.thumbnail_url ||
+      category?.event?.thumbnail ||
+      category?.event?.thumbnail_url
+    )
+  }, [category])
 
   return (
     <div className="min-h-screen bg-[#F8FAF7] dark:bg-[#121612] text-[#262A25] dark:text-[#F3F5F1] flex flex-col font-sans transition-colors duration-300">
@@ -325,14 +333,31 @@ export default function CategoryVotingPage() {
       {/* Sticky Header */}
       <PublicHeader />
 
-      {/* TOP OFFICIAL EVENT HERO BANNER */}
-      <section className="relative bg-gradient-to-br from-[#123E2A] via-[#102D1F] to-[#0A1D14] text-white border-b border-[#2C3529] overflow-hidden -mt-16 sm:-mt-20 pt-20 sm:pt-24 pb-6 sm:pb-8">
-        <div className="absolute inset-0 bg-radial from-emerald-500/10 via-transparent to-transparent pointer-events-none" />
+      {/* =========================================================================
+          TOP OFFICIAL EVENT HERO BANNER (CINEMATIC AMBIENT HORIZON)
+          ========================================================================= */}
+      <section className="relative text-white border-b border-[#2C3529] overflow-hidden -mt-16 sm:-mt-20 pt-20 sm:pt-24 pb-8 sm:pb-12 bg-[#09130C]">
+        {/* Ambient Poster Blur Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
+          {posterSrc ? (
+            <img
+              src={posterSrc}
+              alt=""
+              className="w-full h-full object-cover object-center filter blur-3xl scale-125 opacity-25 transform -translate-y-8"
+              aria-hidden="true"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[#123E2A] via-[#0E291B] to-[#08170F]" />
+          )}
+          {/* Dark Vignette / Gradient Scrim for 100% Crisp Typography Contrast */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#09130C]/80 via-[#09130C]/90 to-[#09130C]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#70B325]/15 via-transparent to-transparent" />
+        </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 relative z-10 space-y-5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 relative z-10 space-y-6">
           
-          {/* Breadcrumb Row */}
-          <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
+          {/* Breadcrumb Navigation */}
+          <nav className="flex items-center gap-1.5 text-xs text-gray-300 font-medium">
             <Link to="/" className="hover:text-white transition-colors no-underline">
               Beranda
             </Link>
@@ -343,49 +368,62 @@ export default function CategoryVotingPage() {
                 <span className="opacity-40">/</span>
               </>
             )}
-            <span className="text-emerald-300 font-semibold truncate max-w-[180px] sm:max-w-none">
+            <span className="text-emerald-400 font-semibold truncate max-w-[180px] sm:max-w-none">
               {categoryTitle}
             </span>
           </nav>
 
-          {/* Event Header Information & Live Countdown Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-center">
+          {/* Main 3-Column Hero Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
             
-            {/* Left Column (8 cols): Event Eyebrow, Title, Tags, and Metrics */}
-            <div className="lg:col-span-8 space-y-3 sm:space-y-3.5 text-left">
-              
-              {/* Event Context & Organizer (Subtle Eyebrow, no pill soup) */}
-              {(category?.event?.name || category?.organizer) && (
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-emerald-200/90 font-medium">
-                  {category?.event?.name && (
-                    <span className="font-semibold text-white/95">{category.event.name}</span>
-                  )}
-                  {category?.event?.name && category?.organizer && (
-                    <span className="text-emerald-400/50 hidden sm:inline">•</span>
-                  )}
-                  {category?.organizer && (
-                    <span className="text-gray-300 text-[11px] sm:text-xs">
-                      Oleh <span className="text-white font-medium">{category.organizer}</span>
-                    </span>
-                  )}
-                </div>
-              )}
+            {/* 1. LEFT POSTER CARD (3 cols on lg) */}
+            <div className="w-full flex justify-center lg:justify-start lg:col-span-3">
+              <div className="relative w-44 sm:w-52 lg:w-full max-w-[260px] aspect-[3/4] rounded-2xl overflow-hidden border border-white/20 shadow-2xl bg-black/60 group/poster select-none flex-shrink-0">
+                {posterSrc ? (
+                  <img
+                    src={posterSrc}
+                    alt={categoryTitle}
+                    className="w-full h-full object-cover group-hover/poster:scale-105 transition-transform duration-500"
+                    loading="eager"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-[#152217] text-emerald-400 p-4 text-center">
+                    <IconTrophy className="w-12 h-12 mb-2 opacity-60 text-[#70B325]" />
+                    <span className="text-xs font-bold text-gray-300 line-clamp-2">{categoryTitle}</span>
+                  </div>
+                )}
 
-              {/* Status & Tier Chips (Focused pills, max 2-3) */}
+                {/* Live Status Pill Overlay on Poster */}
+                <div className="absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur-md border border-white/20 text-[10px] font-black uppercase text-white shadow-xs">
+                  <span className={`w-1.5 h-1.5 rounded-full ${isVotingClosed ? 'bg-gray-400' : 'bg-[#70B325] animate-ping'}`} />
+                  <span>{isVotingClosed ? 'Closed' : 'Live'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. CENTER EVENT DETAILS (5 cols on lg) */}
+            <div className="lg:col-span-5 xl:col-span-5 space-y-3.5 text-left">
+              
+              {/* Official Organizer Badge with Verified Check */}
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[11px] font-bold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  {isVotingClosed ? 'Selesai' : 'Sedang Berlangsung'}
-                </span>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 dark:bg-black/40 backdrop-blur-md border border-white/15 text-xs text-white shadow-xs">
+                  <span className="w-4 h-4 rounded-full bg-[#70B325] flex items-center justify-center flex-shrink-0">
+                    <IconCheck className="w-2.5 h-2.5 text-white stroke-[3]" />
+                  </span>
+                  <span className="text-gray-300 font-medium">Penyelenggara:</span>
+                  <span className="font-extrabold text-white truncate max-w-[200px] sm:max-w-xs">
+                    {category?.organizer || category?.event?.name || 'Sebaris Official'}
+                  </span>
+                </div>
 
                 {category?.tier && (
                   <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border backdrop-blur-md ${
                       category.tier === 'premier'
-                        ? 'bg-amber-400/15 border-amber-300/30 text-amber-200'
+                        ? 'bg-amber-400/20 border-amber-300/40 text-amber-200'
                         : category.tier === 'sekunder'
-                        ? 'bg-slate-300/15 border-slate-300/30 text-slate-200'
-                        : 'bg-orange-400/15 border-orange-300/30 text-orange-200'
+                        ? 'bg-slate-300/20 border-slate-300/40 text-slate-200'
+                        : 'bg-orange-400/20 border-orange-300/40 text-orange-200'
                     }`}
                   >
                     {category.tier === 'premier' ? (
@@ -400,28 +438,28 @@ export default function CategoryVotingPage() {
                 )}
 
                 {category?.allow_free_vote !== false && !isVotingClosed && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 border border-white/20 text-gray-200 text-[11px] font-medium">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#70B325]/20 border border-[#70B325]/40 text-[#D0FE15] text-[11px] font-bold backdrop-blur-md">
                     <IconZap className="w-3 h-3 text-[#D0FE15]" />
                     <span>1x Vote Gratis</span>
                   </span>
                 )}
               </div>
 
-              {/* Event Main Title */}
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight leading-snug">
+              {/* Main Category Title */}
+              <h1 className="text-2xl sm:text-3xl lg:text-3xl xl:text-4xl font-black text-white tracking-tight leading-tight">
                 {categoryTitle}
               </h1>
 
-              {/* Event Description Snippet */}
+              {/* Description */}
               {category?.description && (
-                <p className="text-xs sm:text-sm text-gray-300/90 max-w-2xl leading-relaxed line-clamp-2">
+                <p className="text-xs sm:text-sm text-gray-300 leading-relaxed line-clamp-3">
                   {category.description}
                 </p>
               )}
 
-              {/* Event Metrics - Sleek Compact Ribbon (Replaces 4 bulky boxes) */}
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 text-xs sm:text-sm">
-                <div className="flex items-center gap-1.5">
+              {/* Metrics Ribbon */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-xs sm:text-sm">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-black/40 border border-white/10">
                   <span className="text-gray-400 font-medium">Total Suara:</span>
                   <span className="font-black text-[#D0FE15] text-sm sm:text-base">
                     {isFrozen ? (
@@ -434,25 +472,39 @@ export default function CategoryVotingPage() {
                     )}
                   </span>
                 </div>
-                <span className="text-white/20 hidden sm:inline">•</span>
-                <div className="flex items-center gap-1.5">
+
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-black/40 border border-white/10">
                   <span className="text-gray-400 font-medium">Kandidat:</span>
                   <span className="font-bold text-white">{finalists.length} Finalis</span>
                 </div>
-                <span className="text-white/20 hidden sm:inline">•</span>
-                <div className="flex items-center gap-1.5">
+
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-black/40 border border-white/10">
                   <span className="text-gray-400 font-medium">Biaya:</span>
                   <span className="font-bold text-white">
                     Rp {(category?.price_per_vote || 1000).toLocaleString('id-ID')}/vote
                   </span>
                 </div>
               </div>
+
+              {/* Quick Jump to Vote Button */}
+              {!isVotingClosed && (
+                <div className="pt-1.5">
+                  <button
+                    type="button"
+                    onClick={() => scrollToTab('card-finalis')}
+                    className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-[#70B325]/25 active:scale-98 transition-all cursor-pointer"
+                  >
+                    <span>Beri Vote Finalis</span>
+                    <IconArrowDown className="w-4 h-4 animate-bounce" />
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Right Column (4 cols): Embedded Digital Countdown Box */}
-            <div className="lg:col-span-4 w-full">
+            {/* 3. RIGHT COUNTDOWN TIMER (4 cols on lg) */}
+            <div className="lg:col-span-4 xl:col-span-4 w-full">
               {isVotingClosed ? (
-                <div className="bg-black/40 backdrop-blur-md rounded-2xl p-5 border border-amber-400/40 text-center space-y-2.5 shadow-lg">
+                <div className="bg-black/50 backdrop-blur-xl rounded-2xl p-5 border border-amber-400/40 text-center space-y-2.5 shadow-2xl">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-xs font-black uppercase tracking-wider">
                     <IconTrophy className="w-4 h-4 text-amber-400" />
                     <span>Ajang Telah Berakhir</span>
@@ -471,7 +523,7 @@ export default function CategoryVotingPage() {
                   onExpire={handleExpire}
                 />
               ) : (
-                <div className="bg-black/30 backdrop-blur-md rounded-2xl p-5 border border-white/15 text-center space-y-2">
+                <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-5 border border-white/15 text-center space-y-2">
                   <div className="inline-flex items-center gap-1.5 text-[#D0FE15] text-xs font-black uppercase">
                     <span className="w-2 h-2 rounded-full bg-[#D0FE15] animate-ping" />
                     Live Voting System
