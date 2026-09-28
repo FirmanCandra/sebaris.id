@@ -335,7 +335,7 @@ export default function CategoryVotingPage() {
   }, [category])
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] dark:bg-[#121612] text-[#262A25] dark:text-[#F3F5F1] flex flex-col font-sans transition-colors duration-300 overflow-x-hidden w-full">
+    <div className="min-h-screen bg-[#F8FAF7] dark:bg-[#121612] text-[#262A25] dark:text-[#F3F5F1] flex flex-col font-sans transition-colors duration-300">
       
       {/* Sticky Header */}
       <PublicHeader />
