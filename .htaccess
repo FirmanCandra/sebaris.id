@@ -5,18 +5,27 @@ Options -Indexes
     RewriteEngine On
     RewriteBase /
 
-    # 1. API dan Storage diteruskan ke Laravel
+    # 1. API Laravel
     RewriteRule ^api(/.*)?$ backend/public/index.php [L,QSA]
+
+    # 2. Storage: Sajikan langsung dari backend/storage/app/public jika file ada
+    RewriteCond %{DOCUMENT_ROOT}/backend/storage/app/public/$1 -f [OR]
+    RewriteCond backend/storage/app/public/$1 -f
+    RewriteRule ^storage/(.*)$ backend/storage/app/public/$1 [L]
+
+    # 3. Storage: Fallback ke backend/public/storage
     RewriteRule ^storage(/.*)?$ backend/public/storage$1 [L]
 
-    # 2. Sajikan file fisik nyata langsung (js, css, gambar, dll)
+
+    # 4. Sajikan file fisik nyata langsung (js, css, gambar, dll)
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
-    # 3. Semua rute SPA React (seperti /login, /voting) diarahkan ke index.html
+    # 5. Semua rute SPA React (seperti /login, /voting) diarahkan ke index.html
     RewriteRule ^index\.html$ - [L]
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} !\.(jpg|jpeg|png|gif|webp|svg|ico|css|js|map|woff|woff2|ttf)$ [NC]
     RewriteRule . /index.html [L]
 </IfModule>

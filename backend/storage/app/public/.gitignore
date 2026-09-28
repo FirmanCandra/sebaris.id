@@ -1,2 +1,10 @@
 *
 !.gitignore
+
+# Dummy & sample assets for seeding and initial deployment
+!banners/
+!banners/**
+!categories/
+!categories/**
+!finalists/
+!finalists/**

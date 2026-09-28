@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('banners', [PublicBannerController::class, 'index']);
 
-// Auto Deploy Helper (Run migrations and cache clear directly from browser without SSH)
+// Auto Deploy Helper (Run migrations, storage link, and cache clear directly from browser without SSH)
 Route::get('deploy-migrate', function (\Illuminate\Http\Request $request) {
     if ($request->query('key') !== 'sebaris-deploy-2026') {
         return response()->json(['error' => 'Akses ditolak'], 403);
@@ -27,6 +27,14 @@ Route::get('deploy-migrate', function (\Illuminate\Http\Request $request) {
     try {
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
         $migrateOut = \Illuminate\Support\Facades\Artisan::output();
+
+        $storageLinkOut = 'Skipped';
+        try {
+            \Illuminate\Support\Facades\Artisan::call('storage:link');
+            $storageLinkOut = \Illuminate\Support\Facades\Artisan::output();
+        } catch (\Throwable $storageErr) {
+            $storageLinkOut = 'Notice: ' . $storageErr->getMessage();
+        }
 
         $seedOut = 'Skipped (gunakan &seed=1 jika ingin memuat dummy)';
         if ($request->query('seed') === '1') {
@@ -44,6 +52,7 @@ Route::get('deploy-migrate', function (\Illuminate\Http\Request $request) {
             'status' => 'success',
             'message' => 'Backend berhasil diperbarui, migrasi database dan clear cache sukses!',
             'migrate_output' => $migrateOut,
+            'storage_link_output' => $storageLinkOut,
             'seed_output' => $seedOut,
             'optimize_output' => $clearOut,
         ]);
