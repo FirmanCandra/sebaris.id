@@ -8,9 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('events', function (Blueprint $table) {
-            $table->string('thumbnail')->nullable()->after('name');
-        });
+        if (!Schema::hasColumn('events', 'thumbnail')) {
+            Schema::table('events', function (Blueprint $table) {
+                $table->string('thumbnail')->nullable()->after('name');
+            });
+        }
 
         try {
             $categories = \Illuminate\Support\Facades\DB::table('categories')

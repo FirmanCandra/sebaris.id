@@ -10,12 +10,20 @@ class EventResource extends JsonResource
     public function toArray(Request $request): array
     {
         $thumbnailUrl = null;
-        if ($this->thumbnail) {
-            if (filter_var($this->thumbnail, FILTER_VALIDATE_URL)) {
-                $thumbnailUrl = $this->thumbnail;
+        $thumbnail = $this->thumbnail;
+
+        // Auto fallback to first category's thumbnail if event thumbnail is not explicitly set
+        if (empty($thumbnail) && $this->relationLoaded('categories') && $this->categories->isNotEmpty()) {
+            $firstCat = $this->categories->first();
+            $thumbnail = $firstCat->thumbnail ?? $firstCat->thumbnail_path;
+        }
+
+        if ($thumbnail) {
+            if (filter_var($thumbnail, FILTER_VALIDATE_URL)) {
+                $thumbnailUrl = $thumbnail;
             } else {
                 $host = config('app.url') ?? $request->getSchemeAndHttpHost();
-                $thumbnailUrl = rtrim($host, '/') . '/storage/' . ltrim($this->thumbnail, '/');
+                $thumbnailUrl = rtrim($host, '/') . '/storage/' . ltrim($thumbnail, '/');
             }
         }
 

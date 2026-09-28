@@ -30,6 +30,96 @@ import {
 } from './components/Icons'
 import { resolveStorageUrl } from './api/client'
 
+function EventThumbnailCell({ item }) {
+  const [imgError, setImgError] = useState(false)
+  const thumbSrc =
+    item.thumbnail_url ||
+    item.thumbnail ||
+    item.categories?.[0]?.thumbnail_url ||
+    item.categories?.[0]?.thumbnail
+
+  if (!thumbSrc || imgError) {
+    return (
+      <div className="w-12 h-14 rounded-xl bg-[var(--brand-primary-light)] text-[var(--brand-primary)] font-black text-xs flex items-center justify-center flex-shrink-0 shadow-2xs">
+        {item.name?.slice(0, 2)?.toUpperCase() || 'EV'}
+      </div>
+    )
+  }
+
+  return (
+    <img
+      src={resolveStorageUrl(thumbSrc)}
+      alt={item.name}
+      className="w-12 h-14 rounded-xl object-cover border border-[var(--neutral-border)] flex-shrink-0 shadow-2xs"
+      onError={() => setImgError(true)}
+    />
+  )
+}
+
+function CategoryThumbnailCell({ item }) {
+  const [imgError, setImgError] = useState(false)
+  const thumbSrc = item.thumbnail_url || item.thumbnail
+
+  if (!thumbSrc || imgError) {
+    return (
+      <div className="w-11 h-11 rounded-xl bg-[var(--brand-primary-light)] text-[var(--brand-primary)] font-black text-xs flex items-center justify-center flex-shrink-0 shadow-2xs">
+        {item.name?.slice(0, 2)?.toUpperCase() || 'VT'}
+      </div>
+    )
+  }
+
+  return (
+    <img
+      src={resolveStorageUrl(thumbSrc)}
+      alt={item.name}
+      className="w-11 h-11 rounded-xl object-cover border border-[var(--neutral-border)] flex-shrink-0 shadow-2xs"
+      onError={() => setImgError(true)}
+    />
+  )
+}
+
+function FinalistThumbnailCell({ item }) {
+  const [imgError, setImgError] = useState(false)
+  const photoSrc = item.photo_url || item.photo
+
+  if (!photoSrc || imgError) {
+    return (
+      <div className="w-11 h-11 rounded-xl bg-purple-100 text-purple-700 font-black text-xs flex items-center justify-center flex-shrink-0 shadow-2xs">
+        {item.name?.slice(0, 2)?.toUpperCase() || 'FN'}
+      </div>
+    )
+  }
+
+  return (
+    <img
+      src={resolveStorageUrl(photoSrc)}
+      alt={item.name}
+      className="w-11 h-11 rounded-xl object-cover border border-[var(--neutral-border)] flex-shrink-0 shadow-2xs"
+      onError={() => setImgError(true)}
+    />
+  )
+}
+
+function BannerThumbnailCell({ item }) {
+  const [imgError, setImgError] = useState(false)
+  const bannerSrc = item.image_url || item.image
+
+  return (
+    <div className="w-36 sm:w-44 aspect-[21/8] rounded-xl overflow-hidden bg-gray-900 border border-[var(--neutral-border)] shadow-xs flex-shrink-0 flex items-center justify-center">
+      {bannerSrc && !imgError ? (
+        <img
+          src={resolveStorageUrl(bannerSrc)}
+          alt={item.title}
+          className="w-full h-full object-cover"
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <span className="text-[10px] text-gray-400">Tanpa Gambar</span>
+      )}
+    </div>
+  )
+}
+
 const events = {
   title: 'Event / Ajang',
   description: 'Kelola induk ajang/event yang menaungi beberapa tingkatan kategori pemilihan (Premier, Sekunder, Tersier).',
@@ -55,20 +145,7 @@ const events = {
       label: 'Nama Event / Ajang',
       render: (item) => (
         <div className="flex items-center gap-3">
-          {item.thumbnail || item.thumbnail_url ? (
-            <img
-              src={resolveStorageUrl(item.thumbnail_url || item.thumbnail)}
-              alt={item.name}
-              className="w-12 h-14 rounded-xl object-cover border border-[var(--neutral-border)] flex-shrink-0"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none'
-              }}
-            />
-          ) : (
-            <div className="w-12 h-14 rounded-xl bg-[var(--brand-primary-light)] text-[var(--brand-primary)] font-black text-xs flex items-center justify-center flex-shrink-0">
-              {item.name?.slice(0, 2)?.toUpperCase() || 'EV'}
-            </div>
-          )}
+          <EventThumbnailCell item={item} />
           <Link
             to={`/admin/events/${item.id}`}
             className="group block no-underline min-w-0"
@@ -181,20 +258,7 @@ const categories = {
       label: 'Sesi Voting',
       render: (item) => (
         <div className="flex items-center gap-3">
-          {item.thumbnail || item.thumbnail_url ? (
-            <img
-              src={resolveStorageUrl(item.thumbnail_url || item.thumbnail)}
-              alt={item.name}
-              className="w-11 h-11 rounded-xl object-cover border border-[var(--neutral-border)] flex-shrink-0"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none'
-              }}
-            />
-          ) : (
-            <div className="w-11 h-11 rounded-xl bg-[var(--brand-primary-light)] text-[var(--brand-primary)] font-black text-xs flex items-center justify-center flex-shrink-0">
-              {item.name?.slice(0, 2)?.toUpperCase() || 'VT'}
-            </div>
-          )}
+          <CategoryThumbnailCell item={item} />
           <div className="min-w-0">
             <span className="font-extrabold block text-sm text-[var(--neutral-text-main)] truncate max-w-xs">
               {item.name}
@@ -396,20 +460,7 @@ const finalists = {
       label: 'Finalis',
       render: (item) => (
         <div className="flex items-center gap-3">
-          {item.photo || item.photo_url ? (
-            <img
-              src={resolveStorageUrl(item.photo_url || item.photo)}
-              alt={item.name}
-              className="w-11 h-11 rounded-xl object-cover border border-[var(--neutral-border)] flex-shrink-0"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none'
-              }}
-            />
-          ) : (
-            <div className="w-11 h-11 rounded-xl bg-purple-100 text-purple-700 font-black text-xs flex items-center justify-center flex-shrink-0">
-              {item.name?.slice(0, 2)?.toUpperCase() || 'FN'}
-            </div>
-          )}
+          <FinalistThumbnailCell item={item} />
           <div className="min-w-0">
             <span className="font-extrabold block text-sm text-[var(--neutral-text-main)] truncate max-w-xs">
               {item.name}
@@ -561,22 +612,7 @@ const banners = {
     {
       key: 'image',
       label: 'Pratinjau Banner',
-      render: (item) => (
-        <div className="w-36 sm:w-44 aspect-[21/8] rounded-xl overflow-hidden bg-gray-900 border border-[var(--neutral-border)] shadow-xs flex-shrink-0 flex items-center justify-center">
-          {item.image || item.image_url ? (
-            <img
-              src={resolveStorageUrl(item.image_url || item.image)}
-              alt={item.title}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none'
-              }}
-            />
-          ) : (
-            <span className="text-[10px] text-gray-400">Tanpa Gambar</span>
-          )}
-        </div>
-      ),
+      render: (item) => <BannerThumbnailCell item={item} />,
     },
     {
       key: 'title',

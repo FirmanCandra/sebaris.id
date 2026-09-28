@@ -25,6 +25,32 @@ Route::get('deploy-migrate', function (\Illuminate\Http\Request $request) {
     }
 
     try {
+        // 1. Ensure events table has thumbnail column
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('events', 'thumbnail')) {
+            try {
+                \Illuminate\Support\Facades\Schema::table('events', function ($table) {
+                    $table->string('thumbnail')->nullable()->after('name');
+                });
+            } catch (\Throwable) {
+            }
+        }
+
+        // Backfill event thumbnails from categories if empty
+        try {
+            $categories = \Illuminate\Support\Facades\DB::table('categories')
+                ->whereNotNull('thumbnail')
+                ->whereNotNull('event_id')
+                ->get();
+
+            foreach ($categories as $cat) {
+                \Illuminate\Support\Facades\DB::table('events')
+                    ->where('id', $cat->event_id)
+                    ->whereNull('thumbnail')
+                    ->update(['thumbnail' => $cat->thumbnail]);
+            }
+        } catch (\Throwable) {
+        }
+
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
         $migrateOut = \Illuminate\Support\Facades\Artisan::output();
 
