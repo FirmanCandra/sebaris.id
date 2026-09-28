@@ -200,7 +200,7 @@ export default function LoginPage() {
     <div className="min-h-screen w-full flex flex-col justify-between bg-[#F7F9F6] dark:bg-[#0A0F0B] text-[#262A25] dark:text-[#F3F5F1] transition-colors duration-300 p-4 sm:p-6 lg:p-10">
       
       {/* 1. Top Navigation Bar */}
-      <header className="w-full max-w-[1080px] mx-auto flex items-center justify-between pb-4 sm:pb-6">
+      <header className="w-full max-w-[1040px] mx-auto flex items-center justify-between pb-4 sm:pb-6">
         <Link
           to="/"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-[#70B325] dark:hover:text-[#8FE032] transition-colors"
@@ -224,23 +224,22 @@ export default function LoginPage() {
         </button>
       </header>
 
-      {/* 2. Main Dual-Card Layout Container */}
-      <main className="w-full max-w-[1080px] mx-auto my-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch py-2 sm:py-4">
+      {/* 2. Main Unified Split-Card Container */}
+      <main className="w-full max-w-[1040px] mx-auto my-auto py-2 sm:py-4">
         
-        {/* =========================================================================
-            LEFT CARD: EDITORIAL & BRAND MISSION CARD
-            ========================================================================= */}
-        <aside aria-label="Informasi Platform Sebaris.id" className="hidden lg:flex lg:col-span-5 bg-[#141B15] text-white rounded-3xl p-8 xl:p-10 border border-[#232F24] shadow-xl flex-col justify-between select-none">
+        <div className="bg-white dark:bg-[#141A15] border border-neutral-200/90 dark:border-neutral-800/90 rounded-3xl shadow-2xl shadow-neutral-900/10 overflow-hidden flex flex-col lg:flex-row items-stretch">
           
-          {/* Card Header: Brand Logo & Platform Badge */}
-          <div>
-            <Link to="/" className="inline-block focus:outline-none" aria-label="Sebaris.id Beranda">
-              <SebarisLogo size="md" variant="white" />
-            </Link>
-            <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white/5 border border-white/10 text-xs font-medium text-emerald-400">
-              <span>Sistem E-Voting Resmi</span>
+          {/* =========================================================================
+              LEFT SIDE: EDITORIAL & BRAND MISSION
+              ========================================================================= */}
+          <aside aria-label="Informasi Platform Sebaris.id" className="hidden lg:flex lg:w-5/12 bg-[#141B15] text-white p-8 xl:p-10 flex-col justify-between select-none border-b lg:border-b-0 lg:border-r border-[#222E23]">
+            
+            {/* Brand Logo */}
+            <div>
+              <Link to="/" className="inline-block focus:outline-none focus:ring-2 focus:ring-[#70B325] rounded-xl" aria-label="Sebaris.id Beranda">
+                <SebarisLogo size="md" variant="white" />
+              </Link>
             </div>
-          </div>
 
           {/* Card Body: Headline & 3 Key Value Pillars */}
           <div className="my-auto py-6 space-y-6">
@@ -311,13 +310,13 @@ export default function LoginPage() {
 
         </aside>
 
-        {/* =========================================================================
-            RIGHT CARD: AUTHENTICATION FORM CARD
-            ========================================================================= */}
-        <section aria-label="Formulir Autentikasi" className="lg:col-span-7 bg-white dark:bg-[#141A15] border border-neutral-200/90 dark:border-neutral-800/90 rounded-3xl p-6 sm:p-8 xl:p-10 shadow-xl flex flex-col justify-between space-y-6">
-          
-          {/* Brand Logo for Mobile */}
-          <div className="lg:hidden flex items-center justify-center pb-1">
+          {/* =========================================================================
+              RIGHT SIDE: AUTHENTICATION FORM
+              ========================================================================= */}
+          <section aria-label="Formulir Autentikasi" className="w-full lg:w-7/12 p-6 sm:p-8 xl:p-10 flex flex-col justify-between space-y-6">
+            
+            {/* Brand Logo for Mobile */}
+            <div className="lg:hidden flex items-center justify-center pb-1">
             <SebarisLogo size="md" variant={theme === 'dark' ? 'white' : 'default'} />
           </div>
 
@@ -637,12 +636,14 @@ export default function LoginPage() {
             Dengan melanjutkan, Anda menyetujui Ketentuan Layanan dan Kebijakan Privasi Sebaris.id.
           </div>
 
-        </section>
+          </section>
+
+        </div>
 
       </main>
 
       {/* 3. Bottom Footer Note */}
-      <footer className="w-full max-w-[1080px] mx-auto text-center text-[11px] text-neutral-400 dark:text-neutral-600 select-none py-2">
+      <footer className="w-full max-w-[1040px] mx-auto text-center text-[11px] text-neutral-400 dark:text-neutral-600 select-none py-2">
         <span>Sebaris.id &bull; Platform Pemilihan Digital Resmi</span>
       </footer>
 
