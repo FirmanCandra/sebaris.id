@@ -745,8 +745,14 @@ export default function CategoryVotingPage() {
         {!loading && !error && finalists.length > 0 && (
           <section id="card-leaderboard" className="scroll-mt-28 space-y-6">
             
-            {/* Background Container for Leaderboard (Authentic KreenConnect bg-glass & podium) */}
-            <div className="relative rounded-3xl overflow-hidden bg-gradient-to-b from-[#123E2A]/15 via-[#123E2A]/5 to-transparent dark:from-[#123E2A]/30 dark:via-[#102D1F]/10 dark:to-transparent border border-[#70B325]/20 p-4 sm:p-6 lg:p-10">
+            {/* Background Container for Leaderboard (Harmonized with Event Theme Color) */}
+            <div
+              className="relative rounded-3xl overflow-hidden border p-4 sm:p-6 lg:p-10"
+              style={{
+                background: `linear-gradient(to bottom, ${activeThemeColor}25, ${activeThemeColor}08, transparent)`,
+                borderColor: `${activeThemeColor}30`,
+              }}
+            >
               
               {/* Header (Clean, no redundant nested glass box) */}
               <div className="text-center space-y-1 max-w-xl mx-auto mb-4 sm:mb-6">

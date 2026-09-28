@@ -11,6 +11,7 @@ import {
   IconChevronRight,
 } from './Icons'
 import { api, resolveStorageUrl } from '../api/client'
+import LuxuryAmbientBackdrop from './LuxuryAmbientBackdrop'
 
 export default function FinalistDetailModal({
   isOpen,
@@ -26,6 +27,16 @@ export default function FinalistDetailModal({
   const [activePhotoIndex, setActivePhotoIndex] = useState(0)
   const [messages, setMessages] = useState([])
   const [loadingMessages, setLoadingMessages] = useState(false)
+
+  // Dynamic Event Theme Color & Poster from Category / Event
+  const eventThemeColor = useMemo(() => {
+    return category?.theme_color || category?.event?.theme_color || '#154228'
+  }, [category])
+
+  const posterSrc = useMemo(() => {
+    const raw = category?.thumbnail || category?.event?.thumbnail
+    return raw ? resolveStorageUrl(raw) : null
+  }, [category])
 
   // Fetch Wall of Support messages for this finalist
   useEffect(() => {
@@ -97,7 +108,10 @@ export default function FinalistDetailModal({
       aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-xs animate-fadeIn overflow-y-auto"
     >
-      <div className="bg-white dark:bg-[#151C14] text-[#262A25] dark:text-gray-100 rounded-3xl max-w-lg w-full max-h-[90dvh] overflow-y-auto shadow-2xl border border-gray-100 dark:border-white/10 relative my-auto transition-colors ios-isolate">
+      <div
+        className="bg-white dark:bg-[#151C14] text-[#262A25] dark:text-gray-100 rounded-3xl max-w-lg w-full max-h-[90dvh] overflow-y-auto shadow-2xl border border-gray-100 dark:border-white/10 relative my-auto transition-colors ios-isolate"
+        style={{ borderColor: `${eventThemeColor}40` }}
+      >
         {/* Close Button */}
         <button
           type="button"
@@ -107,9 +121,10 @@ export default function FinalistDetailModal({
           <IconClose className="w-5 h-5" />
         </button>
 
-        {/* Top Header & Poster Card Header */}
-        <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full bg-gradient-to-b from-[#133E2B] via-[#0E2F20] to-[#0A1F16] flex flex-col items-center justify-center p-4 overflow-hidden">
-          <div className="absolute inset-0 bg-radial from-emerald-500/20 via-transparent to-transparent pointer-events-none" />
+        {/* Top Header & Poster Card Header with Luxury Ambient Event Background */}
+        <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full flex flex-col items-center justify-center p-4 overflow-hidden">
+          {/* Dynamic Luxury Ambient Silk & Sparkle Backdrop from Event Theme */}
+          <LuxuryAmbientBackdrop themeColor={eventThemeColor} posterSrc={posterSrc} />
 
           {/* Rank Badge */}
           <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
@@ -197,7 +212,10 @@ export default function FinalistDetailModal({
         <div className="p-6 sm:p-7 space-y-5">
           {/* Identity & Category */}
           <div className="space-y-1">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#70B325] dark:text-[#8FE032] block">
+            <span
+              className="text-[11px] font-extrabold uppercase tracking-wider block"
+              style={{ color: eventThemeColor || '#70B325' }}
+            >
               {category?.name || 'Ajang Voting'}
             </span>
             <h2 className="text-xl sm:text-2xl font-black text-[#262A25] dark:text-white">
@@ -214,14 +232,17 @@ export default function FinalistDetailModal({
               <span className="font-extrabold text-[#262A25] dark:text-white">
                 {finalist.vote_count.toLocaleString('id-ID')} Suara Sah
               </span>
-              <span className="font-black text-[#70B325] dark:text-[#8FE032]">
+              <span className="font-black" style={{ color: eventThemeColor || '#70B325' }}>
                 {percentage}% dari total suara
               </span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-white/10 h-2 rounded-full overflow-hidden">
               <div
-                className="bg-[#70B325] h-full rounded-full transition-all duration-500"
-                style={{ width: `${percentage}%` }}
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${percentage}%`,
+                  backgroundColor: eventThemeColor || '#70B325',
+                }}
               />
             </div>
           </div>
@@ -231,7 +252,10 @@ export default function FinalistDetailModal({
             <h4 className="text-xs font-black uppercase tracking-wider text-gray-700 dark:text-gray-300">
               Profil & Advokasi Finalis
             </h4>
-            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed max-h-36 overflow-y-auto whitespace-pre-line pr-2 border-l-2 border-[#70B325] pl-3 bg-gray-50/70 dark:bg-white/5 py-2 rounded-r-xl">
+            <div
+              className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed max-h-36 overflow-y-auto whitespace-pre-line pr-2 border-l-2 pl-3 bg-gray-50/70 dark:bg-white/5 py-2 rounded-r-xl"
+              style={{ borderLeftColor: eventThemeColor || '#70B325' }}
+            >
               {finalist.bio || finalist.description ||
                 `${finalist.name} adalah salah satu kandidat perwakilan terbaik yang siap memberikan kontribusi nyata. Berikan dukungan terbaikmu agar terpilih sebagai pemenang favorit.`}
             </div>
@@ -344,7 +368,10 @@ export default function FinalistDetailModal({
                 onClose()
                 if (onOpenVote) onOpenVote(finalist)
               }}
-              className="w-full py-3.5 px-4 bg-[#70B325] hover:bg-[#5F9A1E] disabled:bg-gray-300 dark:disabled:bg-gray-800 text-white font-black text-sm rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: isVotingExpired ? undefined : (eventThemeColor || '#70B325'),
+              }}
+              className="w-full py-3.5 px-4 hover:brightness-110 disabled:bg-gray-300 dark:disabled:bg-gray-800 text-white font-black text-sm rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
             >
               <IconZap className="w-5 h-5 text-white" />
               <span>
