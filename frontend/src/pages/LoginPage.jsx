@@ -57,45 +57,76 @@ export default function LoginPage() {
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
-  // Initialize Google Identity Services
+  // Helper to determine accurate button width constrained to container
+  function calculateGoogleBtnWidth() {
+    if (!googleBtnRef.current) return 300
+    const parentWidth = googleBtnRef.current.parentElement?.clientWidth || googleBtnRef.current.clientWidth || 300
+    // Google GSI requires width between 200 and 400.
+    // Subtract 6px safety buffer so it never touches or overflows container bounds
+    return Math.min(Math.max(Math.floor(parentWidth - 6), 200), 380)
+  }
+
+  // Initialize and render Google Identity Services
   useEffect(() => {
     if (!googleClientId) return
+
+    function renderGsi() {
+      if (!window.google?.accounts?.id || !googleBtnRef.current) return
+      try {
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: handleGoogleResponse,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+          use_fedcm_for_prompt: false,
+        })
+
+        const btnWidth = calculateGoogleBtnWidth()
+        googleBtnRef.current.innerHTML = ''
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          type: 'standard',
+          theme: theme === 'dark' ? 'filled_black' : 'outline',
+          size: 'large',
+          width: btnWidth,
+          text: authMode === 'register' ? 'signup_with' : 'continue_with',
+          shape: 'rectangular',
+          logo_alignment: 'left',
+        })
+        setIsGsiRendered(true)
+      } catch (initErr) {
+        console.warn('GSI Init Error:', initErr)
+        setIsGsiRendered(false)
+      }
+    }
 
     let attempts = 0
     const interval = setInterval(() => {
       attempts++
       if (window.google?.accounts?.id && googleBtnRef.current) {
         clearInterval(interval)
-        try {
-          window.google.accounts.id.initialize({
-            client_id: googleClientId,
-            callback: handleGoogleResponse,
-            auto_select: false,
-            cancel_on_tap_outside: true,
-            use_fedcm_for_prompt: false,
-          })
-
-          googleBtnRef.current.innerHTML = ''
-          window.google.accounts.id.renderButton(googleBtnRef.current, {
-            type: 'standard',
-            theme: theme === 'dark' ? 'filled_black' : 'outline',
-            size: 'large',
-            width: 360,
-            text: authMode === 'register' ? 'signup_with' : 'continue_with',
-            shape: 'rectangular',
-            logo_alignment: 'left',
-          })
-          setIsGsiRendered(true)
-        } catch (initErr) {
-          console.warn('GSI Init Error:', initErr)
-          setIsGsiRendered(false)
-        }
+        renderGsi()
       } else if (attempts > 25) {
         clearInterval(interval)
       }
-    }, 200)
+    }, 150)
 
-    return () => clearInterval(interval)
+    let resizeTimer
+    const handleResize = () => {
+      clearTimeout(resizeTimer)
+      resizeTimer = setTimeout(() => {
+        if (window.google?.accounts?.id && googleBtnRef.current) {
+          renderGsi()
+        }
+      }, 150)
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      clearInterval(interval)
+      clearTimeout(resizeTimer)
+      window.removeEventListener('resize', handleResize)
+    }
   }, [googleClientId, authMode, theme])
 
   async function handleGoogleResponse(response) {
@@ -197,7 +228,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-between bg-[#F7F9F6] dark:bg-[#0A0F0B] text-[#262A25] dark:text-[#F3F5F1] transition-colors duration-300 p-4 sm:p-6 lg:p-10">
+    <div className="min-h-screen w-full flex flex-col justify-between bg-[#F7F9F6] dark:bg-[#0A0F0B] text-[#262A25] dark:text-[#F3F5F1] transition-colors duration-300 p-3 sm:p-6 lg:p-10">
       
       {/* 1. Top Navigation Bar */}
       <header className="w-full max-w-[1040px] mx-auto flex items-center justify-between pb-4 sm:pb-6">
@@ -313,7 +344,7 @@ export default function LoginPage() {
           {/* =========================================================================
               RIGHT SIDE: AUTHENTICATION FORM
               ========================================================================= */}
-          <section aria-label="Formulir Autentikasi" className="w-full lg:w-7/12 p-6 sm:p-8 xl:p-10 flex flex-col justify-between space-y-6">
+          <section aria-label="Formulir Autentikasi" className="w-full lg:w-7/12 p-5 sm:p-8 xl:p-10 flex flex-col justify-between space-y-6">
             
             {/* Brand Logo for Mobile */}
             <div className="lg:hidden flex items-center justify-center pb-1">
@@ -373,11 +404,11 @@ export default function LoginPage() {
 
           {/* Google SSO Container */}
           <div className="space-y-3">
-            <div className="flex justify-center w-full min-h-[44px]">
+            <div className="flex justify-center w-full min-h-[44px] overflow-hidden">
               {/* Google official rendered button container */}
               <div
                 ref={googleBtnRef}
-                className={`w-full flex justify-center ${isGsiRendered ? 'block' : 'hidden'}`}
+                className={`w-full flex justify-center items-center ${isGsiRendered ? 'flex' : 'hidden'}`}
                 id="googleSignInBtn"
               />
 

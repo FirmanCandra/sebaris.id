@@ -247,6 +247,27 @@ textarea:focus-visible {
   outline: none;
 }
 
+/* Google Identity Services GSI responsive button container */
+#googleSignInBtn {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+#googleSignInBtn > div {
+  max-width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+}
+
+#googleSignInBtn iframe {
+  max-width: 100% !important;
+  margin: 0 auto !important;
+}
+
 /* Admin Dashboard Specific Styles */
 .admin-shell {
   min-height: 100dvh;
