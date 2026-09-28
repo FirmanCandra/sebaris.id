@@ -2,6 +2,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { api, resolveStorageUrl } from '../api/client'
 import PublicHeader from '../components/PublicHeader'
+import LuxuryAmbientBackdrop from '../components/LuxuryAmbientBackdrop'
 import VotingCountdown from '../components/VotingCountdown'
 import CommercialVoteModal from '../components/CommercialVoteModal'
 import FinalistDetailModal from '../components/FinalistDetailModal'
@@ -85,7 +86,8 @@ export default function CategoryVotingPage() {
             prev.status === catRes.data.status &&
             prev.freeze_leaderboard === catRes.data.freeze_leaderboard &&
             prev.price_per_vote === catRes.data.price_per_vote &&
-            prev.end_date === catRes.data.end_date
+            prev.end_date === catRes.data.end_date &&
+            prev.theme_color === catRes.data.theme_color
           ) {
             return prev
           }
@@ -327,6 +329,10 @@ export default function CategoryVotingPage() {
     )
   }, [category])
 
+  const activeThemeColor = useMemo(() => {
+    return category?.theme_color || category?.event?.theme_color || '#154228'
+  }, [category])
+
   return (
     <div className="min-h-screen bg-[#F8FAF7] dark:bg-[#121612] text-[#262A25] dark:text-[#F3F5F1] flex flex-col font-sans transition-colors duration-300">
       
@@ -337,22 +343,8 @@ export default function CategoryVotingPage() {
           TOP OFFICIAL EVENT HERO BANNER (CINEMATIC AMBIENT HORIZON)
           ========================================================================= */}
       <section className="relative text-white border-b border-[#2C3529] overflow-hidden -mt-16 sm:-mt-20 pt-20 sm:pt-24 pb-8 sm:pb-12 bg-[#09130C]">
-        {/* Ambient Poster Blur Background */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
-          {posterSrc ? (
-            <img
-              src={posterSrc}
-              alt=""
-              className="w-full h-full object-cover object-center filter blur-3xl scale-125 opacity-25 transform -translate-y-8"
-              aria-hidden="true"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[#123E2A] via-[#0E291B] to-[#08170F]" />
-          )}
-          {/* Dark Vignette / Gradient Scrim for 100% Crisp Typography Contrast */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#09130C]/80 via-[#09130C]/90 to-[#09130C]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#70B325]/15 via-transparent to-transparent" />
-        </div>
+        {/* Luxury Dynamic Ambient Silk & Sparkle Backdrop */}
+        <LuxuryAmbientBackdrop themeColor={activeThemeColor} posterSrc={posterSrc} />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 relative z-10 space-y-6">
           

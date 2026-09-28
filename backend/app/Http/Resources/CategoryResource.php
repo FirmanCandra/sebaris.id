@@ -38,11 +38,13 @@ class CategoryResource extends JsonResource
             'allow_free_vote' => (bool) ($this->allow_free_vote ?? true),
             'vote_packages'   => $this->vote_packages ?? [],
             'freeze_leaderboard' => (bool) ($this->freeze_leaderboard ?? false),
+            'theme_color'     => $this->theme_color ?? $this->event?->theme_color ?? null,
             'finalists_count' => $this->whenCounted('finalists'),
             'event' => $this->event ? [
                 'id' => $this->event->id,
                 'name' => $this->event->name,
                 'status' => $this->event->status,
+                'theme_color' => $this->event->theme_color,
                 'start_date' => $this->event->start_date?->toDateString(),
                 'end_date' => $this->event->end_date?->toDateString(),
             ] : null,

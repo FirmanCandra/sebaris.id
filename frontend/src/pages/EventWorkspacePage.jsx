@@ -29,6 +29,15 @@ import EmbedCodeModal from '../components/EmbedCodeModal'
 import VotePackagesModal from '../components/VotePackagesModal'
 import AdjustVoteModal from '../components/AdjustVoteModal'
 
+const LUXURY_PALETTES = [
+  { name: 'Emerald', color: '#166534' },
+  { name: 'Ruby', color: '#BE123C' },
+  { name: 'Sapphire', color: '#1E40AF' },
+  { name: 'Amethyst', color: '#6B21A8' },
+  { name: 'Amber', color: '#B45309' },
+  { name: 'Midnight', color: '#0F172A' },
+]
+
 export default function EventWorkspacePage() {
   const { eventId } = useParams()
   const { token } = useAuth()
@@ -64,7 +73,7 @@ export default function EventWorkspacePage() {
   const [savingFinalist, setSavingFinalist] = useState(false)
 
   const [isEventModalOpen, setIsEventModalOpen] = useState(false)
-  const [eventValues, setEventValues] = useState({ name: '', thumbnail: '', start_date: '', end_date: '', status: 'active' })
+  const [eventValues, setEventValues] = useState({ name: '', thumbnail: '', start_date: '', end_date: '', status: 'active', theme_color: '#154228' })
   const [savingEvent, setSavingEvent] = useState(false)
 
   // Load Event and its categories
@@ -150,6 +159,7 @@ export default function EventWorkspacePage() {
       allow_free_vote: 1,
       freeze_leaderboard: 0,
       description: '',
+      theme_color: '#154228',
     })
     setEditingCategory(null)
     setCategoryErrors({})
@@ -172,6 +182,7 @@ export default function EventWorkspacePage() {
       allow_free_vote: cat.allow_free_vote ? 1 : 0,
       freeze_leaderboard: cat.freeze_leaderboard ? 1 : 0,
       description: cat.description || '',
+      theme_color: cat.theme_color || '#154228',
     })
     setCategoryErrors({})
     setIsCategoryDrawerOpen(true)
@@ -346,6 +357,7 @@ export default function EventWorkspacePage() {
       start_date: eventData.start_date || '',
       end_date: eventData.end_date || '',
       status: eventData.status || 'active',
+      theme_color: eventData.theme_color || '#154228',
     })
     setIsEventModalOpen(true)
   }
@@ -1107,6 +1119,56 @@ export default function EventWorkspacePage() {
                 </p>
               </div>
 
+              {/* Theme Color Selection */}
+              <div className="space-y-2 p-3.5 rounded-xl border border-[var(--neutral-border)] bg-[var(--neutral-surface-soft)]">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                    Warna Tema Background (Luxury Dynamic Backdrop)
+                  </label>
+                  <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    Auto-Generate
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {LUXURY_PALETTES.map((pal) => (
+                    <button
+                      key={pal.color}
+                      type="button"
+                      onClick={() => setCategoryValues((prev) => ({ ...prev, theme_color: pal.color }))}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                        (categoryValues.theme_color || '#154228').toLowerCase() === pal.color.toLowerCase()
+                          ? 'border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-sm ring-2 ring-emerald-500/30'
+                          : 'border-[var(--neutral-border)] text-gray-600 dark:text-gray-400 hover:border-gray-400'
+                      }`}
+                    >
+                      <span
+                        className="w-3.5 h-3.5 rounded-full border border-black/20 shadow-xs flex-shrink-0"
+                        style={{ backgroundColor: pal.color }}
+                      />
+                      <span>{pal.name}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2.5 pt-1">
+                  <input
+                    type="color"
+                    value={categoryValues.theme_color || '#154228'}
+                    onChange={(e) => setCategoryValues((prev) => ({ ...prev, theme_color: e.target.value }))}
+                    className="w-9 h-9 p-0.5 rounded-xl border border-[var(--neutral-border)] bg-transparent cursor-pointer flex-shrink-0"
+                  />
+                  <input
+                    type="text"
+                    value={categoryValues.theme_color ?? '#154228'}
+                    onChange={(e) => setCategoryValues((prev) => ({ ...prev, theme_color: e.target.value }))}
+                    className="form-input text-xs sm:text-sm font-mono flex-1 uppercase"
+                    placeholder="Contoh: #BE123C"
+                  />
+                </div>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-tight">
+                  Cukup pilih 1 warna dasar yang cocok dengan poster. Sistem akan otomatis me-render latar belakang bergelombang sutra mewah dan kilau bintang sparkle.
+                </p>
+              </div>
+
               {/* Tier Selection */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-gray-700 dark:text-gray-300">
@@ -1461,6 +1523,56 @@ export default function EventWorkspacePage() {
                 />
                 <p className="text-[11px] text-gray-500 dark:text-gray-400">
                   Poster ini adalah identitas visual utama event dan akan tampil di katalog beranda publik serta diwarisi ke seluruh kategori di bawah event ini.
+                </p>
+              </div>
+
+              {/* Event Theme Color */}
+              <div className="space-y-2 p-3.5 rounded-xl border border-[var(--neutral-border)] bg-[var(--neutral-surface-soft)]">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                    Warna Tema Utama Event (Default untuk Kategori)
+                  </label>
+                  <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    Auto-Generate
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {LUXURY_PALETTES.map((pal) => (
+                    <button
+                      key={pal.color}
+                      type="button"
+                      onClick={() => setEventValues((prev) => ({ ...prev, theme_color: pal.color }))}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                        (eventValues.theme_color || '#154228').toLowerCase() === pal.color.toLowerCase()
+                          ? 'border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-sm ring-2 ring-emerald-500/30'
+                          : 'border-[var(--neutral-border)] text-gray-600 dark:text-gray-400 hover:border-gray-400'
+                      }`}
+                    >
+                      <span
+                        className="w-3.5 h-3.5 rounded-full border border-black/20 shadow-xs flex-shrink-0"
+                        style={{ backgroundColor: pal.color }}
+                      />
+                      <span>{pal.name}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2.5 pt-1">
+                  <input
+                    type="color"
+                    value={eventValues.theme_color || '#154228'}
+                    onChange={(e) => setEventValues((prev) => ({ ...prev, theme_color: e.target.value }))}
+                    className="w-9 h-9 p-0.5 rounded-xl border border-[var(--neutral-border)] bg-transparent cursor-pointer flex-shrink-0"
+                  />
+                  <input
+                    type="text"
+                    value={eventValues.theme_color ?? '#154228'}
+                    onChange={(e) => setEventValues((prev) => ({ ...prev, theme_color: e.target.value }))}
+                    className="form-input text-xs sm:text-sm font-mono flex-1 uppercase"
+                    placeholder="Contoh: #166534"
+                  />
+                </div>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-tight">
+                  Warna ini akan menjadi tema default seluruh kategori jika kategori tidak menentukan warna tersendiri.
                 </p>
               </div>
 

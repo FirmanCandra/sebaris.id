@@ -28,6 +28,7 @@ class Category extends Model
         'vote_packages',
         'allow_free_vote',
         'freeze_leaderboard',
+        'theme_color',
     ];
 
     protected static function booted(): void

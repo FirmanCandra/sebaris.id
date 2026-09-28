@@ -28,6 +28,7 @@ class CategoryRequest extends FormRequest
             'event_id'          => ['nullable', 'integer'],
             'tier'              => ['nullable', 'string', 'in:premier,sekunder,tersier'],
             'sort_order'        => ['nullable', 'integer', 'min:1'],
+            'theme_color'       => ['nullable', 'string', 'max:50'],
         ];
     }
 }

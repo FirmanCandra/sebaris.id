@@ -138,6 +138,7 @@ const events = {
         { value: 'inactive', label: 'Nonaktif / Selesai' },
       ],
     },
+    { name: 'theme_color', label: 'Warna Tema / Aksen Background (Tema Kemewahan)', type: 'color' },
   ],
   columns: [
     {
@@ -250,6 +251,7 @@ const categories = {
         { value: 1, label: 'Bekukan / Sembunyikan Perolehan Suara (Freeze)' },
       ],
     },
+    { name: 'theme_color', label: 'Warna Tema / Aksen Background (Tema Kemewahan)', type: 'color' },
     { name: 'description', label: 'Deskripsi Voting', type: 'textarea' },
   ],
   columns: [

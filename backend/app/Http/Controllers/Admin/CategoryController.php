@@ -10,13 +10,28 @@ use App\Services\ImageOptimizer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
 class CategoryController extends Controller
 {
+    private function ensureThemeColorColumnExists(): void
+    {
+        if (Schema::hasTable('categories') && !Schema::hasColumn('categories', 'theme_color')) {
+            try {
+                Schema::table('categories', function ($table) {
+                    $table->string('theme_color', 50)->nullable()->after('thumbnail');
+                });
+            } catch (\Throwable) {
+            }
+        }
+    }
+
     public function index(Request $request): AnonymousResourceCollection
     {
+        $this->ensureThemeColorColumnExists();
+
         $query = Category::query()->with('event')->withCount('finalists')->ordered();
 
         if ($request->filled('status')) {
@@ -32,6 +47,8 @@ class CategoryController extends Controller
 
     public function store(CategoryRequest $request): CategoryResource
     {
+        $this->ensureThemeColorColumnExists();
+
         $data = $request->safe()->except('thumbnail');
 
         if ($request->hasFile('thumbnail')) {
@@ -51,6 +68,8 @@ class CategoryController extends Controller
 
     public function update(CategoryRequest $request, Category $category): CategoryResource
     {
+        $this->ensureThemeColorColumnExists();
+
         $data = $request->safe()->except('thumbnail');
 
         if ($request->hasFile('thumbnail')) {

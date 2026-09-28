@@ -118,6 +118,79 @@ function FormField({ field, value, onChange, options }) {
     )
   }
 
+  if (field.type === 'color') {
+    const LUXURY_PALETTES = [
+      { name: 'Emerald', color: '#166534' },
+      { name: 'Ruby', color: '#BE123C' },
+      { name: 'Sapphire', color: '#1E40AF' },
+      { name: 'Amethyst', color: '#6B21A8' },
+      { name: 'Amber', color: '#B45309' },
+      { name: 'Midnight', color: '#0F172A' },
+    ]
+
+    const currentColor = value || '#166534'
+
+    return (
+      <div className="space-y-2">
+        <label htmlFor={id} className="block text-xs font-bold text-gray-700 dark:text-gray-300">
+          {field.label}
+        </label>
+        
+        {/* Preset quick buttons */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {LUXURY_PALETTES.map((pal) => (
+            <button
+              key={pal.color}
+              type="button"
+              onClick={() => onChange(field.name, pal.color)}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                currentColor.toLowerCase() === pal.color.toLowerCase()
+                  ? 'border-white text-white shadow-sm ring-2 ring-[var(--brand-primary)]'
+                  : 'border-[var(--neutral-border)] text-gray-600 dark:text-gray-300 hover:border-gray-400'
+              }`}
+            >
+              <span
+                className="w-3.5 h-3.5 rounded-full border border-black/20 shadow-xs flex-shrink-0"
+                style={{ backgroundColor: pal.color }}
+              />
+              <span>{pal.name}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Custom Color Input & Picker */}
+        <div className="flex items-center gap-2.5">
+          <input
+            id={id}
+            type="color"
+            value={currentColor}
+            onChange={(event) => onChange(field.name, event.target.value)}
+            className="w-10 h-10 p-0.5 rounded-xl border border-[var(--neutral-border)] bg-transparent cursor-pointer flex-shrink-0"
+          />
+          <input
+            type="text"
+            value={value ?? ''}
+            onChange={(event) => onChange(field.name, event.target.value)}
+            className="form-input text-xs sm:text-sm font-mono flex-1 uppercase"
+            placeholder="Pilih atau ketik kode HEX (misal: #BE123C)"
+          />
+          {value && (
+            <button
+              type="button"
+              onClick={() => onChange(field.name, '')}
+              className="text-xs text-gray-400 hover:text-gray-200 underline"
+            >
+              Reset
+            </button>
+          )}
+        </div>
+        <p className="text-[11px] text-gray-400 leading-tight">
+          Pilih 1 warna tema untuk meng-generate latar belakang sinematik mewah pada halaman voting kategori ini.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-1.5">
       <label htmlFor={id} className="block text-xs font-bold text-gray-700 dark:text-gray-300">

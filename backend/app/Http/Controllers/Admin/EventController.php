@@ -42,6 +42,15 @@ class EventController extends Controller
                 // Silently ignore backfill errors
             }
         }
+
+        if (!Schema::hasColumn('events', 'theme_color')) {
+            try {
+                Schema::table('events', function ($table) {
+                    $table->string('theme_color', 50)->nullable()->after('status');
+                });
+            } catch (\Throwable) {
+            }
+        }
     }
 
     public function index(): AnonymousResourceCollection

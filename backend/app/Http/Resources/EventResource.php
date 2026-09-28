@@ -36,6 +36,7 @@ class EventResource extends JsonResource
             'start_date' => $this->start_date?->toDateString(),
             'end_date' => $this->end_date?->toDateString(),
             'status' => $this->status,
+            'theme_color' => $this->theme_color,
             'categories_count' => $this->whenCounted('categories'),
             'categories' => CategoryResource::collection($this->whenLoaded('categories')),
             'created_at' => $this->created_at?->toISOString(),

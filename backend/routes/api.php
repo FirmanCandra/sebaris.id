@@ -25,11 +25,29 @@ Route::get('deploy-migrate', function (\Illuminate\Http\Request $request) {
     }
 
     try {
-        // 1. Ensure events table has thumbnail column
+        // 1. Ensure events and categories have required columns
         if (!\Illuminate\Support\Facades\Schema::hasColumn('events', 'thumbnail')) {
             try {
                 \Illuminate\Support\Facades\Schema::table('events', function ($table) {
                     $table->string('thumbnail')->nullable()->after('name');
+                });
+            } catch (\Throwable) {
+            }
+        }
+
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('events', 'theme_color')) {
+            try {
+                \Illuminate\Support\Facades\Schema::table('events', function ($table) {
+                    $table->string('theme_color', 50)->nullable()->after('status');
+                });
+            } catch (\Throwable) {
+            }
+        }
+
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('categories', 'theme_color')) {
+            try {
+                \Illuminate\Support\Facades\Schema::table('categories', function ($table) {
+                    $table->string('theme_color', 50)->nullable()->after('thumbnail');
                 });
             } catch (\Throwable) {
             }
