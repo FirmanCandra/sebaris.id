@@ -12,9 +12,6 @@ import {
   IconEyeOff,
   IconSun,
   IconMoon,
-  IconLock,
-  IconShieldCheck,
-  IconCheckVote,
 } from '../components/Icons'
 
 export default function LoginPage() {
@@ -185,7 +182,7 @@ export default function LoginPage() {
         })
         window.google.accounts.id.prompt((notification) => {
           if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            console.warn('Google One Tap not displayed:', notification.getNotDisplayedReason())
+            console.warn('Google One Tap tidak ditampilkan:', notification.getNotDisplayedReason())
           }
         })
       } catch (err) {
@@ -197,151 +194,71 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex bg-[#F8FAF7] dark:bg-[#0E130F] text-[#262A25] dark:text-[#F3F5F1] transition-colors duration-300">
+    <div className="min-h-screen w-full flex flex-col justify-between bg-[#F8FAF7] dark:bg-[#0C110D] text-[#262A25] dark:text-[#F3F5F1] transition-colors duration-300 px-4 py-6 sm:py-10">
       
-      {/* =========================================================================
-          LEFT SIDE: EDITORIAL & BRAND MISSION (Open-Source SaaS Standard)
-          ========================================================================= */}
-      <aside aria-label="Informasi Platform Sebaris.id" className="hidden lg:flex lg:w-1/2 xl:w-5/12 bg-[#141B15] text-white p-12 xl:p-16 flex-col justify-between border-r border-[#222E23] select-none">
+      {/* 1. Top Bar: Back Link & Theme Toggle */}
+      <header className="w-full max-w-[460px] mx-auto flex items-center justify-between">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-[#70B325] dark:hover:text-[#8FE032] transition-colors"
+        >
+          <IconChevronLeft className="w-4 h-4" />
+          <span>Kembali ke Beranda</span>
+        </Link>
+
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer bg-white dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700/80 text-neutral-700 dark:text-amber-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 shadow-2xs"
+          aria-label="Ubah Tema Tampilan"
+          title={`Ganti ke mode ${theme === 'dark' ? 'terang' : 'gelap'}`}
+        >
+          {theme === 'dark' ? (
+            <IconSun className="w-4 h-4 text-amber-400" />
+          ) : (
+            <IconMoon className="w-4 h-4 text-neutral-700" />
+          )}
+        </button>
+      </header>
+
+      {/* 2. Main Centered Card Container */}
+      <main className="w-full max-w-[460px] mx-auto my-auto py-6 sm:py-8">
         
-        {/* 1. Header: Brand Logo */}
-        <div>
-          <Link to="/" className="inline-block focus:outline-none" aria-label="Sebaris.id Beranda">
-            <SebarisLogo size="md" variant="white" />
-          </Link>
-          <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white/5 border border-white/10 text-xs font-medium text-emerald-400">
-            <span>Sistem E-Voting Resmi</span>
-          </div>
-        </div>
-
-        {/* 2. Value Proposition & Key Guarantees */}
-        <div className="my-auto py-8 space-y-8 max-w-md">
-          <div className="space-y-3">
-            <h2 className="text-2xl xl:text-3xl font-bold tracking-tight text-white leading-snug">
-              Pemungutan suara digital yang aman, terbuka, dan akuntabel.
-            </h2>
-            <p className="text-xs xl:text-sm text-neutral-300 leading-relaxed">
-              Mendukung pemilihan organisasi, institusi pendidikan, dan ajang penghargaan dengan integritas data yang terjamin.
-            </p>
-          </div>
-
-          {/* Authentic Core Features */}
-          <div className="space-y-4 pt-2">
-            <div className="flex items-start gap-3.5">
-              <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mt-0.5 flex-shrink-0">
-                <IconShieldCheck className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-xs sm:text-sm font-semibold text-white">
-                  Otentikasi Pemilih Sah
-                </h3>
-                <p className="text-xs text-neutral-400 mt-0.5 leading-relaxed">
-                  Verifikasi email resmi dan Google Sign-In untuk memastikan prinsip satu suara sah untuk satu pemilih.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3.5">
-              <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mt-0.5 flex-shrink-0">
-                <IconLock className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-xs sm:text-sm font-semibold text-white">
-                  Kerahasiaan Hak Pilih
-                </h3>
-                <p className="text-xs text-neutral-400 mt-0.5 leading-relaxed">
-                  Pilihan disimpan secara aman dalam bilik suara terenkripsi tanpa dapat diintervensi oleh pihak mana pun.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3.5">
-              <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mt-0.5 flex-shrink-0">
-                <IconCheckVote className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-xs sm:text-sm font-semibold text-white">
-                  Tanda Terima Resmi
-                </h3>
-                <p className="text-xs text-neutral-400 mt-0.5 leading-relaxed">
-                  Setiap transaksi voting menghasilkan kode referensi digital sebagai bukti bahwa suara telah berhasil direkapitulasi.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 3. Footer: Simple Editorial Quote */}
-        <div className="pt-6 border-t border-white/10 text-xs text-neutral-400">
-          <p className="italic text-neutral-300">
-            &ldquo;Kemudahan akses dan transparansi adalah fondasi kepercayaan dalam setiap proses pemilihan.&rdquo;
-          </p>
-          <p className="font-semibold text-white mt-1.5">
-            Komitmen Sebaris.id
-          </p>
-        </div>
-
-      </aside>
-
-      {/* =========================================================================
-          RIGHT SIDE: MODERN AUTH WORKSPACE (Shadcn UI Standard)
-          ========================================================================= */}
-      <main className="w-full lg:w-1/2 xl:w-7/12 flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-16 overflow-y-auto">
-        
-        {/* Top Bar Navigation */}
-        <div className="flex items-center justify-between w-full max-w-[420px] mx-auto mb-6 sm:mb-8">
+        {/* Brand Logo centered above Card */}
+        <div className="flex flex-col items-center justify-center mb-6">
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-[#70B325] dark:hover:text-[#8FE032] transition-colors"
+            className="inline-block focus:outline-none focus:ring-2 focus:ring-[#70B325] rounded-xl p-1"
+            aria-label="Sebaris.id Beranda"
           >
-            <IconChevronLeft className="w-4 h-4" />
-            <span>Kembali ke Beranda</span>
+            <SebarisLogo size="lg" variant={theme === 'dark' ? 'white' : 'default'} />
           </Link>
-
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer bg-white dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700/80 text-neutral-700 dark:text-amber-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 shadow-2xs"
-            aria-label="Ubah Tema Tampilan"
-            title={`Ganti ke mode ${theme === 'dark' ? 'terang' : 'gelap'}`}
-          >
-            {theme === 'dark' ? (
-              <IconSun className="w-4 h-4 text-amber-400" />
-            ) : (
-              <IconMoon className="w-4 h-4 text-neutral-700" />
-            )}
-          </button>
         </div>
 
-        {/* Main Centered Form Card */}
-        <div className="w-full max-w-[420px] mx-auto space-y-6">
+        {/* The Auth Card */}
+        <div className="bg-white dark:bg-[#141A15] border border-neutral-200/90 dark:border-neutral-800/90 rounded-2xl shadow-xl shadow-neutral-900/5 p-6 sm:p-8 space-y-6">
           
-          {/* Brand Logo for Mobile */}
-          <div className="lg:hidden flex items-center justify-center pb-2">
-            <SebarisLogo size="md" variant={theme === 'dark' ? 'white' : 'default'} />
-          </div>
-
-          {/* Heading */}
-          <div className="space-y-1.5 text-center sm:text-left">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
+          {/* Card Heading */}
+          <div className="space-y-1.5 text-center">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
               {authMode === 'login' ? 'Masuk ke Akun' : 'Daftar Akun Baru'}
             </h1>
             <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
               {authMode === 'login'
-                ? 'Masukkan kredensial Anda untuk melanjutkan ke bilik suara.'
+                ? 'Masukkan kredensial Anda untuk mengakses bilik suara.'
                 : 'Daftarkan akun pemilih baru untuk berpartisipasi dalam pemilihan.'}
             </p>
           </div>
 
           {/* Segmented Mode Switcher (Shadcn Tabs Style) */}
-          <div className="flex p-1 bg-neutral-100 dark:bg-neutral-800/60 rounded-lg border border-neutral-200 dark:border-neutral-700/60">
+          <div className="flex p-1 bg-neutral-100 dark:bg-neutral-800/70 rounded-xl border border-neutral-200/80 dark:border-neutral-700/60">
             <button
               type="button"
               onClick={() => {
                 setAuthMode('login')
                 setError('')
               }}
-              className={`flex-1 py-2 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+              className={`flex-1 py-2 text-xs rounded-lg transition-all cursor-pointer font-semibold ${
                 authMode === 'login'
                   ? 'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 shadow-2xs font-bold'
                   : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
@@ -355,7 +272,7 @@ export default function LoginPage() {
                 setAuthMode('register')
                 setError('')
               }}
-              className={`flex-1 py-2 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+              className={`flex-1 py-2 text-xs rounded-lg transition-all cursor-pointer font-semibold ${
                 authMode === 'register'
                   ? 'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 shadow-2xs font-bold'
                   : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
@@ -367,12 +284,12 @@ export default function LoginPage() {
 
           {/* Error Message Alert */}
           {error && (
-            <div className="p-3.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 rounded-lg text-xs font-medium leading-relaxed">
+            <div className="p-3.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 rounded-xl text-xs font-medium leading-relaxed">
               {error}
             </div>
           )}
 
-          {/* Google SSO Container */}
+          {/* Google SSO Section */}
           <div className="space-y-3">
             <div className="flex justify-center w-full min-h-[44px]">
               {/* Google official rendered button container */}
@@ -387,7 +304,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={handleFallbackGoogleClick}
-                  className="w-full h-11 flex items-center justify-center gap-3 px-4 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-800 dark:text-neutral-200 font-semibold text-xs sm:text-sm rounded-lg border border-neutral-300 dark:border-neutral-700 shadow-2xs transition-all cursor-pointer active:scale-[0.99]"
+                  className="w-full h-11 flex items-center justify-center gap-3 px-4 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-800 dark:text-neutral-200 font-semibold text-xs sm:text-sm rounded-xl border border-neutral-300 dark:border-neutral-700 shadow-2xs transition-all cursor-pointer active:scale-[0.99]"
                 >
                   <IconGoogle className="w-4 h-4 flex-shrink-0" />
                   <span>{authMode === 'login' ? 'Lanjutkan dengan Google' : 'Daftar dengan Google'}</span>
@@ -426,7 +343,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="nama@domain.com"
                   autoComplete="email"
-                  className="w-full h-11 px-3.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#70B325] focus:border-transparent transition-all placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
+                  className="w-full h-11 px-3.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-900/60 text-neutral-900 dark:text-neutral-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#70B325] focus:border-transparent transition-all placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
                   required
                 />
               </div>
@@ -452,7 +369,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   autoComplete="current-password"
-                  className="w-full h-11 px-3.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#70B325] focus:border-transparent transition-all placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
+                  className="w-full h-11 px-3.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-900/60 text-neutral-900 dark:text-neutral-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#70B325] focus:border-transparent transition-all placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
                   required
                 />
               </div>
@@ -481,7 +398,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={saving || googleLoading}
-                className="w-full h-11 px-4 rounded-lg bg-[#70B325] hover:bg-[#5F9B1E] text-white font-bold text-xs sm:text-sm shadow-xs hover:shadow transition-all active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
+                className="w-full h-11 px-4 rounded-xl bg-[#70B325] hover:bg-[#5F9B1E] text-white font-bold text-xs sm:text-sm shadow-xs hover:shadow transition-all active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
               >
                 {saving ? (
                   <span>Memverifikasi...</span>
@@ -507,7 +424,7 @@ export default function LoginPage() {
                   onChange={(e) => setRegName(e.target.value)}
                   placeholder="Contoh: Budi Santoso"
                   autoComplete="name"
-                  className="w-full h-11 px-3.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#70B325] focus:border-transparent transition-all placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
+                  className="w-full h-11 px-3.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-900/60 text-neutral-900 dark:text-neutral-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#70B325] focus:border-transparent transition-all placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
                   required
                 />
               </div>
@@ -523,7 +440,7 @@ export default function LoginPage() {
                   onChange={(e) => setRegEmail(e.target.value)}
                   placeholder="nama@domain.com"
                   autoComplete="email"
-                  className="w-full h-11 px-3.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#70B325] focus:border-transparent transition-all placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
+                  className="w-full h-11 px-3.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-900/60 text-neutral-900 dark:text-neutral-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#70B325] focus:border-transparent transition-all placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
                   required
                 />
               </div>
@@ -549,7 +466,7 @@ export default function LoginPage() {
                   onChange={(e) => setRegPassword(e.target.value)}
                   placeholder="Minimal 6 karakter"
                   autoComplete="new-password"
-                  className="w-full h-11 px-3.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#70B325] focus:border-transparent transition-all placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
+                  className="w-full h-11 px-3.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-900/60 text-neutral-900 dark:text-neutral-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#70B325] focus:border-transparent transition-all placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
                   minLength={6}
                   required
                 />
@@ -576,7 +493,7 @@ export default function LoginPage() {
                   onChange={(e) => setRegConfirmPassword(e.target.value)}
                   placeholder="Ketik ulang kata sandi"
                   autoComplete="new-password"
-                  className="w-full h-11 px-3.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#70B325] focus:border-transparent transition-all placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
+                  className="w-full h-11 px-3.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-900/60 text-neutral-900 dark:text-neutral-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#70B325] focus:border-transparent transition-all placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
                   minLength={6}
                   required
                 />
@@ -585,7 +502,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={saving || googleLoading}
-                className="w-full h-11 px-4 rounded-lg bg-[#70B325] hover:bg-[#5F9B1E] text-white font-bold text-xs sm:text-sm shadow-xs hover:shadow transition-all active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
+                className="w-full h-11 px-4 rounded-xl bg-[#70B325] hover:bg-[#5F9B1E] text-white font-bold text-xs sm:text-sm shadow-xs hover:shadow transition-all active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
               >
                 {saving ? (
                   <span>Mendaftarkan...</span>
@@ -634,12 +551,17 @@ export default function LoginPage() {
 
         </div>
 
-        {/* Legal Disclaimer */}
-        <div className="w-full max-w-[420px] mx-auto pt-6 text-center text-[11px] text-neutral-400 dark:text-neutral-500">
+        {/* Legal Disclaimer below card */}
+        <div className="w-full max-w-[460px] mx-auto pt-6 text-center text-[11px] text-neutral-400 dark:text-neutral-500">
           Dengan melanjutkan, Anda menyetujui Ketentuan Layanan dan Kebijakan Privasi Sebaris.id.
         </div>
 
       </main>
+
+      {/* 3. Bottom Footer Note */}
+      <footer className="w-full max-w-[460px] mx-auto text-center text-[11px] text-neutral-400 dark:text-neutral-600 select-none py-2">
+        <span>Sebaris.id &bull; Platform Pemilihan Digital Resmi</span>
+      </footer>
 
     </div>
   )
