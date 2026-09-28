@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { api, resolveStorageUrl } from '../api/client'
 import PublicHeader from '../components/PublicHeader'
+import PublicFooter from '../components/PublicFooter'
 import CheckVoteModal from '../components/CheckVoteModal'
 import SebarisLogo from '../components/SebarisLogo'
 import HeroBannerSkeleton from '../components/HeroBannerSkeleton'
@@ -389,7 +390,7 @@ export default function PublicEventsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] dark:bg-[#121612] text-[#262A25] dark:text-[#F3F5F1] flex flex-col font-sans transition-colors duration-300">
+    <div className="min-h-screen bg-[#F8FAF7] dark:bg-[#121612] text-[#262A25] dark:text-[#F3F5F1] flex flex-col font-sans transition-colors duration-300 overflow-x-hidden w-full">
       
       {/* Top Sticky Navigation Bar */}
       <PublicHeader
@@ -621,24 +622,32 @@ export default function PublicEventsPage() {
                   return (
                     <article
                       key={item.id}
-                      className="flex-shrink-0 w-[74vw] max-w-[270px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl overflow-hidden bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group relative"
+                      className="flex-shrink-0 w-[80vw] max-w-[290px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl overflow-hidden bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group relative"
                     >
                       {item.thumbnail ? (
                         /* Full Poster Card Layout */
                         <Link
                           to={`/voting/${item.slug || item.id}`}
-                          className="relative w-full h-full block overflow-hidden group/poster select-none"
+                          className="relative w-full h-full block overflow-hidden group/poster select-none bg-gray-900"
                         >
                           <img
                             src={resolveStorageUrl(item.thumbnail)}
                             alt={item.title}
-                            className="w-full h-full object-cover group-hover/poster:scale-105 transition-transform duration-500"
+                            className="w-full h-full object-cover object-center group-hover/poster:scale-105 transition-transform duration-500"
                             loading="lazy"
                             decoding="async"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none'
+                              const fb = e.currentTarget.parentElement?.querySelector('.poster-fallback')
+                              if (fb) fb.classList.remove('hidden')
                             }}
                           />
+
+                          {/* Fallback if image fails */}
+                          <div className="poster-fallback hidden absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gray-900 text-gray-300 p-4 text-center">
+                            <IconFlame className="w-10 h-10 text-[#70B325] mb-2 opacity-70" />
+                            <span className="text-xs font-bold line-clamp-2">{item.title}</span>
+                          </div>
 
                           {/* Top-Left Live Status Badge */}
                           <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[10px] font-black uppercase text-white shadow-xs">
@@ -819,7 +828,7 @@ export default function PublicEventsPage() {
               >                {champions.map(({ category, finalist, totalVotes, percentage }) => (
                   <article
                     key={finalist.id}
-                    className="flex-shrink-0 w-[74vw] max-w-[270px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden relative border border-white/60 dark:border-white/10 shadow-[0_12px_30px_-5px_rgba(20,40,5,0.18)] hover:shadow-[0_20px_40px_-8px_rgba(20,40,5,0.28)] transition-all duration-500 group hover:-translate-y-2 bg-white dark:bg-[#1A2214]"
+                    className="flex-shrink-0 w-[80vw] max-w-[290px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden relative border border-white/60 dark:border-white/10 shadow-[0_12px_30px_-5px_rgba(20,40,5,0.18)] hover:shadow-[0_20px_40px_-8px_rgba(20,40,5,0.28)] transition-all duration-500 group hover:-translate-y-2 bg-white dark:bg-[#1A2214]"
                   >
                     {/* Full-Bleed Portrait Photo */}
                     <div className="absolute inset-0 w-full h-full bg-gray-100 dark:bg-gray-900 overflow-hidden">
@@ -991,7 +1000,7 @@ export default function PublicEventsPage() {
                   return (
                     <article
                       key={item.id}
-                      className="flex-shrink-0 w-[74vw] max-w-[270px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl overflow-hidden bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group opacity-90 hover:opacity-100"
+                      className="flex-shrink-0 w-[80vw] max-w-[290px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl overflow-hidden bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group opacity-90 hover:opacity-100"
                     >
                       {/* Poster / Thumbnail with subtle grayscale (46%) */}
                       <div className="relative h-[46%] w-full overflow-hidden bg-gray-100 dark:bg-black/30 flex items-center justify-center">
@@ -1072,33 +1081,7 @@ export default function PublicEventsPage() {
     </main>
 
       {/* Brand Footer */}
-      <footer className="mt-16 bg-white dark:bg-[#121612] border-t border-[#E5EADF] dark:border-[#2C3529] py-10 transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-2 text-center md:text-left">
-            <SebarisLogo size="sm" />
-            <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm">
-              Platform e-voting online terpercaya untuk pemilihan sekolah, kampus, organisasi, dan komunitas di Indonesia.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-6 text-xs font-semibold text-gray-600 dark:text-gray-300">
-            <a href="/#voting-section" className="hover:text-[#70B325] transition-colors">
-              Voting Aktif
-            </a>
-            <button
-              type="button"
-              onClick={() => handleOpenCheckVoteModal()}
-              className="hover:text-[#70B325] transition-colors bg-transparent border-none cursor-pointer"
-            >
-              Cek Suara
-            </button>
-          </div>
-
-          <div className="text-xs text-gray-400 dark:text-gray-500 text-center md:text-right">
-            <p>© {new Date().getFullYear()} sebaris.id. Hak cipta dilindungi.</p>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter onOpenCheckVote={() => handleOpenCheckVoteModal()} />
 
       {/* Verification Receipt Modal Dialog */}
       <CheckVoteModal

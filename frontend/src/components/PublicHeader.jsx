@@ -98,8 +98,14 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
             aria-label="Sebaris.id Beranda"
           >
             <SebarisLogo
+              size="sm"
+              variant={theme === 'dark' ? 'white' : 'default'}
+              className="sm:hidden"
+            />
+            <SebarisLogo
               size="md"
               variant={theme === 'dark' ? 'white' : 'default'}
+              className="hidden sm:flex"
             />
           </Link>
 
@@ -140,12 +146,12 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
           </nav>
 
           {/* 3. BAGIAN KANAN: TOGGLE THEME + AUTH ACTIONS */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             {/* Toggle Mode Terang & Gelap */}
             <button
               type="button"
               onClick={toggleTheme}
-              className="w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md transition-all cursor-pointer bg-black/5 dark:bg-white/10 border border-black/10 dark:border-white/15 text-gray-700 dark:text-amber-400 hover:bg-black/10 dark:hover:bg-white/20"
+              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full flex items-center justify-center backdrop-blur-md transition-all cursor-pointer bg-black/5 dark:bg-white/10 border border-black/10 dark:border-white/15 text-gray-700 dark:text-amber-400 hover:bg-black/10 dark:hover:bg-white/20 flex-shrink-0"
               aria-label="Ubah Tema"
               title={`Ganti ke mode ${theme === 'dark' ? 'terang' : 'gelap'}`}
             >
@@ -158,8 +164,8 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
 
             {/* AUTH LOGIC */}
             {isAdmin ? (
-              /* KONDISI 1: ADMIN LOGIN - Hanya tampilkan Dashboard Admin & Profil Logout (TIDAK ADA Masuk/Daftar) */
-              <div className="flex items-center gap-2">
+              /* KONDISI 1: ADMIN LOGIN - Hanya tampilkan Dashboard Admin & Profil Logout di desktop, mobile lewat drawer */
+              <div className="hidden sm:flex items-center gap-2">
                 <Link
                   to="/admin/categories"
                   className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-[#262A25] text-white hover:bg-black dark:bg-[#70B325] dark:text-[#0E140E] dark:hover:bg-[#8FE032] transition-all no-underline shadow-xs"
@@ -168,7 +174,7 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
                   <span>Dashboard Admin</span>
                 </Link>
 
-                <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-gray-200 dark:border-white/15">
+                <div className="flex items-center gap-2 pl-2 border-l border-gray-200 dark:border-white/15">
                   <div className="flex items-center gap-1.5">
                     <div className="w-6 h-6 rounded-full bg-[#70B325] text-white font-black text-xs flex items-center justify-center shadow-xs">
                       {admin?.name ? admin.name.charAt(0).toUpperCase() : 'A'}
@@ -197,7 +203,7 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
               <button
                 type="button"
                 onClick={() => setUserModalOpen(true)}
-                className="flex items-center gap-2 py-1.5 px-3.5 rounded-full transition-colors cursor-pointer bg-[#F4F9EE] dark:bg-white/10 border border-[#D5E6C4] dark:border-white/15 text-[#262A25] dark:text-white hover:bg-[#EAF3DE] dark:hover:bg-white/20"
+                className="flex items-center gap-2 py-1.5 px-2.5 sm:px-3.5 rounded-full transition-colors cursor-pointer bg-[#F4F9EE] dark:bg-white/10 border border-[#D5E6C4] dark:border-white/15 text-[#262A25] dark:text-white hover:bg-[#EAF3DE] dark:hover:bg-white/20"
                 title="Buka profil pemilih & riwayat vote"
               >
                 {user.avatar ? (
@@ -217,8 +223,8 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
                 </span>
               </button>
             ) : (
-              /* KONDISI 3: BELUM LOGIN SIAPAPUN - Tampilkan Masuk & Daftar */
-              <div className="flex items-center gap-1 sm:gap-2">
+              /* KONDISI 3: BELUM LOGIN SIAPAPUN - Desktop: Masuk & Daftar, Mobile: Lewat Hamburger Drawer */
+              <div className="hidden sm:flex items-center gap-1 sm:gap-2">
                 <Link
                   to="/login?tab=login"
                   className="inline-flex items-center px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-[#262A25] dark:text-gray-200 hover:text-[#70B325] dark:hover:text-[#8FE032] transition-colors"
@@ -235,14 +241,18 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
               </div>
             )}
 
-            {/* Mobile Menu Hamburger Button */}
+            {/* Mobile Menu Hamburger Button (Selalu tampak jelas & tidak pernah terdorong keluar layar) */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center backdrop-blur-md transition-all cursor-pointer bg-black/5 dark:bg-white/10 border border-black/10 dark:border-white/15 text-gray-800 dark:text-gray-200"
-              aria-label="Buka menu navigasi"
+              className="md:hidden w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center backdrop-blur-md transition-all cursor-pointer bg-black/5 dark:bg-white/10 border border-black/10 dark:border-white/15 text-gray-900 dark:text-white hover:bg-black/10 dark:hover:bg-white/20 active:scale-95 flex-shrink-0"
+              aria-label={mobileMenuOpen ? 'Tutup menu' : 'Buka menu navigasi'}
             >
-              {mobileMenuOpen ? <IconClose className="w-5 h-5" /> : <IconMenu className="w-5 h-5" />}
+              {mobileMenuOpen ? (
+                <IconClose className="w-5 h-5 text-gray-900 dark:text-white stroke-[2.5]" />
+              ) : (
+                <IconMenu className="w-5 h-5 text-gray-900 dark:text-white stroke-[2.5]" />
+              )}
             </button>
           </div>
         </div>

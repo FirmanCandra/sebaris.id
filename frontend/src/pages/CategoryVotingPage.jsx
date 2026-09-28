@@ -2,6 +2,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { api, resolveStorageUrl } from '../api/client'
 import PublicHeader from '../components/PublicHeader'
+import PublicFooter from '../components/PublicFooter'
 import LuxuryAmbientBackdrop from '../components/LuxuryAmbientBackdrop'
 import VotingCountdown from '../components/VotingCountdown'
 import CommercialVoteModal from '../components/CommercialVoteModal'
@@ -334,7 +335,7 @@ export default function CategoryVotingPage() {
   }, [category])
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] dark:bg-[#121612] text-[#262A25] dark:text-[#F3F5F1] flex flex-col font-sans transition-colors duration-300">
+    <div className="min-h-screen bg-[#F8FAF7] dark:bg-[#121612] text-[#262A25] dark:text-[#F3F5F1] flex flex-col font-sans transition-colors duration-300 overflow-x-hidden w-full">
       
       {/* Sticky Header */}
       <PublicHeader />
@@ -1531,6 +1532,9 @@ export default function CategoryVotingPage() {
           data={eReceiptData}
         />
       )}
+
+      {/* Official Brand Footer */}
+      <PublicFooter />
 
     </div>
   )
