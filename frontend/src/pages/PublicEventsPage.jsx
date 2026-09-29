@@ -784,16 +784,6 @@ export default function PublicEventsPage() {
                   </p>
                 </div>
               </div>
-
-              {champions.length > 0 && (
-                <Link
-                  to="/events"
-                  className="hidden sm:inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-[#173007] hover:text-black dark:text-[#D2FF0F] dark:hover:text-white transition-colors bg-white/70 hover:bg-white dark:bg-white/10 dark:hover:bg-white/20 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-[#173007]/15 dark:border-white/20 shadow-xs whitespace-nowrap"
-                >
-                  <span>Lihat Lebih Banyak</span>
-                  <IconChevronRight className="w-4 h-4" />
-                </Link>
-              )}
             </div>
 
             <div className="relative group/slider">
@@ -890,18 +880,6 @@ export default function PublicEventsPage() {
                 ))}
               </div>
 
-              {/* Mobile "Lihat Lebih Banyak ->" button below carousel */}
-              {champions.length > 1 && (
-                <div className="sm:hidden flex items-center justify-center pt-3 pb-1">
-                  <Link
-                    to="/events"
-                    className="inline-flex items-center gap-1 text-xs font-black text-[#173007] dark:text-[#D2FF0F] bg-white/70 dark:bg-white/10 px-3.5 py-1.5 rounded-full border border-[#173007]/15 dark:border-white/20 shadow-xs"
-                  >
-                    <span>Lihat Lebih Banyak</span>
-                    <IconChevronRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              )}
             </div>
           </div>
 
