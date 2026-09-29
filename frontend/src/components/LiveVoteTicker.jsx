@@ -20,31 +20,43 @@ export default function LiveVoteTicker() {
     location.pathname.startsWith('/login') ||
     location.pathname.startsWith('/embed')
 
-  // Fetch recent votes
+  // Extract category param if on a category voting page
+  const categoryMatch = location.pathname.match(/^\/(?:voting|categories)\/([^/]+)/)
+  const currentCategory = categoryMatch ? decodeURIComponent(categoryMatch[1]) : null
+
+  // Fetch recent votes strictly scoped to current category if on a category page
   useEffect(() => {
     if (isHiddenRoute) return
 
     let isMounted = true
+    setVisible(false)
+    setCurrentIndex(0)
 
     async function fetchRecentVotes() {
       try {
-        const res = await api('/votes/recent')
-        if (isMounted && res.data && res.data.length > 0) {
-          setItems(res.data)
+        const queryParam = currentCategory ? `?category=${encodeURIComponent(currentCategory)}` : ''
+        const res = await api(`/votes/recent${queryParam}`)
+        if (isMounted) {
+          if (res.data && res.data.length > 0) {
+            setItems(res.data)
+            setCurrentIndex(0)
+          } else {
+            setItems([])
+          }
         }
       } catch {
-        // silent fail, non-critical enhancement
+        if (isMounted) setItems([])
       }
     }
 
     fetchRecentVotes()
-    const refreshInterval = setInterval(fetchRecentVotes, 35000)
+    const refreshInterval = setInterval(fetchRecentVotes, 30000)
 
     return () => {
       isMounted = false
       clearInterval(refreshInterval)
     }
-  }, [isHiddenRoute])
+  }, [isHiddenRoute, currentCategory])
 
   // Cycle through votes
   useEffect(() => {
