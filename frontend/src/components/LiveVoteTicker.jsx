@@ -24,9 +24,13 @@ export default function LiveVoteTicker() {
   const categoryMatch = location.pathname.match(/^\/(?:voting|categories)\/([^/]+)/)
   const currentCategory = categoryMatch ? decodeURIComponent(categoryMatch[1]) : null
 
-  // Fetch recent votes strictly scoped to current category if on a category page
+  // Fetch recent votes strictly scoped to current category ONLY when on a category page
   useEffect(() => {
-    if (isHiddenRoute) return
+    if (isHiddenRoute || !currentCategory) {
+      setItems([])
+      setVisible(false)
+      return
+    }
 
     let isMounted = true
     setVisible(false)
@@ -34,7 +38,7 @@ export default function LiveVoteTicker() {
 
     async function fetchRecentVotes() {
       try {
-        const queryParam = currentCategory ? `?category=${encodeURIComponent(currentCategory)}` : ''
+        const queryParam = `?category=${encodeURIComponent(currentCategory)}`
         const res = await api(`/votes/recent${queryParam}`)
         if (isMounted) {
           if (res.data && res.data.length > 0) {
@@ -60,7 +64,7 @@ export default function LiveVoteTicker() {
 
   // Cycle through votes
   useEffect(() => {
-    if (isHiddenRoute || dismissed || items.length === 0 || isPaused) return
+    if (isHiddenRoute || !currentCategory || dismissed || items.length === 0 || isPaused) return
 
     // Show initial item after small entrance delay
     const initialDelay = setTimeout(() => {
@@ -81,9 +85,9 @@ export default function LiveVoteTicker() {
       clearTimeout(initialDelay)
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [isHiddenRoute, dismissed, items.length, isPaused])
+  }, [isHiddenRoute, currentCategory, dismissed, items.length, isPaused])
 
-  if (isHiddenRoute || dismissed || items.length === 0) {
+  if (isHiddenRoute || !currentCategory || dismissed || items.length === 0) {
     return null
   }
 

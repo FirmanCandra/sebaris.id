@@ -407,28 +407,29 @@ class VoteController extends Controller
     public function recent(Request $request): JsonResponse
     {
         $categoryParam = trim($request->query('category', ''));
-        $targetCategory = null;
-
-        if (!empty($categoryParam)) {
-            $targetCategory = Category::where(function ($q) use ($categoryParam) {
-                if (is_numeric($categoryParam)) {
-                    $q->where('id', (int) $categoryParam);
-                } else {
-                    $q->where('slug', $categoryParam);
-                }
-            })->first();
+        if (empty($categoryParam)) {
+            return response()->json(['data' => []]);
         }
 
-        $query = Vote::query()
+        $targetCategory = Category::where(function ($q) use ($categoryParam) {
+            if (is_numeric($categoryParam)) {
+                $q->where('id', (int) $categoryParam);
+            } else {
+                $q->where('slug', $categoryParam);
+            }
+        })->first();
+
+        if (!$targetCategory) {
+            return response()->json(['data' => []]);
+        }
+
+        $votes = Vote::query()
             ->with(['finalist:id,name,photo,category_id', 'finalist.category:id,name,slug'])
             ->where('status', 'confirmed')
-            ->latest('paid_at');
-
-        if ($targetCategory) {
-            $query->whereHas('finalist', fn ($q) => $q->where('category_id', $targetCategory->id));
-        }
-
-        $votes = $query->limit(20)->get();
+            ->whereHas('finalist', fn ($q) => $q->where('category_id', $targetCategory->id))
+            ->latest('paid_at')
+            ->limit(20)
+            ->get();
 
         $items = $votes->map(function ($vote) {
             $name = 'Seseorang';
