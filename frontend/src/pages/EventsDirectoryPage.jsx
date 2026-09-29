@@ -12,8 +12,7 @@ import {
   IconChevronRight,
   IconCalendar,
   IconUsers,
-  IconFlame,
-  IconClock,
+  IconZap,
 } from '../components/Icons'
 import {
   BannerCampus,
@@ -56,7 +55,7 @@ export default function EventsDirectoryPage() {
   const [checkVoteModalQuery, setCheckVoteModalQuery] = useState('')
 
   useEffect(() => {
-    document.title = 'Semua Event & Ajang Voting | Sebaris.id'
+    document.title = 'Ajang & Event Voting | Sebaris.id'
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }, [])
 
@@ -183,7 +182,10 @@ export default function EventsDirectoryPage() {
   const countPast = useMemo(() => allDirectoryItems.filter((i) => i.isPast).length, [allDirectoryItems])
 
   return (
-    <div className="min-h-screen bg-[#F8FAF7] dark:bg-[#121612] text-[#262A25] dark:text-[#E8EFE5] flex flex-col font-sans transition-colors duration-300">
+    <div className="min-h-screen bg-[#F8FAF7] dark:bg-[#121612] text-[#262A25] dark:text-[#E8EFE5] flex flex-col font-sans transition-colors duration-300 relative overflow-x-hidden">
+      {/* Subtle Top Ambient Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-72 bg-gradient-to-b from-[#70B325]/12 via-[#70B325]/4 to-transparent blur-3xl pointer-events-none -z-10" />
+
       <PublicHeader
         searchQuery={searchQuery}
         onSearchChange={(val) => setSearchQuery(val)}
@@ -193,135 +195,125 @@ export default function EventsDirectoryPage() {
         }}
       />
 
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 pb-16 space-y-6 sm:space-y-8">
-        {/* Page Hero Header */}
-        <section className="text-center max-w-3xl mx-auto space-y-3 pt-2 sm:pt-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EAF5DE] dark:bg-white/10 text-[#70B325] dark:text-[#86C839] text-xs font-black uppercase tracking-wider">
-            <IconFlame className="w-3.5 h-3.5" />
-            <span>Katalog Event &amp; Ajang</span>
-          </div>
-          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#262A25] dark:text-white tracking-tight leading-tight">
-            Semua Ajang &amp; Event Voting
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-8 pb-20 space-y-6 sm:space-y-10">
+        {/* Page Hero Header: Clean & Punchy */}
+        <section className="text-center max-w-2xl mx-auto space-y-2.5 pt-2 sm:pt-4">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#262A25] dark:text-white tracking-tight leading-tight">
+            Ajang &amp; Event Voting
           </h1>
-          <p className="text-xs sm:text-base text-gray-500 dark:text-gray-400">
-            Jelajahi berbagai kompetisi, pemilihan duta, organisasi kampus, dan ajang penghargaan resmi yang sedang berlangsung maupun yang telah selesai.
+          <p className="text-xs sm:text-base text-gray-500 dark:text-gray-400 leading-relaxed">
+            Dukung kandidat dan ajang favorit Anda secara real-time, transparan, dan terpercaya.
           </p>
         </section>
 
-        {/* Filter & Search Toolbar */}
-        <section className="bg-white dark:bg-[#1A2018] border border-gray-200 dark:border-white/10 rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xs space-y-3">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            {/* Search Input */}
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari event, kategori, atau penyelenggara..."
-                className="w-full h-11 pl-10 pr-10 text-xs sm:text-sm bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/15 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#70B325] transition-colors"
-              />
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                <IconSearch className="w-4 h-4" />
-              </span>
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer p-1"
-                  title="Hapus pencarian"
-                >
-                  <IconClose className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-
-            {/* Segmented Filter Status Tabs */}
-            <div className="inline-flex items-center p-1 bg-gray-100 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 self-start sm:self-auto overflow-x-auto max-w-full">
+        {/* Filter & Search Toolbar: Sleek Pill Bar */}
+        <section className="flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4 w-full">
+          {/* Search Input */}
+          <div className="relative w-full md:w-80 lg:w-96">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari event atau penyelenggara..."
+              className="w-full h-11 pl-10 pr-10 text-xs sm:text-sm bg-white dark:bg-[#1A2018] border border-gray-200/90 dark:border-white/15 rounded-full text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#70B325] shadow-xs transition-all"
+            />
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+              <IconSearch className="w-4 h-4" />
+            </span>
+            {searchQuery && (
               <button
                 type="button"
-                onClick={() => handleStatusChange('all')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-                  filterStatus === 'all'
-                    ? 'bg-white dark:bg-[#252E22] text-[#70B325] dark:text-[#86C839] shadow-xs'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer p-0.5"
+                title="Hapus pencarian"
               >
-                <span>Semua</span>
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-gray-200/70 dark:bg-white/10 text-gray-700 dark:text-gray-300">
-                  {allDirectoryItems.length}
-                </span>
+                <IconClose className="w-3.5 h-3.5" />
               </button>
-
-              <button
-                type="button"
-                onClick={() => handleStatusChange('active')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-                  filterStatus === 'active'
-                    ? 'bg-white dark:bg-[#252E22] text-[#70B325] dark:text-[#86C839] shadow-xs'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Berlangsung</span>
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-gray-200/70 dark:bg-white/10 text-gray-700 dark:text-gray-300">
-                  {countActive}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleStatusChange('past')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-                  filterStatus === 'past'
-                    ? 'bg-white dark:bg-[#252E22] text-[#70B325] dark:text-[#86C839] shadow-xs'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                <IconLock className="w-3 h-3" />
-                <span>Selesai</span>
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-gray-200/70 dark:bg-white/10 text-gray-700 dark:text-gray-300">
-                  {countPast}
-                </span>
-              </button>
-            </div>
+            )}
           </div>
 
-          {/* Active summary line */}
-          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-1 px-1 border-t border-gray-100 dark:border-white/5">
-            <span>
-              Menampilkan <strong className="text-gray-900 dark:text-white">{filteredItems.length}</strong> ajang pemilihan
-              {searchQuery && ` untuk pencarian "${searchQuery}"`}
-            </span>
+          {/* Segmented Filter Status Tabs */}
+          <div className="inline-flex items-center p-1 bg-gray-200/70 dark:bg-white/10 rounded-full border border-gray-200/60 dark:border-white/10 shadow-2xs self-center">
+            <button
+              type="button"
+              onClick={() => handleStatusChange('all')}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                filterStatus === 'all'
+                  ? 'bg-white dark:bg-[#252E22] text-[#70B325] dark:text-[#86C839] shadow-xs'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              <span>Semua</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 font-extrabold">
+                {allDirectoryItems.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleStatusChange('active')}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                filterStatus === 'active'
+                  ? 'bg-white dark:bg-[#252E22] text-[#70B325] dark:text-[#86C839] shadow-xs'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span>Berlangsung</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 font-extrabold">
+                {countActive}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleStatusChange('past')}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                filterStatus === 'past'
+                  ? 'bg-white dark:bg-[#252E22] text-[#70B325] dark:text-[#86C839] shadow-xs'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              <IconLock className="w-3 h-3" />
+              <span>Selesai</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 font-extrabold">
+                {countPast}
+              </span>
+            </button>
           </div>
         </section>
 
         {/* Directory Event Cards Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {[1, 2, 3].map((n) => (
               <div
                 key={n}
-                className="h-[380px] rounded-2xl bg-white dark:bg-[#1A2018] border border-gray-200 dark:border-white/10 animate-pulse p-4 flex flex-col justify-between"
+                className="rounded-3xl bg-white dark:bg-[#1A2018] border border-gray-200 dark:border-white/10 animate-pulse p-3 sm:p-4 flex flex-col justify-between space-y-4"
               >
-                <div className="aspect-[4/5] w-full bg-gray-200 dark:bg-white/10 rounded-xl" />
-                <div className="space-y-2 pt-3">
-                  <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-3/4" />
-                  <div className="h-3 bg-gray-100 dark:bg-white/5 rounded w-1/2" />
+                <div className="aspect-[16/10] w-full bg-gray-200 dark:bg-white/10 rounded-2xl" />
+                <div className="space-y-2">
+                  <div className="h-5 bg-gray-200 dark:bg-white/10 rounded-md w-3/4" />
+                  <div className="h-3.5 bg-gray-100 dark:bg-white/5 rounded-md w-1/2" />
                 </div>
+                <div className="h-11 bg-gray-100 dark:bg-white/5 rounded-xl w-full" />
               </div>
             ))}
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="py-16 px-6 text-center bg-white dark:bg-[#1A2018] border border-gray-200 dark:border-white/10 rounded-3xl max-w-lg mx-auto space-y-3">
+          <div className="py-16 px-6 text-center bg-white dark:bg-[#1A2018] border border-gray-200 dark:border-white/10 rounded-3xl max-w-md mx-auto space-y-3 shadow-xs">
             <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-white/10 text-gray-400 flex items-center justify-center mx-auto">
-              <IconSearch className="w-6 h-6" />
+              <IconSearch className="w-5 h-5" />
             </div>
             <h3 className="text-base font-extrabold text-[#262A25] dark:text-white">
               Tidak Ada Event Ditemukan
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {searchQuery
-                ? `Tidak ada ajang atau kategori yang cocok dengan pencarian "${searchQuery}".`
+                ? `Tidak ada ajang yang cocok dengan pencarian "${searchQuery}".`
                 : 'Belum ada event dalam kategori status yang dipilih.'}
             </p>
             {searchQuery && (
@@ -335,7 +327,7 @@ export default function EventsDirectoryPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {filteredItems.map((item) => {
               const FallbackIllustration = [BannerCampus, BannerSchool, BannerFestival, BannerPoster][
                 item.fallbackIdx % 4
@@ -344,83 +336,90 @@ export default function EventsDirectoryPage() {
               return (
                 <article
                   key={item.id}
-                  className="card-base flex flex-col justify-between overflow-hidden bg-white dark:bg-[#1A2018] border border-gray-200 dark:border-white/10 rounded-2xl sm:rounded-3xl shadow-xs hover:border-[#70B325] dark:hover:border-[#70B325] hover:shadow-lg transition-all duration-300 group"
+                  className="group bg-white dark:bg-[#181F16] border border-gray-200/90 dark:border-white/10 rounded-3xl p-3 sm:p-4 shadow-xs hover:shadow-xl hover:border-[#70B325] dark:hover:border-[#70B325]/70 transition-all duration-300 flex flex-col justify-between"
                 >
-                  <div>
-                    {/* Poster Thumbnail (4:5 Aspect Ratio) */}
-                    <div className="relative aspect-[4/5] w-full overflow-hidden bg-gray-100 dark:bg-black/50">
+                  <div className="space-y-3.5">
+                    {/* Poster Thumbnail (16:10 Aspect Ratio with rounded inner corners) */}
+                    <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-gray-100 dark:bg-black/50 shadow-inner">
                       {item.thumbnail ? (
                         <img
                           src={resolveStorageUrl(item.thumbnail)}
                           alt={item.title}
-                          className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-cover object-center group-hover:scale-106 transition-transform duration-500 ease-out"
                           loading="lazy"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                           }}
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center p-4">
-                          <FallbackIllustration className="w-full h-full object-contain opacity-70 group-hover:scale-105 transition-transform duration-500" />
+                        <div className="w-full h-full flex items-center justify-center p-4 bg-gradient-to-br from-emerald-950/40 to-black/60">
+                          <FallbackIllustration className="w-full h-full object-contain opacity-75 group-hover:scale-105 transition-transform duration-500" />
                         </div>
                       )}
 
                       {/* Top Badges */}
-                      <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none z-10">
+                      <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10">
                         {item.isPast ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md border border-white/20 text-white font-extrabold text-[10px] shadow-sm">
-                            <IconLock className="w-3 h-3 text-gray-300" />
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md border border-white/20 text-white font-extrabold text-[11px] shadow-sm">
+                            <IconLock className="w-3.5 h-3.5 text-gray-300" />
                             <span>SELESAI</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/85 backdrop-blur-md border border-emerald-500/50 text-emerald-300 font-extrabold text-[10px] shadow-sm">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/90 backdrop-blur-md border border-emerald-500/50 text-emerald-300 font-extrabold text-[11px] shadow-sm">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
                             <span>LIVE</span>
                           </span>
                         )}
 
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold">
-                          <IconUsers className="w-3 h-3" />
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/65 backdrop-blur-md border border-white/20 text-white text-[11px] font-bold shadow-xs">
+                          <IconUsers className="w-3.5 h-3.5" />
                           <span>{item.finalistsCount} Finalis</span>
                         </span>
                       </div>
                     </div>
 
                     {/* Card Body */}
-                    <div className="p-3.5 sm:p-4 space-y-2">
-                      <div className="space-y-1">
-                        <h3 className="font-extrabold text-sm sm:text-base text-gray-900 dark:text-white line-clamp-2 leading-snug group-hover:text-[#70B325] transition-colors">
-                          <Link to={`/voting/${item.slug}`} className="no-underline text-inherit">
-                            {item.title}
-                          </Link>
-                        </h3>
-                        <p className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1 truncate">
-                          <span className="truncate">{item.organizer}</span>
-                          <IconCheck className="w-3 h-3 text-[#70B325] flex-shrink-0" />
-                        </p>
-                      </div>
+                    <div className="space-y-2 px-1">
+                      <h3 className="font-extrabold text-base sm:text-lg text-gray-900 dark:text-white line-clamp-2 leading-snug group-hover:text-[#70B325] dark:group-hover:text-[#8FE032] transition-colors">
+                        <Link to={`/voting/${item.slug}`} className="no-underline text-inherit">
+                          {item.title}
+                        </Link>
+                      </h3>
 
-                      {/* Details row */}
-                      <div className="pt-2 border-t border-gray-100 dark:border-white/10 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
-                        <span className="inline-flex items-center gap-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5 truncate">
+                        <span className="truncate">{item.organizer}</span>
+                        <IconCheck className="w-3.5 h-3.5 text-[#70B325] flex-shrink-0" />
+                      </p>
+
+                      {/* Meta Information */}
+                      <div className="pt-2 border-t border-gray-100 dark:border-white/10 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                        <span className="inline-flex items-center gap-1.5">
                           <IconCalendar className="w-3.5 h-3.5 text-gray-400" />
                           <span>{item.dateLabel}</span>
                         </span>
-                        {item.categoriesCount > 1 && (
-                          <span className="font-semibold text-gray-700 dark:text-gray-300">
+                        {item.categoriesCount > 1 ? (
+                          <span className="font-bold text-gray-700 dark:text-gray-300">
                             {item.categoriesCount} Kategori
+                          </span>
+                        ) : (
+                          <span className="font-semibold text-gray-400">
+                            Ajang Resmi
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Action Button */}
-                  <div className="p-3.5 sm:p-4 pt-0">
+                  {/* Primary CTA Button */}
+                  <div className="pt-4 px-1">
                     <Link
                       to={`/voting/${item.slug}`}
-                      className="w-full py-2.5 px-3 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-xs sm:text-sm rounded-xl text-center no-underline flex items-center justify-center gap-1.5 shadow-xs active:scale-98 transition-all cursor-pointer"
+                      className="w-full py-2.5 sm:py-3 px-4 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-xs sm:text-sm rounded-xl text-center no-underline flex items-center justify-center gap-2 shadow-xs hover:shadow-md active:scale-98 transition-all cursor-pointer"
                     >
+                      <IconZap className="w-3.5 h-3.5" />
                       <span>{item.isPast ? 'Lihat Hasil Akhir' : 'Buka & Vote Sekarang'}</span>
                       <IconChevronRight className="w-3.5 h-3.5" />
                     </Link>
