@@ -10,6 +10,7 @@ import {
   IconCheckVote,
   IconClock,
   IconClose,
+  IconFilter,
 } from '../components/Icons'
 
 // ─── Tiny inline bar chart (no external lib) ──────────────────────────────────
@@ -103,8 +104,11 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  // Voter table filter state
-  const [voterCategoryId, setVoterCategoryId] = useState('')
+  // Global Filter: Event and Category
+  const [selectedEventId, setSelectedEventId] = useState('')
+  const [selectedCategoryId, setSelectedCategoryId] = useState('')
+
+  // Voter table filter & pagination state
   const [voterSearch, setVoterSearch] = useState('')
   const [voterSearchInput, setVoterSearchInput] = useState('')
   const [voterPage, setVoterPage] = useState(1)
@@ -118,7 +122,11 @@ export default function AdminDashboardPage() {
     setLoading(true)
     setError('')
     try {
-      const res = await api('/admin/dashboard', { token })
+      const params = new URLSearchParams()
+      if (selectedEventId) params.set('event_id', selectedEventId)
+      if (selectedCategoryId) params.set('category_id', selectedCategoryId)
+      const q = params.toString() ? `?${params.toString()}` : ''
+      const res = await api(`/admin/dashboard${q}`, { token })
       setData(res)
       setVoterData({ data: res.voters?.data ?? [], meta: res.voters?.meta ?? {} })
     } catch (e) {
@@ -126,13 +134,14 @@ export default function AdminDashboardPage() {
     } finally {
       setLoading(false)
     }
-  }, [token])
+  }, [token, selectedEventId, selectedCategoryId])
 
   const loadVoters = useCallback(async () => {
     setVoterLoading(true)
     try {
       const params = new URLSearchParams({ page: voterPage })
-      if (voterCategoryId) params.set('category_id', voterCategoryId)
+      if (selectedCategoryId) params.set('category_id', selectedCategoryId)
+      else if (selectedEventId) params.set('event_id', selectedEventId)
       if (voterSearch) params.set('search', voterSearch)
       const res = await api(`/admin/dashboard?${params.toString()}`, { token })
       setVoterData({ data: res.voters?.data ?? [], meta: res.voters?.meta ?? {} })
@@ -141,12 +150,15 @@ export default function AdminDashboardPage() {
     } finally {
       setVoterLoading(false)
     }
-  }, [token, voterCategoryId, voterSearch, voterPage])
+  }, [token, voterPage, selectedCategoryId, selectedEventId, voterSearch])
 
-  useEffect(() => { loadDashboard() }, [loadDashboard])
+  useEffect(() => {
+    loadDashboard()
+  }, [loadDashboard])
+
   useEffect(() => {
     if (!loading) loadVoters()
-  }, [voterCategoryId, voterSearch, voterPage]) // eslint-disable-line
+  }, [voterPage, voterSearch]) // eslint-disable-line
 
   // Chart data with 14-day fill
   const votesChart = useMemo(() => fill14Days(data?.votes_per_day ?? [], 'total_votes', 'date'), [data])
@@ -157,9 +169,38 @@ export default function AdminDashboardPage() {
   const voters = voterData?.data ?? []
   const voterMeta = voterData?.meta ?? {}
 
+  // Filter lists from API
+  const availableEvents = data?.filters?.events ?? []
+  const allCategories = data?.filters?.categories ?? []
+
+  // Dynamic category options filtered by selected event
+  const filteredCategoriesForDropdown = useMemo(() => {
+    if (!selectedEventId) return allCategories
+    return allCategories.filter((c) => String(c.event_id) === String(selectedEventId))
+  }, [allCategories, selectedEventId])
+
+  // Active filter labels
+  const selectedEventName = useMemo(() => {
+    if (!selectedEventId) return null
+    return availableEvents.find((e) => String(e.id) === String(selectedEventId))?.name ?? null
+  }, [availableEvents, selectedEventId])
+
+  const selectedCategoryName = useMemo(() => {
+    if (!selectedCategoryId) return null
+    return allCategories.find((c) => String(c.id) === String(selectedCategoryId))?.name ?? null
+  }, [allCategories, selectedCategoryId])
+
   function handleVoterSearch(e) {
     e.preventDefault()
     setVoterSearch(voterSearchInput)
+    setVoterPage(1)
+  }
+
+  function handleResetFilters() {
+    setSelectedEventId('')
+    setSelectedCategoryId('')
+    setVoterSearch('')
+    setVoterSearchInput('')
     setVoterPage(1)
   }
 
@@ -199,6 +240,123 @@ export default function AdminDashboardPage() {
           Statistik real-time, tren suara, dan daftar voter seluruh ajang voting.
         </p>
       </div>
+
+      {/* ── Global Filter Bar (Event & Category) ── */}
+      <section
+        className="bg-[var(--neutral-surface)] border border-[var(--neutral-border)] rounded-2xl p-4 sm:p-5 shadow-[var(--shadow-subtle)] space-y-3"
+        aria-label="Filter statistik dashboard"
+      >
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[var(--brand-primary-light)] text-[var(--brand-primary)] flex items-center justify-center flex-shrink-0">
+              <IconFilter className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-sm font-extrabold text-[var(--neutral-text-main)]">Filter Dashboard</h2>
+              <p className="text-[11px] text-gray-400">
+                Pilih event atau kategori untuk memfilter KPI suara, revenue, finalis, dan grafik tren.
+              </p>
+            </div>
+          </div>
+
+          {/* Filter Controls */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            {/* Event Dropdown */}
+            <div className="flex-1 sm:flex-initial min-w-[200px]">
+              <label htmlFor="dashboard-event-filter" className="sr-only">
+                Filter Event
+              </label>
+              <select
+                id="dashboard-event-filter"
+                value={selectedEventId}
+                onChange={(e) => {
+                  const evId = e.target.value
+                  setSelectedEventId(evId)
+                  // Reset category if it doesn't belong to the newly selected event
+                  if (evId && selectedCategoryId) {
+                    const belongs = allCategories.some(
+                      (c) => String(c.id) === String(selectedCategoryId) && String(c.event_id) === String(evId)
+                    )
+                    if (!belongs) setSelectedCategoryId('')
+                  }
+                  setVoterPage(1)
+                }}
+                className="w-full h-10 px-3.5 text-xs font-semibold bg-[var(--neutral-bg)] border border-[var(--neutral-border)] rounded-xl text-[var(--neutral-text-main)] focus:border-[var(--brand-primary)] focus:outline-none cursor-pointer transition-colors"
+              >
+                <option value="">Semua Event (Global)</option>
+                {availableEvents.map((ev) => (
+                  <option key={ev.id} value={ev.id}>
+                    {ev.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Category Dropdown */}
+            <div className="flex-1 sm:flex-initial min-w-[200px]">
+              <label htmlFor="dashboard-category-filter" className="sr-only">
+                Filter Kategori
+              </label>
+              <select
+                id="dashboard-category-filter"
+                value={selectedCategoryId}
+                onChange={(e) => {
+                  const catId = e.target.value
+                  setSelectedCategoryId(catId)
+                  if (catId) {
+                    const matchedCat = allCategories.find((c) => String(c.id) === String(catId))
+                    if (matchedCat && !selectedEventId) {
+                      setSelectedEventId(String(matchedCat.event_id))
+                    }
+                  }
+                  setVoterPage(1)
+                }}
+                className="w-full h-10 px-3.5 text-xs font-semibold bg-[var(--neutral-bg)] border border-[var(--neutral-border)] rounded-xl text-[var(--neutral-text-main)] focus:border-[var(--brand-primary)] focus:outline-none cursor-pointer transition-colors"
+              >
+                <option value="">Semua Kategori</option>
+                {filteredCategoriesForDropdown.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Reset Filter Button */}
+            {(selectedEventId || selectedCategoryId) && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="h-10 px-3.5 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 text-xs font-bold flex items-center gap-1.5 hover:bg-red-100 transition-colors cursor-pointer"
+                title="Reset semua filter ke tampilan global"
+              >
+                <IconClose className="w-3.5 h-3.5" />
+                <span>Reset</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Filter State Tags */}
+        {(selectedEventId || selectedCategoryId) && (
+          <div className="pt-2.5 border-t border-[var(--neutral-border)] flex flex-wrap items-center gap-2 text-xs">
+            <span className="text-[11px] font-bold text-gray-400">Filter Aktif:</span>
+            {selectedEventName && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--brand-primary-light)] text-[var(--brand-primary)] font-bold text-xs">
+                <span>Event: {selectedEventName}</span>
+              </span>
+            )}
+            {selectedCategoryName && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#EBF7E3] text-[#48781B] font-bold text-xs">
+                <span>Kategori: {selectedCategoryName}</span>
+              </span>
+            )}
+            <span className="text-[11px] text-gray-400 ml-auto hidden sm:inline">
+              Semua metrik dan grafik di bawah menyesuaikan pilihan di atas.
+            </span>
+          </div>
+        )}
+      </section>
 
       {/* ── KPI Cards ── */}
       <section className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4" aria-label="Ringkasan statistik">
@@ -488,12 +646,15 @@ export default function AdminDashboardPage() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <select
               id="voter-category-filter"
-              value={voterCategoryId}
-              onChange={(e) => { setVoterCategoryId(e.target.value); setVoterPage(1) }}
+              value={selectedCategoryId}
+              onChange={(e) => {
+                setSelectedCategoryId(e.target.value)
+                setVoterPage(1)
+              }}
               className="h-9 px-3 text-xs font-semibold bg-[var(--neutral-surface)] border border-[var(--neutral-border)] rounded-xl focus:border-[var(--brand-primary)] focus:outline-none"
             >
               <option value="">Semua Kategori</option>
-              {categories.map((c) => (
+              {filteredCategoriesForDropdown.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>

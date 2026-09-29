@@ -15,6 +15,7 @@ import AdminManagementPage from './pages/AdminManagementPage'
 import EventWorkspacePage from './pages/EventWorkspacePage'
 import RegisterEventPage from './pages/RegisterEventPage'
 import AdminProposalsPage from './pages/AdminProposalsPage'
+import AdminParticipantsPage from './pages/AdminParticipantsPage'
 import EventsDirectoryPage from './pages/EventsDirectoryPage'
 import EmbedCodeModal from './components/EmbedCodeModal'
 import VotePackagesModal from './components/VotePackagesModal'
@@ -714,6 +715,7 @@ export default function App() {
           <Route path="events/:eventId" element={<EventWorkspacePage />} />
           <Route path="categories" element={<CategoriesAdminPage />} />
           <Route path="finalists" element={<FinalistsAdminPage />} />
+          <Route path="participants" element={<AdminParticipantsPage />} />
           <Route path="banners" element={<BannersAdminPage />} />
           <Route path="admins" element={<AdminManagementPage />} />
         </Route>

@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FinalistController;
 use App\Http\Controllers\Admin\AdminManagementController;
 use App\Http\Controllers\Admin\VoteAdjustController;
+use App\Http\Controllers\Admin\ParticipantController;
 use App\Http\Controllers\PublicBannerController;
 use App\Http\Controllers\PublicCategoryController;
 use App\Http\Controllers\PublicEventController;
@@ -181,6 +182,10 @@ Route::prefix('admin')->group(function () {
         Route::post('admins', [AdminManagementController::class, 'store']);
         Route::put('admins/{admin}', [AdminManagementController::class, 'update']);
         Route::delete('admins/{admin}', [AdminManagementController::class, 'destroy']);
+        // Participants Management (Users, Voters, Comments)
+        Route::get('participants', [ParticipantController::class, 'index']);
+        Route::get('participants/{id}', [ParticipantController::class, 'show']);
+
         // Event Registrations (Organizer Proposals)
         Route::get('event-registrations', [EventRegistrationController::class, 'adminIndex']);
         Route::patch('event-registrations/{id}', [EventRegistrationController::class, 'adminUpdate']);

@@ -22,6 +22,7 @@ const NAV_LINKS = [
   { to: '/admin/events', label: 'Event / Ajang', icon: IconTrophy },
   { to: '/admin/categories', label: 'Kategori', icon: IconLayers },
   { to: '/admin/finalists', label: 'Finalis', icon: IconUsers },
+  { to: '/admin/participants', label: 'Partisipan', icon: IconUsers },
   { to: '/admin/banners', label: 'Banner Slider', icon: IconImage },
   { to: '/admin/admins', label: 'Admin & Tim', icon: IconUsers },
 ]
@@ -33,7 +34,7 @@ export default function AdminLayout() {
   const location = useLocation()
   const { theme, toggleTheme } = useTheme()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [counts, setCounts] = useState({ proposals: 0, events: 0, categories: 0, finalists: 0, banners: 0 })
+  const [counts, setCounts] = useState({ proposals: 0, events: 0, categories: 0, finalists: 0, banners: 0, participants: 0 })
 
   // Fetch count badges for sidebar
   useEffect(() => {
@@ -44,13 +45,15 @@ export default function AdminLayout() {
       api('/admin/finalists', { token }),
       api('/admin/banners', { token }),
       api('/admin/event-registrations', { token }),
-    ]).then(([resEvents, resCats, resFinalists, resBanners, resProposals]) => {
+      api('/admin/participants', { token }),
+    ]).then(([resEvents, resCats, resFinalists, resBanners, resProposals, resParticipants]) => {
       setCounts({
         events: resEvents.status === 'fulfilled' && resEvents.value?.data ? resEvents.value.data.length : 0,
         categories: resCats.status === 'fulfilled' && resCats.value?.data ? resCats.value.data.length : 0,
         finalists: resFinalists.status === 'fulfilled' && resFinalists.value?.data ? resFinalists.value.data.length : 0,
         banners: resBanners.status === 'fulfilled' && resBanners.value?.data ? resBanners.value.data.length : 0,
         proposals: resProposals.status === 'fulfilled' && resProposals.value?.counts ? resProposals.value.counts.pending : 0,
+        participants: resParticipants.status === 'fulfilled' && resParticipants.value?.kpi ? resParticipants.value.kpi.total_registered : 0,
       })
     })
   }, [token, location.pathname])
@@ -174,6 +177,8 @@ export default function AdminLayout() {
                     ? 'categories'
                     : link.label === 'Finalis'
                     ? 'finalists'
+                    : link.label === 'Partisipan'
+                    ? 'participants'
                     : link.label === 'Banner Slider'
                     ? 'banners'
                     : null
