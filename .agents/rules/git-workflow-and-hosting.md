@@ -1,21 +1,31 @@
 # Aturan Git Workflow & Hosting Deployment (Sebaris.id)
 
-Peraturan wajib bagi setiap AI Agent yang bekerja di repositori ini:
+Peraturan WAJIB bagi setiap AI Coding Agent (Antigravity, Claude, Cursor, dsb.) yang bekerja di repositori ini:
 
-## 1. Selalu Push Setiap Selesai Update
-- Setiap kali selesai memperbaiki bug, memodifikasi tampilan, menambahkan komponen, atau memperbarui fitur:
-  1. Jalankan `npm run build` di folder `frontend/` untuk meng-compile kode dan menyinkronkan aset ke root (`index.html` dan `assets/`).
-  2. Buat commit Git dengan format semantik yang jelas: `git commit -m "<type>(<scope>): <deskripsi>"`.
-  3. Lakukan push ke remote GitHub:
-     - Push branch `local`
-     - Fast-forward merge ke branch `hosting` dan push
-     - Fast-forward merge ke branch `main` dan push
-     - Kembalikan HEAD ke branch `local`
-- Dilarang membiarkan commit atau modifikasi menggantung di lokal tanpa di-push ke remote GitHub.
+## 1. Selalu Gunakan Kode Terbaru (Anti-Regresi)
+- Sebelum mulai bekerja atau mengedit file, WAJIB pastikan branch aktif adalah `local` dan berisi commit paling mutakhir.
+- Jalankan pengecekan cepat: `git status` dan `git log -n 1 origin/main`.
+- **DILARANG KERAS** melakukan `git checkout` ke commit lama atau branch lawas yang menyebabkan status detached HEAD atau menimpa fitur yang telah dikembangkan sebelumnya.
+- Selalu bangun fitur di atas commit TERAKHIR.
 
-## 2. Kepatuhan SOP Hostinger (Berdasarkan HOSTINGER-DEPLOY-GUIDE.md)
-- Root repository adalah folder `public_html/` di Hostinger.
-- Build frontend (`frontend/dist`) otomatis disalin ke root `public_html/index.html` dan `public_html/assets/` melalui script `frontend/scripts/sync-dist.js`.
-- Jangan pernah menyarankan atau menjalankan `php artisan serve` atau `npm run build` di SSH Hostinger.
-- Ingatkan pengguna agar tidak mengaktifkan "Cache Manager / Cache Otomatis" di hPanel Hostinger demi menjaga sifat real-time data E-Voting.
-- Arahkan pengguna untuk melakukan update di Hostinger via menu **hPanel Git (Tarik / Pull)** atau endpoint migrasi otomatis.
+## 2. Push Wajib ke 3 Branch: `local`, `hosting`, dan `main`
+- Setiap kali selesai memperbaiki bug, memodifikasi tampilan, atau menambahkan fitur:
+  1. Jalankan `npm run build` di folder `frontend/` (otomatis meng-compile bundle dan menyinkronkan file ke root `index.html` dan `assets/` via `scripts/sync-dist.js`).
+  2. Stage semua perubahan: `git add .` atau `git add -A`.
+  3. Buat commit Git dengan pesan jelas: `git commit -m "<type>(<scope>): <deskripsi>"`.
+  4. Lakukan push SERENTAK ke 3 target branch:
+     ```bash
+     git push origin local && git push origin local:hosting && git push origin local:main
+     ```
+- **PENTING TENTANG KONTRIBUSI GITHUB**:
+  - GitHub Contribution Graph (kotak hijau profil) **HANYA** menghitung commit yang masuk ke default branch (`main`).
+  - Jika agent hanya push ke `local` atau `hosting`, atau jika agent mem-push commit lama ke `main`, maka kotak kontribusi user di GitHub akan berkurang/hilang.
+  - Oleh karena itu, branch `main` HARUS selalu di-update bersamaan dengan `hosting` dan `local` pada SETIAP kali commit!
+
+## 3. Pantangan Keras (Zero Tolerance)
+- **DILARANG FORCE PUSH MENIMPA COMMIT TERBARU**: Jangan pernah menjalankan `git push --force` ke branch `hosting` atau `main` menggunakan commit lama.
+- **Dilarang membiarkan commit tertinggal di lokal**: Setiap pekerjaan selesai WAJIB langsung di-build dan di-push.
+- **Dilarang build di server Hostinger**: Dilarang menjalankan `php artisan serve` atau `npm run build` via SSH Hostinger. Semua build dilakukan di lokal lalu di-push ke GitHub.
+- **Dilarang mengaktifkan Cache Manager di hPanel**: Menjaga data voting dan perolehan suara tetap real-time.
+- Update di Hostinger dilakukan dengan mengklik **Tarik (Pull)** di menu hPanel Git.
+
