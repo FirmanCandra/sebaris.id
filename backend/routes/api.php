@@ -70,6 +70,16 @@ Route::get('deploy-migrate', function (\Illuminate\Http\Request $request) {
         } catch (\Throwable) {
         }
 
+        // Try pulling latest changes if git is available
+        $gitPullOut = 'Skipped';
+        try {
+            if (function_exists('shell_exec')) {
+                $gitPullOut = shell_exec('cd .. && git pull 2>&1') ?: 'Up to date';
+            }
+        } catch (\Throwable $gitErr) {
+            $gitPullOut = 'Notice: ' . $gitErr->getMessage();
+        }
+
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
         $migrateOut = \Illuminate\Support\Facades\Artisan::output();
 
@@ -96,6 +106,7 @@ Route::get('deploy-migrate', function (\Illuminate\Http\Request $request) {
         return response()->json([
             'status' => 'success',
             'message' => 'Backend berhasil diperbarui, migrasi database dan clear cache sukses!',
+            'git_pull_output' => $gitPullOut,
             'migrate_output' => $migrateOut,
             'storage_link_output' => $storageLinkOut,
             'seed_output' => $seedOut,
