@@ -12,6 +12,8 @@ import NotFoundPage from './pages/NotFoundPage'
 import EmbedVotingPage from './pages/EmbedVotingPage'
 import AdminManagementPage from './pages/AdminManagementPage'
 import EventWorkspacePage from './pages/EventWorkspacePage'
+import RegisterEventPage from './pages/RegisterEventPage'
+import AdminProposalsPage from './pages/AdminProposalsPage'
 import EmbedCodeModal from './components/EmbedCodeModal'
 import VotePackagesModal from './components/VotePackagesModal'
 import AdjustVoteModal from './components/AdjustVoteModal'
@@ -694,6 +696,7 @@ export default function App() {
       <GoogleOneTap />
       <Routes>
         <Route path="/" element={<PublicEventsPage />} />
+        <Route path="/daftarkan-vote" element={<RegisterEventPage />} />
         <Route path="/categories/:categoryId" element={<CategoryVotingPage />} />
         <Route path="/voting/:categoryId" element={<CategoryVotingPage />} />
         <Route path="/embed/voting/:categoryId" element={<EmbedVotingPage />} />
@@ -701,6 +704,7 @@ export default function App() {
         <Route path="/admin" element={<ProtectedApp />}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="proposals" element={<AdminProposalsPage />} />
           <Route path="events" element={<EventsAdminPage />} />
           <Route path="events/:eventId" element={<EventWorkspacePage />} />
           <Route path="categories" element={<CategoriesAdminPage />} />

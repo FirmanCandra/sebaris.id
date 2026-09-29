@@ -18,6 +18,7 @@ import { api } from '../api/client'
 
 const NAV_LINKS = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: IconBarChart },
+  { to: '/admin/proposals', label: 'Pengajuan Event', icon: IconTrophy },
   { to: '/admin/events', label: 'Event / Ajang', icon: IconTrophy },
   { to: '/admin/categories', label: 'Kategori', icon: IconLayers },
   { to: '/admin/finalists', label: 'Finalis', icon: IconUsers },
@@ -32,7 +33,7 @@ export default function AdminLayout() {
   const location = useLocation()
   const { theme, toggleTheme } = useTheme()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [counts, setCounts] = useState({ events: 0, categories: 0, finalists: 0, banners: 0 })
+  const [counts, setCounts] = useState({ proposals: 0, events: 0, categories: 0, finalists: 0, banners: 0 })
 
   // Fetch count badges for sidebar
   useEffect(() => {
@@ -42,12 +43,14 @@ export default function AdminLayout() {
       api('/admin/categories', { token }),
       api('/admin/finalists', { token }),
       api('/admin/banners', { token }),
-    ]).then(([resEvents, resCats, resFinalists, resBanners]) => {
+      api('/admin/event-registrations', { token }),
+    ]).then(([resEvents, resCats, resFinalists, resBanners, resProposals]) => {
       setCounts({
         events: resEvents.status === 'fulfilled' && resEvents.value?.data ? resEvents.value.data.length : 0,
         categories: resCats.status === 'fulfilled' && resCats.value?.data ? resCats.value.data.length : 0,
         finalists: resFinalists.status === 'fulfilled' && resFinalists.value?.data ? resFinalists.value.data.length : 0,
         banners: resBanners.status === 'fulfilled' && resBanners.value?.data ? resBanners.value.data.length : 0,
+        proposals: resProposals.status === 'fulfilled' && resProposals.value?.counts ? resProposals.value.counts.pending : 0,
       })
     })
   }, [token, location.pathname])
@@ -163,7 +166,9 @@ export default function AdminLayout() {
               {NAV_LINKS.map((link) => {
                 const IconComponent = link.icon
                 const countKey =
-                  link.label === 'Event / Ajang'
+                  link.label === 'Pengajuan Event'
+                    ? 'proposals'
+                    : link.label === 'Event / Ajang'
                     ? 'events'
                     : link.label === 'Kategori'
                     ? 'categories'
@@ -189,7 +194,13 @@ export default function AdminLayout() {
                     </div>
 
                     {badgeCount > 0 && (
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                      <span
+                        className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                          countKey === 'proposals'
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
+                        }`}
+                      >
                         {badgeCount}
                       </span>
                     )}

@@ -143,6 +143,22 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
             >
               Cek Vote
             </button>
+
+            <NavLink
+              to="/daftarkan-vote"
+              className={({ isActive }) =>
+                `transition-colors duration-200 flex items-center gap-1.5 ${
+                  isActive
+                    ? 'text-[#70B325] dark:text-[#8FE032] font-black'
+                    : 'text-gray-700 dark:text-gray-200 hover:text-[#70B325] dark:hover:text-[#8FE032] font-medium'
+                }`
+              }
+            >
+              <span>Daftarkan Vote</span>
+              <span className="px-1.5 py-0.5 text-[9px] font-black rounded-full uppercase tracking-wider bg-[#EBF7E3] text-[#48781B] dark:bg-[#70B325]/20 dark:text-[#8FE032]">
+                Panitia
+              </span>
+            </NavLink>
           </nav>
 
           {/* 3. BAGIAN KANAN: TOGGLE THEME + AUTH ACTIONS */}
@@ -321,6 +337,23 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
                   >
                     Cek Vote
                   </button>
+
+                  <NavLink
+                    to="/daftarkan-vote"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={({ isActive }) =>
+                      `flex items-center justify-between px-4 py-3 rounded-2xl font-semibold text-sm transition-all ${
+                        isActive
+                          ? 'text-[#70B325] dark:text-[#8FE032] bg-[#70B325]/10 font-extrabold'
+                          : 'text-[#262A25] dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5'
+                      }`
+                    }
+                  >
+                    <span>Daftarkan Vote</span>
+                    <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#EBF7E3] text-[#48781B] dark:bg-[#70B325]/20 dark:text-[#8FE032]">
+                      Panitia
+                    </span>
+                  </NavLink>
                 </div>
 
                 {/* Mobile Actions: Auth State */}

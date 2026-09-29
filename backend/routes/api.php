@@ -14,6 +14,7 @@ use App\Http\Controllers\PublicEventController;
 use App\Http\Controllers\PublicFinalistController;
 use App\Http\Controllers\UserAuthController;
 use App\Http\Controllers\VoteController;
+use App\Http\Controllers\EventRegistrationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('banners', [PublicBannerController::class, 'index']);
@@ -128,6 +129,11 @@ Route::post('votes/{referenceId}/simulate-pay', [VoteController::class, 'simulat
 Route::get('votes/{referenceId}/status', [VoteController::class, 'checkStatus']);
 Route::get('votes/check', [VoteController::class, 'checkVotes']);
 
+// Event Registrations (Self-Service Organizer)
+Route::post('event-registrations', [EventRegistrationController::class, 'store'])->middleware('throttle:15,1');
+Route::get('event-registrations/search', [EventRegistrationController::class, 'search']);
+Route::get('event-registrations/{registrationNumber}', [EventRegistrationController::class, 'show']);
+
 // Unified Global Authentication (Email & Password, Registration, Google OAuth)
 Route::prefix('auth')->group(function () {
     Route::post('login', [UserAuthController::class, 'login'])->middleware('throttle:10,1');
@@ -138,6 +144,7 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth:sanctum')->prefix('user')->group(function () {
     Route::get('me', [UserAuthController::class, 'me']);
     Route::get('votes', [UserAuthController::class, 'myVotes']);
+    Route::get('event-registrations', [EventRegistrationController::class, 'userRegistrations']);
     Route::post('logout', [UserAuthController::class, 'logout']);
 });
 
@@ -162,6 +169,10 @@ Route::prefix('admin')->group(function () {
         Route::post('admins', [AdminManagementController::class, 'store']);
         Route::put('admins/{admin}', [AdminManagementController::class, 'update']);
         Route::delete('admins/{admin}', [AdminManagementController::class, 'destroy']);
+        // Event Registrations (Organizer Proposals)
+        Route::get('event-registrations', [EventRegistrationController::class, 'adminIndex']);
+        Route::patch('event-registrations/{id}', [EventRegistrationController::class, 'adminUpdate']);
+        Route::post('event-registrations/{id}/approve', [EventRegistrationController::class, 'adminApproveToEvent']);
     });
 });
 
