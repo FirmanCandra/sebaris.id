@@ -32,6 +32,7 @@ import {
   IconArrowDown,
   IconList,
   IconGrid,
+  IconChevronDown,
 } from '../components/Icons'
 
 export default function CategoryVotingPage() {
@@ -51,7 +52,12 @@ export default function CategoryVotingPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [isVotingExpired, setIsVotingExpired] = useState(false)
-  const [activeTab, setActiveTab] = useState('card-leaderboard')
+
+  // Multi-Category Switcher States & Refs
+  const [showCategoryMenu, setShowCategoryMenu] = useState(false)
+  const categoryMenuRef = useRef(null)
+  const categoryPillsRef = useRef(null)
+  const activePillRef = useRef(null)
 
   // View mode for Finalists section (Google Drive style: 'grid' or 'list')
   const [viewMode, setViewMode] = useState(() => {
@@ -231,32 +237,36 @@ export default function CategoryVotingPage() {
     }
   }, [category?.slug, categoryId])
 
-  // ScrollSpy listener to update the active tab as user scrolls through sections
+  // Auto-scroll active category into view in the switcher track
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY + 140
-      const sections = ['card-leaderboard', 'card-finalis', 'card-dukungan', 'card-tentang']
-      
-      for (const sectionId of sections) {
-        const el = document.getElementById(sectionId)
-        if (el) {
-          const top = el.offsetTop
-          const bottom = top + el.offsetHeight
-          if (scrollPosition >= top && scrollPosition <= bottom) {
-            setActiveTab(sectionId)
-            break
-          }
-        }
+    if (activePillRef.current && categoryPillsRef.current) {
+      activePillRef.current.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest',
+      })
+    }
+  }, [category?.id, category?.slug])
+
+  // Close category dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (categoryMenuRef.current && !categoryMenuRef.current.contains(e.target)) {
+        setShowCategoryMenu(false)
       }
     }
+    if (showCategoryMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('touchstart', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
+  }, [showCategoryMenu])
 
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  // Smooth scroll helper for navbar tabs (matching KreenConnect behavior)
+  // Smooth scroll helper for quick anchor jumps (e.g. from ticker to #card-dukungan)
   const scrollToTab = (sectionId) => {
-    setActiveTab(sectionId)
     const el = document.getElementById(sectionId)
     if (el) {
       const scrollOffset = 110
@@ -552,132 +562,210 @@ export default function CategoryVotingPage() {
         </div>
       </section>
 
-      {/* KREENCONNECT-STYLE STICKY SUB-NAVBAR WITH MULTI-CATEGORY TIERED SWITCHER (GAMBAR 2) */}
-      <div className="sticky top-16 sm:top-20 z-30 w-full bg-white/95 dark:bg-[#151C14]/95 backdrop-blur-md border-b border-gray-200 dark:border-white/10 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 py-1">
-            {/* If Sibling Categories exist, render the Tiered Category Switcher Menu as the primary navigation */}
-            {category?.sibling_categories && category.sibling_categories.length > 1 ? (
-              <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1.5 flex-1 min-w-0">
-                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 pl-1 mr-1 flex-shrink-0">
-                  <span>Kategori:</span>
+      {/* =========================================================================
+          IMPROVED CATEGORY SWITCHER (STICKY SUB-NAVBAR)
+          Only displayed when multiple categories exist for the event
+          ========================================================================= */}
+      {category?.sibling_categories && category.sibling_categories.length > 1 && (
+        <div className="sticky top-16 sm:top-20 z-30 w-full bg-white/95 dark:bg-[#151C14]/95 backdrop-blur-md border-b border-gray-200 dark:border-white/10 shadow-xs transition-colors">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-2.5">
+            <div className="flex items-center justify-between gap-3">
+              
+              {/* Context Label on Desktop */}
+              <div className="hidden lg:flex items-center gap-2 flex-shrink-0 text-xs font-black text-gray-700 dark:text-gray-300">
+                <span className="w-2 h-2 rounded-full bg-[#70B325] animate-pulse" />
+                <span className="uppercase tracking-wider text-[11px] text-gray-500 dark:text-gray-400">Kategori:</span>
+                <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 font-extrabold text-[11px]">
+                  {category.sibling_categories.length} Pilihan
                 </span>
+              </div>
+
+              {/* -------------------------------------------------------------
+                  MOBILE VIEW (sm:hidden)
+                  ------------------------------------------------------------- */}
+              <div className="sm:hidden w-full min-w-0 relative">
+                {category.sibling_categories.length === 2 ? (
+                  /* Case A: Exactly 2 Categories -> 2-Column Segmented Grid */
+                  <div className="grid grid-cols-2 gap-1.5 p-1 bg-gray-100/90 dark:bg-black/30 rounded-2xl border border-gray-200/80 dark:border-white/10">
+                    {category.sibling_categories.map((sibling) => {
+                      const isCurrent =
+                        sibling.is_current ||
+                        String(sibling.id) === String(category.id) ||
+                        sibling.slug === category.slug
+
+                      return (
+                        <button
+                          key={sibling.id}
+                          type="button"
+                          onClick={() => handleCategorySwitch(sibling)}
+                          className={`min-h-[44px] px-2.5 py-2 rounded-xl text-xs font-black tracking-tight transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center leading-tight ${
+                            isCurrent
+                              ? 'bg-[#70B325] text-white shadow-xs font-black ring-1 ring-white/20'
+                              : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/5'
+                          }`}
+                        >
+                          {sibling.tier === 'premier' && (
+                            <IconCrown className={`w-3.5 h-3.5 flex-shrink-0 ${isCurrent ? 'text-amber-200' : 'text-amber-500'}`} />
+                          )}
+                          <span className="line-clamp-2">{sibling.name}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  /* Case B: 3+ Categories -> Smooth Horizontal Scroll with Dropdown Quick Jump */
+                  <div className="flex items-center gap-2" ref={categoryMenuRef}>
+                    <div
+                      ref={categoryPillsRef}
+                      className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto scrollbar-none py-1 px-1 -mx-1 scroll-smooth"
+                    >
+                      {category.sibling_categories.map((sibling) => {
+                        const isCurrent =
+                          sibling.is_current ||
+                          String(sibling.id) === String(category.id) ||
+                          sibling.slug === category.slug
+
+                        return (
+                          <button
+                            key={sibling.id}
+                            ref={isCurrent ? activePillRef : null}
+                            type="button"
+                            onClick={() => handleCategorySwitch(sibling)}
+                            className={`min-h-[42px] px-3.5 py-2 rounded-xl text-xs font-bold tracking-tight transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer flex-shrink-0 border ${
+                              isCurrent
+                                ? 'bg-[#70B325] text-white border-[#70B325] shadow-xs font-black ring-2 ring-[#70B325]/30'
+                                : 'bg-gray-100/90 dark:bg-white/5 text-gray-700 dark:text-gray-300 border-gray-200/80 dark:border-white/10 hover:border-[#70B325]/50 hover:bg-[#70B325]/10 active:scale-97'
+                            }`}
+                          >
+                            {sibling.tier === 'premier' && (
+                              <IconCrown className={`w-3.5 h-3.5 flex-shrink-0 ${isCurrent ? 'text-amber-200' : 'text-amber-500'}`} />
+                            )}
+                            <span className="truncate max-w-[190px]">{sibling.name}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+
+                    {/* Quick Dropdown Trigger Button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowCategoryMenu(!showCategoryMenu)}
+                      className={`min-h-[42px] px-2.5 py-2 rounded-xl text-xs font-black flex items-center gap-1 flex-shrink-0 border transition-all cursor-pointer shadow-2xs ${
+                        showCategoryMenu
+                          ? 'bg-[#70B325] text-white border-[#70B325]'
+                          : 'bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-white/15 hover:bg-gray-200 dark:hover:bg-white/15'
+                      }`}
+                      aria-label="Tampilkan daftar lengkap kategori"
+                      title="Lihat semua kategori"
+                    >
+                      <span className="text-[11px]">Semua</span>
+                      <IconChevronDown
+                        className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                          showCategoryMenu ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+
+                    {/* Dropdown Menu Popover */}
+                    {showCategoryMenu && (
+                      <div className="absolute right-0 top-full mt-2 w-72 max-w-[90vw] bg-white dark:bg-[#1A2216] border border-gray-200 dark:border-white/15 rounded-2xl shadow-xl z-50 p-2 space-y-1 animate-fadeIn">
+                        <div className="px-3 py-1.5 border-b border-gray-100 dark:border-white/10 flex items-center justify-between text-[11px] font-black uppercase text-gray-400">
+                          <span>Pilih Kategori</span>
+                          <span>{category.sibling_categories.length} total</span>
+                        </div>
+                        <div className="max-h-60 overflow-y-auto space-y-1 pt-1">
+                          {category.sibling_categories.map((sibling) => {
+                            const isCurrent =
+                              sibling.is_current ||
+                              String(sibling.id) === String(category.id) ||
+                              sibling.slug === category.slug
+
+                            return (
+                              <button
+                                key={sibling.id}
+                                type="button"
+                                onClick={() => {
+                                  setShowCategoryMenu(false)
+                                  handleCategorySwitch(sibling)
+                                }}
+                                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs transition-all flex items-center justify-between gap-2 cursor-pointer ${
+                                  isCurrent
+                                    ? 'bg-[#70B325]/15 dark:bg-[#70B325]/25 text-[#558223] dark:text-[#A3E635] font-black'
+                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 font-semibold'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  {sibling.tier === 'premier' ? (
+                                    <IconCrown className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                                  ) : (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
+                                  )}
+                                  <span className="truncate">{sibling.name}</span>
+                                </div>
+                                {isCurrent && (
+                                  <IconCheck className="w-4 h-4 text-[#70B325] dark:text-[#A3E635] flex-shrink-0" />
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* -------------------------------------------------------------
+                  DESKTOP VIEW (hidden sm:flex)
+                  ------------------------------------------------------------- */}
+              <div
+                ref={categoryPillsRef}
+                className="hidden sm:flex items-center gap-2 overflow-x-auto scrollbar-none py-1 flex-1 min-w-0"
+              >
                 {category.sibling_categories.map((sibling) => {
                   const isCurrent =
                     sibling.is_current ||
                     String(sibling.id) === String(category.id) ||
                     sibling.slug === category.slug
-                  const tier = sibling.tier || 'premier'
-                  const tierName = tier === 'premier' ? 'Premier' : tier === 'sekunder' ? 'Sekunder' : 'Tersier'
-                  const tierBadgeCls =
-                    tier === 'premier'
-                      ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700'
-                      : tier === 'sekunder'
-                      ? 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-600'
-                      : 'bg-orange-100 dark:bg-orange-950/70 text-orange-900 dark:text-orange-200 border-orange-300 dark:border-orange-700'
 
                   return (
                     <button
                       key={sibling.id}
+                      ref={isCurrent ? activePillRef : null}
                       type="button"
                       onClick={() => handleCategorySwitch(sibling)}
-                      className={`relative px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold tracking-wide transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer flex-shrink-0 border ${
+                      className={`relative min-h-[42px] px-4 py-2 rounded-xl text-xs sm:text-sm font-bold tracking-tight transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer flex-shrink-0 border ${
                         isCurrent
                           ? 'bg-[#70B325] text-white border-[#70B325] shadow-sm shadow-[#70B325]/25 font-black ring-2 ring-[#70B325]/30'
-                          : 'bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-white/10 hover:border-[#70B325]/50 hover:bg-[#70B325]/10'
+                          : 'bg-gray-100/80 dark:bg-white/5 text-gray-700 dark:text-gray-300 border-gray-200/80 dark:border-white/10 hover:border-[#70B325]/50 hover:bg-[#70B325]/10 hover:text-gray-900 dark:hover:text-white'
                       }`}
                     >
-                      {tier === 'premier' ? (
-                        <IconCrown className="w-3.5 h-3.5 text-amber-400" />
+                      {sibling.tier === 'premier' ? (
+                        <IconCrown className={`w-3.5 h-3.5 ${isCurrent ? 'text-amber-200' : 'text-amber-500'}`} />
                       ) : (
-                        <IconMedal className="w-3.5 h-3.5 text-slate-300" />
+                        <IconMedal className={`w-3.5 h-3.5 ${isCurrent ? 'text-white/70' : 'text-gray-400'}`} />
                       )}
-                      <span className="truncate max-w-[200px] sm:max-w-xs">{sibling.name}</span>
-                      <span
-                        className={`text-[10px] uppercase font-black px-1.5 py-0.5 rounded-md border ${
-                          isCurrent ? 'bg-white/20 text-white border-white/40' : tierBadgeCls
-                        }`}
-                      >
-                        {tierName}
-                      </span>
+                      <span className="truncate max-w-[240px] lg:max-w-md">{sibling.name}</span>
+                      {sibling.tier === 'premier' && (
+                        <span
+                          className={`text-[10px] uppercase font-black px-1.5 py-0.5 rounded-md border ${
+                            isCurrent
+                              ? 'bg-white/20 text-white border-white/40'
+                              : 'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300/80 dark:border-amber-700/60'
+                          }`}
+                        >
+                          Premier
+                        </span>
+                      )}
                     </button>
                   )
                 })}
               </div>
-            ) : null}
 
-            {/* Quick Section Anchors: Papan Peringkat | Finalis | Dukungan | Deskripsi */}
-            <nav
-              aria-label="Navigasi Halaman Ajang"
-              className={`flex items-center gap-4 sm:gap-6 overflow-x-auto scrollbar-none flex-shrink-0 ${
-                category?.sibling_categories && category.sibling_categories.length > 1
-                  ? 'border-t md:border-t-0 md:border-l border-gray-200 dark:border-white/10 pt-1.5 md:pt-0 md:pl-5 h-11'
-                  : 'h-12 sm:h-14 justify-center sm:justify-start'
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() => scrollToTab('card-leaderboard')}
-                className={`h-full border-b-2 font-bold text-xs sm:text-sm tracking-wide transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-                  activeTab === 'card-leaderboard'
-                    ? 'border-[#70B325] text-[#70B325] dark:text-[#8FE032]'
-                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                <IconTrophy className="w-4 h-4" />
-                <span>Papan Peringkat</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => scrollToTab('card-finalis')}
-                className={`h-full border-b-2 font-bold text-xs sm:text-sm tracking-wide transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-                  activeTab === 'card-finalis'
-                    ? 'border-[#70B325] text-[#70B325] dark:text-[#8FE032]'
-                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                <IconUsers className="w-4 h-4" />
-                <span>Finalis</span>
-                <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 font-extrabold">
-                  {finalists.length}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => scrollToTab('card-dukungan')}
-                className={`h-full border-b-2 font-bold text-xs sm:text-sm tracking-wide transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-                  activeTab === 'card-dukungan'
-                    ? 'border-[#70B325] text-[#70B325] dark:text-[#8FE032]'
-                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                <IconChat className="w-4 h-4" />
-                <span>Dukungan</span>
-                {messages.length > 0 && (
-                  <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 font-extrabold">
-                    {messages.length}
-                  </span>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => scrollToTab('card-tentang')}
-                className={`h-full border-b-2 font-bold text-xs sm:text-sm tracking-wide transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-                  activeTab === 'card-tentang'
-                    ? 'border-[#70B325] text-[#70B325] dark:text-[#8FE032]'
-                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                <IconCalendar className="w-4 h-4" />
-                <span>Deskripsi</span>
-              </button>
-            </nav>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* MAIN SINGLE-PAGE CONTINUOUS CONTENT */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 flex-1 w-full space-y-12 sm:space-y-16">
