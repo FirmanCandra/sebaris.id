@@ -30,6 +30,8 @@ import {
   IconCheck,
   IconSparkles,
   IconArrowDown,
+  IconList,
+  IconGrid,
 } from '../components/Icons'
 
 export default function CategoryVotingPage() {
@@ -50,6 +52,22 @@ export default function CategoryVotingPage() {
   const [error, setError] = useState('')
   const [isVotingExpired, setIsVotingExpired] = useState(false)
   const [activeTab, setActiveTab] = useState('card-leaderboard')
+
+  // View mode for Finalists section (Google Drive style: 'grid' or 'list')
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('sebaris_finalists_view_mode') || 'grid'
+    } catch {
+      return 'grid'
+    }
+  })
+
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode)
+    try {
+      localStorage.setItem('sebaris_finalists_view_mode', mode)
+    } catch {}
+  }
 
   // Wall of Support Messages State
   const [messages, setMessages] = useState([])
@@ -1112,10 +1130,53 @@ export default function CategoryVotingPage() {
             </div>
           )}
 
-          {/* Complete 3-Column Finalist Cards Grid (KreenConnect Exact Structure) */}
+          {/* View Mode Controls Toolbar (Google Drive Style) */}
           {filteredFinalists.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-              {filteredFinalists.map((finalist, index) => {
+            <div className="flex items-center justify-between gap-3 pt-1">
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-gray-500 dark:text-gray-400">
+                <span>Daftar Finalis</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
+                <span className="text-[#70B325] dark:text-[#86C839] font-extrabold">{filteredFinalists.length} Finalis</span>
+              </div>
+
+              {/* Google Drive Segmented Pill Toggle */}
+              <div className="inline-flex items-center p-1 bg-gray-100 dark:bg-[#1A2018] rounded-xl border border-gray-200 dark:border-white/10 shadow-2xs">
+                <button
+                  type="button"
+                  onClick={() => handleViewModeChange('list')}
+                  className={`p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    viewMode === 'list'
+                      ? 'bg-white dark:bg-[#252E22] text-[#70B325] dark:text-[#86C839] shadow-xs border border-gray-200/60 dark:border-white/10'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                  title="Tampilan List"
+                  aria-label="Tampilan List"
+                >
+                  <IconList className="w-4 h-4" />
+                  <span className="hidden sm:inline">List</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleViewModeChange('grid')}
+                  className={`p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    viewMode === 'grid'
+                      ? 'bg-white dark:bg-[#252E22] text-[#70B325] dark:text-[#86C839] shadow-xs border border-gray-200/60 dark:border-white/10'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                  title="Tampilan Grid (2 Kolom di Mobile)"
+                  aria-label="Tampilan Grid"
+                >
+                  <IconGrid className="w-4 h-4" />
+                  <span className="hidden sm:inline">Grid</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Grid View: 2-Column on Mobile, 2-3 on Desktop */}
+          {filteredFinalists.length > 0 && viewMode === 'grid' && (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-5 lg:gap-6">
+              {filteredFinalists.map((finalist) => {
                 const photoSrc = finalist.photo_url || finalist.photo
                 const percentage =
                   totalVotes > 0
@@ -1127,7 +1188,7 @@ export default function CategoryVotingPage() {
                 return (
                   <article
                     key={finalist.id}
-                    className="card-base flex flex-col justify-between overflow-hidden bg-white dark:bg-[#1A2018] border border-gray-200 dark:border-white/10 rounded-2xl p-3 sm:p-4 shadow-xs hover:border-[#70B325] dark:hover:border-[#70B325] hover:shadow-md transition-all group"
+                    className="card-base flex flex-col justify-between overflow-hidden bg-white dark:bg-[#1A2018] border border-gray-200 dark:border-white/10 rounded-2xl p-2 sm:p-4 shadow-xs hover:border-[#70B325] dark:hover:border-[#70B325] hover:shadow-md transition-all group"
                   >
                     <div>
                       {/* Portrait Image (4:5 Aspect Ratio) */}
@@ -1145,73 +1206,73 @@ export default function CategoryVotingPage() {
                             onError={(e) => { e.currentTarget.style.display = 'none' }}
                           />
                         ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-emerald-950 to-gray-900 text-center p-4">
-                            <div className="w-16 h-16 rounded-full bg-[#70B325]/20 text-[#70B325] flex items-center justify-center font-black text-2xl mb-2">
+                          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-emerald-950 to-gray-900 text-center p-2 sm:p-4">
+                            <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-[#70B325]/20 text-[#70B325] flex items-center justify-center font-black text-sm sm:text-2xl mb-1 sm:mb-2">
                               {finalist.name.slice(0, 2).toUpperCase()}
                             </div>
-                            <span className="text-xs font-bold text-gray-300">Foto Resmi Finalis</span>
+                            <span className="text-[10px] sm:text-xs font-bold text-gray-300">Foto Resmi</span>
                           </div>
                         )}
 
                         {/* Top Left: Candidate Number / Juara Badge */}
-                        <div className="absolute top-2.5 left-2.5 z-10">
+                        <div className="absolute top-2 left-2 z-10">
                           {isVotingClosed ? (
                             globalRank === 1 ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 text-xs font-black shadow-md border border-amber-300">
-                                <IconTrophy className="w-3.5 h-3.5" /> JUARA 1
+                              <span className="inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 text-[10px] sm:text-xs font-black shadow-md border border-amber-300">
+                                <IconTrophy className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">JUARA</span> 1
                               </span>
                             ) : globalRank === 2 ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-slate-200 to-slate-400 text-slate-900 text-xs font-black shadow-md border border-slate-300">
-                                <IconMedal className="w-3.5 h-3.5" /> JUARA 2
+                              <span className="inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-gradient-to-r from-slate-200 to-slate-400 text-slate-900 text-[10px] sm:text-xs font-black shadow-md border border-slate-300">
+                                <IconMedal className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">JUARA</span> 2
                               </span>
                             ) : globalRank === 3 ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-amber-800 to-amber-900 text-amber-100 text-xs font-black shadow-md border border-amber-700">
-                                <IconMedal className="w-3.5 h-3.5" /> JUARA 3
+                              <span className="inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-gradient-to-r from-amber-800 to-amber-900 text-amber-100 text-[10px] sm:text-xs font-black shadow-md border border-amber-700">
+                                <IconMedal className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">JUARA</span> 3
                               </span>
                             ) : (
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-black/75 backdrop-blur-md text-white border border-white/20 text-xs font-black shadow-sm">
+                              <span className="inline-flex items-center px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-black/75 backdrop-blur-md text-white border border-white/20 text-[10px] sm:text-xs font-black shadow-sm">
                                 No. {String(globalRank).padStart(2, '0')}
                               </span>
                             )
                           ) : (
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-black/75 backdrop-blur-md text-white border border-white/20 text-xs font-black shadow-sm">
+                            <span className="inline-flex items-center px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-black/75 backdrop-blur-md text-white border border-white/20 text-[10px] sm:text-xs font-black shadow-sm">
                               No. {String(globalRank).padStart(2, '0')}
                             </span>
                           )}
                         </div>
                       </div>
 
-                      {/* Candidate Name (Centered, 2-line clamp) */}
+                      {/* Candidate Name (Centered) */}
                       <h3
                         onClick={() => setSelectedFinalistForDetail(finalist)}
-                        className="font-bold text-sm sm:text-base text-center mt-3 text-gray-900 dark:text-white line-clamp-2 h-10 flex items-center justify-center cursor-pointer hover:text-[#70B325] transition-colors"
+                        className="font-bold text-xs sm:text-base text-center mt-2 sm:mt-3 text-gray-900 dark:text-white line-clamp-1 sm:line-clamp-2 min-h-[1.5rem] sm:min-h-[2.5rem] flex items-center justify-center cursor-pointer hover:text-[#70B325] transition-colors leading-tight"
                       >
                         {finalist.name}
                       </h3>
 
                       {/* Sub-label / Affiliation */}
-                      <div className="text-[11px] text-center text-gray-400 pb-2 border-b border-gray-100 dark:border-white/10 truncate">
+                      <div className="text-[10px] sm:text-[11px] text-center text-gray-400 pb-1.5 sm:pb-2 border-b border-gray-100 dark:border-white/10 truncate">
                         {finalist.description || `Kandidat Nomor Urut ${globalRank}`}
                       </div>
 
-                      {/* 2-Column Stat Box (KreenConnect Exact Layout: Harga & Vote) */}
-                      <div className="grid grid-cols-2 rounded-xl bg-gray-50 dark:bg-white/5 p-2.5 my-3 text-center divide-x divide-gray-200 dark:divide-white/10 border border-gray-100 dark:border-white/5">
-                        <div className="pr-2">
-                          <div className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1 mb-0.5">
-                            <IconCoins className="w-3.5 h-3.5 text-amber-500" />
-                            <span>Tarif</span>
+                      {/* 2-Column Stat Box (Tarif & Vote) */}
+                      <div className="grid grid-cols-2 rounded-xl bg-gray-50 dark:bg-white/5 p-1.5 sm:p-2.5 my-2 sm:my-3 text-center divide-x divide-gray-200 dark:divide-white/10 border border-gray-100 dark:border-white/5">
+                        <div className="pr-1 sm:pr-2">
+                          <div className="text-[10px] sm:text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1 mb-0.5">
+                            <IconCoins className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500 flex-shrink-0" />
+                            <span className="truncate">Tarif</span>
                           </div>
-                          <div className="text-xs sm:text-sm font-extrabold text-gray-900 dark:text-white">
+                          <div className="text-[11px] sm:text-sm font-extrabold text-gray-900 dark:text-white truncate">
                             Rp {priceFormatted}
                           </div>
                         </div>
 
-                        <div className="pl-2">
-                          <div className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1 mb-0.5">
-                            <IconTrendingUp className="w-3.5 h-3.5 text-[#70B325]" />
-                            <span>Vote</span>
+                        <div className="pl-1 sm:pl-2">
+                          <div className="text-[10px] sm:text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1 mb-0.5">
+                            <IconTrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#70B325] flex-shrink-0" />
+                            <span className="truncate">Vote</span>
                           </div>
-                          <div className="text-xs sm:text-sm font-extrabold text-[#70B325] dark:text-[#86C839]">
+                          <div className="text-[11px] sm:text-sm font-extrabold text-[#70B325] dark:text-[#86C839] truncate">
                             {isFrozen ? 'Rahasia' : `${percentage}%`}
                           </div>
                         </div>
@@ -1219,22 +1280,23 @@ export default function CategoryVotingPage() {
                     </div>
 
                     {/* Action Buttons Row */}
-                    <div className="space-y-2 pt-1">
-                      {/* Secondary Action: Lihat Detail Finalis */}
+                    <div className="space-y-1.5 sm:space-y-2 pt-1">
+                      {/* Secondary Action: Detail */}
                       <button
                         type="button"
                         onClick={() => setSelectedFinalistForDetail(finalist)}
-                        className="w-full py-2 px-3 text-xs font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 rounded-xl transition-colors cursor-pointer text-center"
+                        className="w-full py-1.5 sm:py-2 px-2 text-[11px] sm:text-xs font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 rounded-xl transition-colors cursor-pointer text-center truncate"
                       >
-                        Lihat Detail Finalis
+                        <span className="sm:hidden">Detail</span>
+                        <span className="hidden sm:inline">Lihat Detail Finalis</span>
                       </button>
 
                       {/* Primary Action: Vote or Juara Terpilih */}
                       {isVotingClosed ? (
-                        <div className="w-full min-h-[42px] py-2 px-3 bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 font-extrabold text-xs sm:text-sm rounded-xl border border-gray-200 dark:border-white/10 flex items-center justify-center gap-1.5 cursor-default shadow-2xs">
-                          <IconTrophy className="w-4 h-4 text-amber-500" />
-                          <span>
-                            {globalRank === 1 ? 'Pemenang Juara 1' : globalRank === 2 ? 'Juara 2 (Runner Up 1)' : 'Juara 3 (Runner Up 2)'}
+                        <div className="w-full min-h-[36px] sm:min-h-[42px] py-1.5 sm:py-2 px-2 bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 font-extrabold text-[11px] sm:text-sm rounded-xl border border-gray-200 dark:border-white/10 flex items-center justify-center gap-1 cursor-default shadow-2xs">
+                          <IconTrophy className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                          <span className="truncate">
+                            {globalRank === 1 ? 'Juara 1' : globalRank === 2 ? 'Juara 2' : 'Juara 3'}
                           </span>
                         </div>
                       ) : (
@@ -1242,49 +1304,185 @@ export default function CategoryVotingPage() {
                           type="button"
                           disabled={isVotingExpired}
                           onClick={() => setSelectedFinalistForVote(finalist)}
-                          className="w-full min-h-[42px] py-2 px-3 bg-[#70B325] hover:bg-[#5F9A1E] disabled:bg-gray-300 dark:disabled:bg-gray-800 text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
+                          className="w-full min-h-[36px] sm:min-h-[42px] py-1.5 sm:py-2 px-2 bg-[#70B325] hover:bg-[#5F9A1E] disabled:bg-gray-300 dark:disabled:bg-gray-800 text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer disabled:cursor-not-allowed"
                         >
-                          <IconZap className="w-4 h-4 text-white" />
-                          <span>
+                          <IconZap className="w-3.5 h-3.5 text-white flex-shrink-0" />
+                          <span className="truncate">
                             {isVotingExpired
-                              ? 'Voting Ditutup'
-                              : `Vote ${finalist.name.split(' ')[0]}`}
+                              ? 'Ditutup'
+                              : (
+                                <>
+                                  Vote <span className="hidden sm:inline">{finalist.name.split(' ')[0]}</span>
+                                </>
+                              )}
                           </span>
                         </button>
                       )}
 
                       {/* Share Quick Buttons */}
-                      <div className="flex items-center gap-1.5 pt-1">
+                      <div className="flex items-center gap-1 pt-0.5">
                         <button
                           type="button"
                           onClick={() => handleShareWhatsApp(finalist)}
-                          className="flex-1 py-1 text-[11px] font-bold text-[#1F8A43] dark:text-[#8FE032] bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/50 rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                          className="flex-1 py-1 px-1.5 text-[10px] sm:text-[11px] font-bold text-[#1F8A43] dark:text-[#8FE032] bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/50 rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer"
                           title="Bagikan ke WhatsApp"
                         >
-                          <IconWhatsApp className="w-3 h-3" />
-                          <span>WhatsApp</span>
+                          <IconWhatsApp className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">WA</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => handleCopyLink(finalist)}
-                          className="px-3 py-1 text-[11px] font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/15 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1"
+                          className="px-2 py-1 text-[10px] sm:text-[11px] font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/15 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1"
                           title="Salin Link Voting Finalis"
                         >
                           {copiedId === finalist.id ? (
                             <span className="inline-flex items-center gap-1 text-emerald-600 font-bold">
                               <IconCheck className="w-3 h-3" />
-                              <span>Tersalin</span>
+                              <span className="hidden sm:inline">Tersalin</span>
                             </span>
                           ) : (
                             <>
-                              <IconLink className="w-3 h-3" />
-                              <span>Salin Link</span>
+                              <IconLink className="w-3 h-3 flex-shrink-0" />
+                              <span className="hidden sm:inline">Salin</span>
                             </>
                           )}
                         </button>
                       </div>
                     </div>
+                  </article>
+                )
+              })}
+            </div>
+          )}
 
+          {/* List View: Row Layout (Google Drive Style) */}
+          {filteredFinalists.length > 0 && viewMode === 'list' && (
+            <div className="flex flex-col gap-2.5 sm:gap-3">
+              {filteredFinalists.map((finalist) => {
+                const photoSrc = finalist.photo_url || finalist.photo
+                const percentage =
+                  totalVotes > 0
+                    ? ((finalist.vote_count / totalVotes) * 100).toFixed(1)
+                    : 0
+                const globalRank = finalists.findIndex((f) => f.id === finalist.id) + 1
+                const priceFormatted = (category?.price_per_vote || 1000).toLocaleString('id-ID')
+
+                return (
+                  <article
+                    key={finalist.id}
+                    className="card-base flex items-center justify-between gap-2.5 sm:gap-4 p-2.5 sm:p-3.5 bg-white dark:bg-[#1A2018] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xs hover:border-[#70B325] dark:hover:border-[#70B325] hover:shadow-sm transition-all group"
+                  >
+                    {/* Left: Thumbnail Candidate Image */}
+                    <div
+                      onClick={() => setSelectedFinalistForDetail(finalist)}
+                      className="relative w-16 h-20 sm:w-20 sm:h-24 rounded-xl overflow-hidden bg-gray-100 dark:bg-black/50 flex-shrink-0 cursor-pointer shadow-xs"
+                      title="Klik untuk membuka profil lengkap finalis"
+                    >
+                      {photoSrc ? (
+                        <img
+                          src={resolveStorageUrl(photoSrc)}
+                          alt={finalist.name}
+                          className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                          onError={(e) => { e.currentTarget.style.display = 'none' }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-emerald-950 text-[#70B325] font-black text-sm">
+                          {finalist.name.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="absolute top-1 left-1 z-10">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-black/80 backdrop-blur-xs text-white text-[9px] sm:text-[10px] font-black tracking-tight border border-white/20">
+                          No. {String(globalRank).padStart(2, '0')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Middle: Candidate Info & Stats */}
+                    <div className="flex-1 min-w-0 pr-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {isVotingClosed && globalRank <= 3 && (
+                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-black ${
+                            globalRank === 1 ? 'bg-amber-400 text-amber-950' : globalRank === 2 ? 'bg-slate-300 text-slate-900' : 'bg-amber-800 text-amber-100'
+                          }`}>
+                            <IconTrophy className="w-3 h-3" /> Juara {globalRank}
+                          </span>
+                        )}
+                        <h3
+                          onClick={() => setSelectedFinalistForDetail(finalist)}
+                          className="font-bold text-xs sm:text-base text-gray-900 dark:text-white truncate cursor-pointer hover:text-[#70B325] transition-colors"
+                        >
+                          {finalist.name}
+                        </h3>
+                      </div>
+                      <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                        {finalist.description || `Kandidat Nomor Urut ${globalRank}`}
+                      </p>
+
+                      {/* Stat chips */}
+                      <div className="flex items-center gap-1.5 sm:gap-3 mt-1.5 sm:mt-2">
+                        <div className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-md border border-gray-200/60 dark:border-white/5">
+                          <IconCoins className="w-3 h-3 text-amber-500 flex-shrink-0" />
+                          <span className="font-bold">Rp {priceFormatted}</span>
+                        </div>
+                        <div className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-[#70B325] dark:text-[#86C839] bg-[#70B325]/10 px-2 py-0.5 rounded-md border border-[#70B325]/20 font-bold">
+                          <IconTrendingUp className="w-3 h-3 flex-shrink-0" />
+                          <span>{isFrozen ? 'Rahasia' : `${percentage}%`}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Actions */}
+                    <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                      {isVotingClosed ? (
+                        <span className="text-[10px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 px-2 sm:px-2.5 py-1 bg-gray-100 dark:bg-white/5 rounded-lg border border-gray-200/60 dark:border-white/5">
+                          Selesai
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={isVotingExpired}
+                          onClick={() => setSelectedFinalistForVote(finalist)}
+                          className="py-1.5 sm:py-2 px-3 sm:px-4 bg-[#70B325] hover:bg-[#5F9A1E] disabled:bg-gray-300 dark:disabled:bg-gray-800 text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-1 cursor-pointer disabled:cursor-not-allowed"
+                        >
+                          <IconZap className="w-3.5 h-3.5 text-white" />
+                          <span>Vote</span>
+                        </button>
+                      )}
+
+                      {/* Detail & Share Toolbar */}
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedFinalistForDetail(finalist)}
+                          className="px-2 py-1 text-[10px] sm:text-[11px] font-bold text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 rounded-lg transition-colors cursor-pointer"
+                          title="Lihat Detail Profil"
+                        >
+                          Detail
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleShareWhatsApp(finalist)}
+                          className="p-1 text-[#1F8A43] dark:text-[#8FE032] hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg transition-colors cursor-pointer"
+                          title="Bagikan ke WhatsApp"
+                        >
+                          <IconWhatsApp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyLink(finalist)}
+                          className="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+                          title="Salin Tautan Profil"
+                        >
+                          {copiedId === finalist.id ? (
+                            <IconCheck className="w-3.5 h-3.5 text-emerald-600" />
+                          ) : (
+                            <IconLink className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   </article>
                 )
               })}
