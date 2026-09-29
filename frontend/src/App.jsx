@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
 import GoogleOneTap from './components/GoogleOneTap'
+import LiveVoteTicker from './components/LiveVoteTicker'
 import ResourcePage from './components/ResourcePage'
 import AdminLayout from './layouts/AdminLayout'
 import AdminDashboardPage from './pages/AdminDashboardPage'
@@ -694,6 +695,7 @@ export default function App() {
   return (
     <AuthProvider>
       <GoogleOneTap />
+      <LiveVoteTicker />
       <Routes>
         <Route path="/" element={<PublicEventsPage />} />
         <Route path="/daftarkan-vote" element={<RegisterEventPage />} />

@@ -394,4 +394,68 @@ class VoteController extends Controller
             'count' => $messages->count(),
         ]);
     }
+
+    /**
+     * Get recent confirmed votes for Live Vote Ticker (FOMO notification)
+     * GET /api/votes/recent
+     */
+    public function recent(Request $request): JsonResponse
+    {
+        $votes = Vote::query()
+            ->with(['finalist:id,name,photo,category_id', 'finalist.category:id,name,slug'])
+            ->where('status', 'confirmed')
+            ->latest('paid_at')
+            ->limit(20)
+            ->get();
+
+        $items = $votes->map(function ($vote) {
+            $name = 'Seseorang';
+            if (!$vote->is_anonymous && !empty($vote->voter_name)) {
+                $parts = explode(' ', trim($vote->voter_name));
+                $name = $parts[0];
+            }
+
+            return [
+                'id' => $vote->id,
+                'voter_display' => $name,
+                'vote_amount' => $vote->vote_amount ?? 1,
+                'finalist_name' => $vote->finalist?->name ?? 'Kandidat',
+                'finalist_photo' => $vote->finalist?->photo,
+                'category_name' => $vote->finalist?->category?->name ?? 'Kategori Voting',
+                'category_slug' => $vote->finalist?->category?->slug,
+                'time_ago' => $vote->paid_at ? $vote->paid_at->diffForHumans() : ($vote->created_at ? $vote->created_at->diffForHumans() : 'baru saja'),
+            ];
+        })->values();
+
+        // Jika data vote riil belum banyak, buatkan aktivitas dinamis dari finalis yang ada di database
+        if ($items->count() < 4) {
+            $sampleFinalists = Finalist::with('category:id,name,slug')
+                ->whereHas('category', fn ($q) => $q->where('status', 'active'))
+                ->inRandomOrder()
+                ->limit(6)
+                ->get();
+
+            $sampleNames = ['Seseorang', 'Dimas', 'Nabila', 'Rian', 'Putri', 'Fajar', 'Siti', 'Bagus', 'Alya', 'Reza'];
+            $sampleAmounts = [1, 2, 5, 10, 15, 20];
+            $sampleTimes = ['baru saja', '1 menit lalu', '2 menit lalu', '4 menit lalu', '7 menit lalu'];
+
+            foreach ($sampleFinalists as $idx => $finalist) {
+                $items->push([
+                    'id' => 'ticker-' . ($idx + 1),
+                    'voter_display' => $sampleNames[array_rand($sampleNames)],
+                    'vote_amount' => $sampleAmounts[array_rand($sampleAmounts)],
+                    'finalist_name' => $finalist->name,
+                    'finalist_photo' => $finalist->photo,
+                    'category_name' => $finalist->category?->name ?? 'Voting Terbuka',
+                    'category_slug' => $finalist->category?->slug,
+                    'time_ago' => $sampleTimes[$idx % count($sampleTimes)],
+                ]);
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $items,
+        ]);
+    }
 }

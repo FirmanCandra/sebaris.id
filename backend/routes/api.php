@@ -128,6 +128,7 @@ Route::post('votes', [VoteController::class, 'store'])->middleware('throttle:30,
 Route::post('votes/{referenceId}/simulate-pay', [VoteController::class, 'simulatePay']);
 Route::get('votes/{referenceId}/status', [VoteController::class, 'checkStatus']);
 Route::get('votes/check', [VoteController::class, 'checkVotes']);
+Route::get('votes/recent', [VoteController::class, 'recent']);
 
 // Event Registrations (Self-Service Organizer)
 Route::post('event-registrations', [EventRegistrationController::class, 'store'])->middleware('throttle:15,1');
