@@ -136,14 +136,6 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
               Vote
             </button>
 
-            <button
-              type="button"
-              onClick={handleCheckVoteClick}
-              className="text-gray-700 dark:text-gray-200 hover:text-[#70B325] dark:hover:text-[#8FE032] font-medium transition-colors duration-200 cursor-pointer"
-            >
-              Cek Vote
-            </button>
-
             <NavLink
               to="/daftarkan-vote"
               className={({ isActive }) =>
@@ -328,14 +320,6 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
                     className="w-full text-left flex items-center px-4 py-3 rounded-2xl font-semibold text-sm text-[#262A25] dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 transition-all cursor-pointer"
                   >
                     Vote
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleCheckVoteClick}
-                    className="w-full text-left flex items-center px-4 py-3 rounded-2xl font-semibold text-sm text-[#262A25] dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 transition-all cursor-pointer"
-                  >
-                    Cek Vote
                   </button>
 
                   <NavLink
