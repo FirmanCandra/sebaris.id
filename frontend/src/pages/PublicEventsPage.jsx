@@ -564,7 +564,7 @@ export default function PublicEventsPage() {
 
             {filteredHighlights.length > 0 && (
               <Link
-                to={`/voting/${filteredHighlights[0]?.slug || filteredHighlights[0]?.id}`}
+                to="/events"
                 className="hidden sm:inline-flex items-center gap-1 text-sm font-extrabold text-[#70B325] dark:text-[#86C839] hover:underline whitespace-nowrap"
               >
                 <span>Lihat Lebih Banyak</span>
@@ -721,7 +721,7 @@ export default function PublicEventsPage() {
               {filteredHighlights.length > 1 && (
                 <div className="sm:hidden flex items-center justify-center pt-3 pb-1">
                   <Link
-                    to={`/voting/${filteredHighlights[0]?.slug || filteredHighlights[0]?.id}`}
+                    to="/events"
                     className="inline-flex items-center gap-1 text-sm font-extrabold text-[#70B325] dark:text-[#86C839] hover:underline"
                   >
                     <span>Lihat Lebih Banyak</span>
@@ -787,7 +787,7 @@ export default function PublicEventsPage() {
 
               {champions.length > 0 && (
                 <Link
-                  to={`/voting/${champions[0]?.category.slug || champions[0]?.category.id}`}
+                  to="/events"
                   className="hidden sm:inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-[#173007] hover:text-black dark:text-[#D2FF0F] dark:hover:text-white transition-colors bg-white/70 hover:bg-white dark:bg-white/10 dark:hover:bg-white/20 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-[#173007]/15 dark:border-white/20 shadow-xs whitespace-nowrap"
                 >
                   <span>Lihat Lebih Banyak</span>
@@ -894,7 +894,7 @@ export default function PublicEventsPage() {
               {champions.length > 1 && (
                 <div className="sm:hidden flex items-center justify-center pt-3 pb-1">
                   <Link
-                    to={`/voting/${champions[0]?.category.slug || champions[0]?.category.id}`}
+                    to="/events"
                     className="inline-flex items-center gap-1 text-xs font-black text-[#173007] dark:text-[#D2FF0F] bg-white/70 dark:bg-white/10 px-3.5 py-1.5 rounded-full border border-[#173007]/15 dark:border-white/20 shadow-xs"
                   >
                     <span>Lihat Lebih Banyak</span>
@@ -945,7 +945,7 @@ export default function PublicEventsPage() {
 
             {filteredPast.length > 0 && (
               <Link
-                to={`/voting/${filteredPast[0]?.slug || filteredPast[0]?.id}`}
+                to="/events?filter=past"
                 className="hidden sm:inline-flex items-center gap-1 text-sm font-bold text-gray-600 dark:text-gray-400 hover:underline whitespace-nowrap"
               >
                 <span>Lihat Semua Arsip</span>
@@ -1065,7 +1065,7 @@ export default function PublicEventsPage() {
               {filteredPast.length > 1 && (
                 <div className="sm:hidden flex items-center justify-center pt-3 pb-1">
                   <Link
-                    to={`/voting/${filteredPast[0]?.slug || filteredPast[0]?.id}`}
+                    to="/events?filter=past"
                     className="inline-flex items-center gap-1 text-sm font-bold text-gray-600 dark:text-gray-400 hover:underline"
                   >
                     <span>Lihat Semua Arsip</span>

@@ -15,6 +15,7 @@ import AdminManagementPage from './pages/AdminManagementPage'
 import EventWorkspacePage from './pages/EventWorkspacePage'
 import RegisterEventPage from './pages/RegisterEventPage'
 import AdminProposalsPage from './pages/AdminProposalsPage'
+import EventsDirectoryPage from './pages/EventsDirectoryPage'
 import EmbedCodeModal from './components/EmbedCodeModal'
 import VotePackagesModal from './components/VotePackagesModal'
 import AdjustVoteModal from './components/AdjustVoteModal'
@@ -698,6 +699,8 @@ export default function App() {
       <LiveVoteTicker />
       <Routes>
         <Route path="/" element={<PublicEventsPage />} />
+        <Route path="/events" element={<EventsDirectoryPage />} />
+        <Route path="/vote" element={<EventsDirectoryPage />} />
         <Route path="/daftarkan-vote" element={<RegisterEventPage />} />
         <Route path="/categories/:categoryId" element={<CategoryVotingPage />} />
         <Route path="/voting/:categoryId" element={<CategoryVotingPage />} />

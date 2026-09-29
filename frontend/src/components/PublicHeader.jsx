@@ -128,13 +128,18 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
               Beranda
             </NavLink>
 
-            <button
-              type="button"
-              onClick={handleVoteClick}
-              className="text-gray-700 dark:text-gray-200 hover:text-[#70B325] dark:hover:text-[#8FE032] font-medium transition-colors duration-200 cursor-pointer"
+            <NavLink
+              to="/vote"
+              className={({ isActive }) =>
+                `transition-colors duration-200 ${
+                  isActive
+                    ? 'text-[#70B325] dark:text-[#8FE032] font-black'
+                    : 'text-gray-700 dark:text-gray-200 hover:text-[#70B325] dark:hover:text-[#8FE032] font-medium'
+                }`
+              }
             >
               Vote
-            </button>
+            </NavLink>
 
             <NavLink
               to="/daftarkan-vote"
@@ -314,13 +319,19 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
                     Beranda
                   </NavLink>
 
-                  <button
-                    type="button"
-                    onClick={handleVoteClick}
-                    className="w-full text-left flex items-center px-4 py-3 rounded-2xl font-semibold text-sm text-[#262A25] dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+                  <NavLink
+                    to="/vote"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={({ isActive }) =>
+                      `flex items-center px-4 py-3 rounded-2xl font-bold text-sm transition-all ${
+                        isActive
+                          ? 'text-[#70B325] dark:text-[#8FE032] bg-[#70B325]/10 font-extrabold'
+                          : 'text-[#262A25] dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 font-semibold'
+                      }`
+                    }
                   >
                     Vote
-                  </button>
+                  </NavLink>
 
                   <NavLink
                     to="/daftarkan-vote"
