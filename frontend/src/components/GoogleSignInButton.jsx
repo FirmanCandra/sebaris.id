@@ -19,14 +19,18 @@ export default function GoogleSignInButton({
       if (window.google?.accounts?.id && btnRef.current) {
         clearInterval(interval)
         try {
-          window.google.accounts.id.initialize({
-            client_id: clientId,
-            callback: (res) => {
-              if (res?.credential && onCredentialResponse) {
-                onCredentialResponse(res.credential)
-              }
-            },
-          })
+          if (!window.__gsi_initialized_id || window.__gsi_initialized_id !== clientId) {
+            window.google.accounts.id.initialize({
+              client_id: clientId,
+              callback: (res) => {
+                if (res?.credential) {
+                  window.dispatchEvent(new CustomEvent('sebaris-google-credential', { detail: res.credential }))
+                }
+              },
+            })
+            window.__gsi_initialized_id = clientId
+          }
+
           btnRef.current.innerHTML = ''
           window.google.accounts.id.renderButton(btnRef.current, {
             type: 'standard',
@@ -45,7 +49,17 @@ export default function GoogleSignInButton({
       }
     }, 200)
 
-    return () => clearInterval(interval)
+    const onCred = (e) => {
+      if (onCredentialResponse && e.detail) {
+        onCredentialResponse(e.detail)
+      }
+    }
+    window.addEventListener('sebaris-google-credential', onCred)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('sebaris-google-credential', onCred)
+    }
   }, [clientId, onCredentialResponse, theme, size, width, text])
 
   if (!clientId) {

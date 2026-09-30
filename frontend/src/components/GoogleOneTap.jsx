@@ -64,14 +64,22 @@ export default function GoogleOneTap() {
           // ignore
         }
 
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleCredential,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-          context: "signin",
-          itp_support: true,
-        })
+        if (!window.__gsi_initialized_id || window.__gsi_initialized_id !== clientId) {
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: (res) => {
+              handleCredential(res)
+              if (res?.credential) {
+                window.dispatchEvent(new CustomEvent('sebaris-google-credential', { detail: res.credential }))
+              }
+            },
+            auto_select: false,
+            cancel_on_tap_outside: true,
+            context: "signin",
+            itp_support: true,
+          })
+          window.__gsi_initialized_id = clientId
+        }
 
         window.google.accounts.id.prompt((notification) => {
           isOneTapPromptPending = false
