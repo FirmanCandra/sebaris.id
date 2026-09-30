@@ -125,14 +125,25 @@ export default function LiveVoteTicker() {
         {/* Candidate Photo or Live Pulse Indicator */}
         <div className="relative flex-shrink-0">
           {currentItem.finalist_photo ? (
-            <img
-              src={resolveStorageUrl(currentItem.finalist_photo)}
-              alt={currentItem.finalist_name}
-              className="w-10 h-10 rounded-full object-cover border border-[#70B325]/40 shadow-xs"
-              onError={(e) => {
-                e.target.style.display = 'none'
-              }}
-            />
+            <>
+              <img
+                src={resolveStorageUrl(currentItem.finalist_photo)}
+                alt={currentItem.finalist_name}
+                className="w-10 h-10 rounded-full object-cover border border-[#70B325]/40 shadow-xs"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                  if (e.currentTarget.nextElementSibling) {
+                    e.currentTarget.nextElementSibling.style.display = 'flex'
+                  }
+                }}
+              />
+              <div
+                style={{ display: 'none' }}
+                className="w-10 h-10 rounded-full bg-[#EBF7E3] dark:bg-[#70B325]/20 text-[#48781B] dark:text-[#8FE032] font-black text-xs items-center justify-center border border-[#70B325]/30"
+              >
+                {currentItem.finalist_name?.slice(0, 2)?.toUpperCase() || 'VT'}
+              </div>
+            </>
           ) : (
             <div className="w-10 h-10 rounded-full bg-[#EBF7E3] dark:bg-[#70B325]/20 text-[#48781B] dark:text-[#8FE032] font-black text-xs flex items-center justify-center border border-[#70B325]/30">
               {currentItem.finalist_name?.slice(0, 2)?.toUpperCase() || 'VT'}
