@@ -580,11 +580,11 @@ export default function CategoryVotingPage() {
       </section>
 
       {/* =========================================================================
-          IMPROVED CATEGORY SWITCHER (STICKY SUB-NAVBAR)
+          IMPROVED CATEGORY SWITCHER (SUB-NAVBAR - NON-STICKY PER USER REQUEST)
           Only displayed when multiple categories exist for the event
           ========================================================================= */}
       {category?.sibling_categories && category.sibling_categories.length > 1 && (
-        <div className="sticky top-16 sm:top-20 z-30 w-full bg-white/95 dark:bg-[#151C14]/95 backdrop-blur-md border-b border-gray-200 dark:border-white/10 shadow-xs transition-colors">
+        <div className="w-full bg-white dark:bg-[#151C14] border-b border-gray-200 dark:border-white/10 shadow-2xs transition-colors">
           <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-2.5">
             <div className="flex items-center justify-between gap-3">
 
@@ -1351,55 +1351,34 @@ export default function CategoryVotingPage() {
                         {finalist.description || `Kandidat Nomor Urut ${globalRank}`}
                       </div>
 
-                      {/* 3-Column Stat Box: Tarif, Vote%, Total Suara */}
-                      <div className="grid grid-cols-3 rounded-xl bg-gray-50 dark:bg-white/5 p-1.5 sm:p-2.5 my-2 sm:my-3 text-center divide-x divide-gray-200 dark:divide-white/10 border border-gray-100 dark:border-white/5">
-                        <div className="px-0.5">
-                          <div className="text-[9px] sm:text-[10px] font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-center gap-0.5 mb-0.5">
-                            <IconCoins className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-500 flex-shrink-0" />
-                            <span className="truncate">Tarif</span>
-                          </div>
-                          <div className="text-[10px] sm:text-xs font-extrabold text-gray-900 dark:text-white truncate">
+                      {/* 3-Column Compact Stat Box: Tarif, Vote%, Total Suara */}
+                      <div className="grid grid-cols-3 rounded-xl bg-gray-50/90 dark:bg-white/5 py-1.5 px-1 my-2 text-center divide-x divide-gray-200/70 dark:divide-white/10 border border-gray-100 dark:border-white/5">
+                        <div className="px-0.5 min-w-0">
+                          <span className="block text-[9px] text-gray-400 font-semibold tracking-tight uppercase">Tarif</span>
+                          <span className="block text-[10px] sm:text-xs font-bold text-gray-800 dark:text-gray-100 leading-tight whitespace-nowrap">
                             Rp {priceFormatted}
-                          </div>
+                          </span>
                         </div>
-
-                        <div className="px-0.5">
-                          <div className="text-[9px] sm:text-[10px] font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-center gap-0.5 mb-0.5">
-                            <IconTrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#70B325] flex-shrink-0" />
-                            <span className="truncate">Vote</span>
-                          </div>
-                          <div className="text-[10px] sm:text-xs font-extrabold text-[#70B325] dark:text-[#86C839] truncate">
+                        <div className="px-0.5 min-w-0">
+                          <span className="block text-[9px] text-gray-400 font-semibold tracking-tight uppercase">Vote</span>
+                          <span className="block text-[10px] sm:text-xs font-bold text-[#70B325] dark:text-[#86C839] leading-tight whitespace-nowrap">
                             {isFrozen ? 'Rahasia' : `${percentage}%`}
-                          </div>
+                          </span>
                         </div>
-
-                        <div className="px-0.5">
-                          <div className="text-[9px] sm:text-[10px] font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-center gap-0.5 mb-0.5">
-                            <IconUsers className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-500 flex-shrink-0" />
-                            <span className="truncate">Suara</span>
-                          </div>
-                          <div className="text-[10px] sm:text-xs font-extrabold text-blue-600 dark:text-blue-400 truncate">
+                        <div className="px-0.5 min-w-0">
+                          <span className="block text-[9px] text-gray-400 font-semibold tracking-tight uppercase">Suara</span>
+                          <span className="block text-[10px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 leading-tight whitespace-nowrap">
                             {isFrozen ? '?' : (finalist.vote_count || 0).toLocaleString('id-ID')}
-                          </div>
+                          </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Action Buttons Row */}
-                    <div className="space-y-1.5 sm:space-y-2 pt-1">
-                      {/* Secondary Action: Detail */}
-                      <button
-                        type="button"
-                        onClick={() => setSelectedFinalistForDetail(finalist)}
-                        className="w-full py-1.5 sm:py-2 px-2 text-[11px] sm:text-xs font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 rounded-xl transition-colors cursor-pointer text-center truncate"
-                      >
-                        <span className="sm:hidden">Detail</span>
-                        <span className="hidden sm:inline">Lihat Detail Finalis</span>
-                      </button>
-
-                      {/* Primary Action: Vote or Juara Terpilih */}
+                    {/* Action Buttons: 2-Row Compact Layout */}
+                    <div className="space-y-1.5 pt-1">
+                      {/* Row 1: Primary Action (Vote or Juara) */}
                       {isVotingClosed ? (
-                        <div className="w-full min-h-[36px] sm:min-h-[42px] py-1.5 sm:py-2 px-2 bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 font-extrabold text-[11px] sm:text-sm rounded-xl border border-gray-200 dark:border-white/10 flex items-center justify-center gap-1 cursor-default shadow-2xs">
+                        <div className="w-full h-8 sm:h-9 px-2 bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 font-bold text-xs sm:text-sm rounded-xl border border-gray-200 dark:border-white/10 flex items-center justify-center gap-1 shadow-2xs">
                           <IconTrophy className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
                           <span className="truncate">
                             {globalRank === 1 ? 'Juara 1' : globalRank === 2 ? 'Juara 2' : 'Juara 3'}
@@ -1410,72 +1389,80 @@ export default function CategoryVotingPage() {
                           type="button"
                           disabled={isVotingExpired}
                           onClick={() => setSelectedFinalistForVote(finalist)}
-                          className="w-full min-h-[36px] sm:min-h-[42px] py-1.5 sm:py-2 px-2 bg-[#70B325] hover:bg-[#5F9A1E] disabled:bg-gray-300 dark:disabled:bg-gray-800 text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer disabled:cursor-not-allowed"
+                          className="w-full h-8 sm:h-9 px-2 bg-[#70B325] hover:bg-[#5F9A1E] disabled:bg-gray-300 dark:disabled:bg-gray-800 text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed active:scale-[0.98]"
                         >
                           <IconZap className="w-3.5 h-3.5 text-white flex-shrink-0" />
                           <span className="truncate">
-                            {isVotingExpired
-                              ? 'Ditutup'
-                              : (
-                                <>
-                                  Vote <span className="hidden sm:inline">{finalist.name.split(' ')[0]}</span>
-                                </>
-                              )}
+                            {isVotingExpired ? 'Voting Ditutup' : `Vote ${finalist.name.split(' ')[0]}`}
                           </span>
                         </button>
                       )}
 
-                      {/* Single "Bagikan" button with popover dropdown */}
-                      <div className="relative" ref={shareOpenId === finalist.id ? shareDropdownRef : null}>
+                      {/* Row 2: Secondary Actions (Detail + Bagikan Side-by-Side) */}
+                      <div className="grid grid-cols-2 gap-1.5 relative">
+                        {/* Detail Button */}
                         <button
                           type="button"
-                          onClick={() => setShareOpenId(shareOpenId === finalist.id ? null : finalist.id)}
-                          className="w-full py-1.5 sm:py-2 px-2 text-[11px] sm:text-xs font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/15 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-                          title="Bagikan Finalis Ini"
+                          onClick={() => setSelectedFinalistForDetail(finalist)}
+                          className="h-7 sm:h-8 px-2 text-[11px] sm:text-xs font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 rounded-lg transition-colors cursor-pointer flex items-center justify-center truncate"
                         >
-                          <IconLink className="w-3 h-3 flex-shrink-0" />
-                          <span>Bagikan</span>
-                          <IconChevronDown
-                            className={`w-3 h-3 flex-shrink-0 transition-transform duration-150 ${shareOpenId === finalist.id ? 'rotate-180' : ''}`}
-                          />
+                          <span>Detail</span>
                         </button>
 
-                        {/* Share Dropdown Popover */}
-                        {shareOpenId === finalist.id && (
-                          <div className="absolute bottom-full mb-1.5 left-0 right-0 bg-white dark:bg-[#1C2519] border border-gray-200 dark:border-white/15 rounded-xl shadow-xl z-30 p-1 overflow-hidden animate-fadeIn">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                handleShareWhatsApp(finalist)
-                                setShareOpenId(null)
-                              }}
-                              className="w-full flex items-center gap-2 px-3 py-2 text-[11px] sm:text-xs font-bold text-[#1F8A43] dark:text-[#8FE032] hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg transition-colors cursor-pointer"
-                            >
-                              <IconWhatsApp className="w-3.5 h-3.5 flex-shrink-0" />
-                              <span>Bagikan ke WA</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                handleCopyLink(finalist)
-                                setTimeout(() => setShareOpenId(null), 1600)
-                              }}
-                              className="w-full flex items-center gap-2 px-3 py-2 text-[11px] sm:text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
-                            >
-                              {copiedId === finalist.id ? (
-                                <>
-                                  <IconCheck className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                                  <span className="text-emerald-600 dark:text-emerald-400">Link Tersalin!</span>
-                                </>
-                              ) : (
-                                <>
-                                  <IconLink className="w-3.5 h-3.5 flex-shrink-0" />
-                                  <span>Salin Link</span>
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        )}
+                        {/* Bagikan Button with Dropdown Popover */}
+                        <div className="relative" ref={shareOpenId === finalist.id ? shareDropdownRef : null}>
+                          <button
+                            type="button"
+                            onClick={() => setShareOpenId(shareOpenId === finalist.id ? null : finalist.id)}
+                            className="w-full h-7 sm:h-8 px-2 text-[11px] sm:text-xs font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1"
+                            title="Bagikan Profil Finalis"
+                          >
+                            <IconLink className="w-3 h-3 flex-shrink-0 text-gray-500 dark:text-gray-400" />
+                            <span>Bagikan</span>
+                            <IconChevronDown
+                              className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
+                                shareOpenId === finalist.id ? 'rotate-180 text-[#70B325]' : ''
+                              }`}
+                            />
+                          </button>
+
+                          {/* Share Dropdown Popover */}
+                          {shareOpenId === finalist.id && (
+                            <div className="absolute bottom-full mb-1.5 right-0 w-44 bg-white dark:bg-[#1C2519] border border-gray-200 dark:border-white/15 rounded-xl shadow-xl z-40 p-1 overflow-hidden animate-fadeIn space-y-0.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleShareWhatsApp(finalist)
+                                  setShareOpenId(null)
+                                }}
+                                className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] sm:text-xs font-bold text-[#1F8A43] dark:text-[#8FE032] hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg transition-colors cursor-pointer text-left"
+                              >
+                                <IconWhatsApp className="w-3.5 h-3.5 flex-shrink-0" />
+                                <span>Bagikan ke WA</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleCopyLink(finalist)
+                                  setTimeout(() => setShareOpenId(null), 1600)
+                                }}
+                                className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] sm:text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors cursor-pointer text-left"
+                              >
+                                {copiedId === finalist.id ? (
+                                  <>
+                                    <IconCheck className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                                    <span className="text-emerald-600 dark:text-emerald-400">Link Tersalin!</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <IconLink className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" />
+                                    <span>Salin Link</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </article>
