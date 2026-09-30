@@ -1,5 +1,29 @@
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000/api'
-export const BACKEND_URL = API_URL.replace(/\/api\/?$/, '')
+// Dynamically resolve API URL:
+// 1. In Local Development (npm run dev): uses VITE_API_URL or defaults to 'http://127.0.0.1:8000/api'
+// 2. In Production (Hostinger / web): uses current browser origin + '/api' dynamically,
+//    ensuring it seamlessly binds to whatever domain the app is running on without hardcoding!
+const getApiBaseUrl = () => {
+  if (import.meta.env.DEV) {
+    return import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api'
+  }
+
+  // If in browser (production)
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    // If VITE_API_URL is explicitly set to an external URL that isn't the old legacy domain
+    const envUrl = import.meta.env.VITE_API_URL
+    if (envUrl && !envUrl.includes('pojoktungu59.com') && envUrl !== '/api') {
+      return envUrl
+    }
+    return `${window.location.origin}/api`
+  }
+
+  return '/api'
+}
+
+const API_URL = getApiBaseUrl()
+export const BACKEND_URL = typeof window !== 'undefined' && window.location?.origin
+  ? window.location.origin
+  : API_URL.replace(/\/api\/?$/, '')
 
 export class ApiError extends Error {
   constructor(message, errors = {}) {
@@ -13,18 +37,26 @@ export function resolveStorageUrl(pathOrUrl) {
   const str = String(pathOrUrl).trim()
   if (!str) return ''
 
+  const currentOrigin = typeof window !== 'undefined' && window.location?.origin
+    ? window.location.origin
+    : BACKEND_URL
+
   // If already a full URL
   if (str.startsWith('http://') || str.startsWith('https://')) {
     // If it points to localhost/storage or 127.0.0.1/storage without port 8000, repair it to backend host
     if (str.includes('localhost/storage') || str.includes('127.0.0.1/storage')) {
-      return str.replace(/^(https?:\/\/[^/:]+)(\/storage\/)/, `${BACKEND_URL}$2`)
+      return str.replace(/^(https?:\/\/[^/:]+)(\/storage\/)/, `${currentOrigin}$2`)
+    }
+    // If it points to legacy domain pojoktungu59.com, automatically repair to current domain!
+    if (str.includes('pojoktungu59.com/storage')) {
+      return str.replace(/^(https?:\/\/[^/]+)(\/storage\/)/, `${currentOrigin}$2`)
     }
     return str
   }
 
   // If it's a relative path like "finalists/xyz.png" or "/storage/finalists/xyz.png"
   const clean = str.startsWith('/storage') ? str : `/storage/${str.replace(/^\/+/, '')}`
-  return `${BACKEND_URL}${clean}`
+  return `${currentOrigin}${clean}`
 }
 
 
