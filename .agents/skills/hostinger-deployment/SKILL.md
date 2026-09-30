@@ -7,13 +7,25 @@ description: "SOP dan panduan lengkap deploy ke Hostinger untuk Sebaris.id, auto
 
 File acuan utama: `HOSTINGER-DEPLOY-GUIDE.md` di root project.
 
-Gunakan skill ini setiap kali melakukan perubahan kode, penambahan fitur, perbaikan bug, atau instruksi yang berhubungan dengan deployment ke server Hostinger (`sebaris.pojoktungu59.com`).
+Gunakan skill ini setiap kali melakukan perubahan kode, penambahan fitur, perbaikan bug, atau instruksi yang berhubungan dengan deployment ke server Hostinger.
+
+---
+
+## 0. Info Server Production (WAJIB BACA DULU)
+
+| Item | Nilai |
+|---|---|
+| **Domain aktif** | `https://sebarisproject.id` |
+| **Folder server** | `~/domains/sebarisproject.id/public_html/` |
+| **Domain lama (NON-AKTIF)** | `sebaris.pojoktungu59.com` — JANGAN digunakan |
+
+> **PERHATIAN AGENT:** Jika ada referensi lama ke `sebaris.pojoktungu59.com` atau `sebaris.id` di kode atau dokumentasi, itu adalah domain lama yang sudah tidak dipakai. Domain aktif adalah `sebarisproject.id`.
 
 ---
 
 ## 1. Aturan Wajib: Push Setiap Update ke GitHub
 
-> **PERINGATAN KERAS:** Jangan pernah membiarkan commit atau perubahan kode menggantung di lokal (*"dianggurin"*). Setiap kali fitur/bugfix selesai diuji:
+> **PERINGATAN KERAS:** Jangan pernah membiarkan commit menggantung di lokal.
 
 1. **Build Frontend & Auto-Sync**:
    ```bash
@@ -21,60 +33,69 @@ Gunakan skill ini setiap kali melakukan perubahan kode, penambahan fitur, perbai
    npm run build
    cd ..
    ```
-   *Catatan:* Script `frontend/scripts/sync-dist.js` otomatis menyalin hasil build ke root (`index.html` dan `assets/`) agar web server Hostinger dapat langsung membacanya.
+   Script `frontend/scripts/sync-dist.js` otomatis menyalin hasil build ke root (`index.html` dan `assets/`).
 
 2. **Commit dengan Pesan Jelas**:
    ```bash
    git add .
-   git commit -m "<type>(<scope>): <deskripsi jelas perubahan>"
+   git commit -m "<type>(<scope>): <deskripsi jelas>"
    ```
 
-3. **Sinkronisasi & Push ke Semua Branch Utama**:
+3. **Push serentak ke 3 branch** (satu command):
    ```bash
-   git push origin local
-   git checkout hosting && git merge local --ff-only && git push origin hosting
-   git checkout main && git merge local --ff-only && git push origin main
-   git checkout local
+   git push origin local && git push origin local:hosting && git push origin local:main
    ```
+   Jangan checkout ke branch lain. Gunakan format `local:hosting` dan `local:main` agar tetap di branch `local`.
 
 ---
 
 ## 2. Struktur Direktori Hostinger
 
-Di server Hostinger, repository di-clone ke:
-`~/domains/sebaris.pojoktungu59.com/public_html/`
+```
+~/domains/sebarisproject.id/public_html/   ← ROOT repository Git
+├── index.html                              ← Frontend React (hasil build)
+├── assets/                                 ← JS/CSS bundle
+├── .htaccess                               ← Router utama
+└── backend/
+    ├── public/index.php                    ← Entry Laravel (untuk /api/...)
+    └── storage/app/public/                 ← File upload (foto, dll)
+        ├── finalists/
+        ├── categories/
+        └── banners/
+```
 
-- **Root `public_html/` adalah root repository Git.**
-- **Frontend (React)**: Disajikan langsung dari root `index.html` dan `assets/`.
-- **Backend (Laravel)**: Berada di `backend/`. Request `/api/...` dialihkan oleh root `.htaccess` ke `backend/public/index.php`.
+### Penting: Storage Tanpa Symlink
+
+`.htaccess` dikonfigurasi agar `/storage/...` langsung ke folder fisik:
+```apache
+RewriteRule ^storage(/.*)?$ backend/storage/app/public$1 [L]
+```
+
+- **JANGAN** ubah ke `backend/public/storage` (itu path symlink, tidak ada di Hostinger)
+- **JANGAN** jalankan `php artisan storage:link` (tidak diperlukan)
+- Laravel menyimpan upload ke `backend/storage/app/public/[folder]/` — path ini yang benar
 
 ---
 
 ## 3. Pantangan Keras di Server Hostinger (Shared Hosting)
 
-Hostinger yang digunakan adalah tipe **Shared Hosting** dengan batas RAM & CPU CloudLinux LVE yang ketat.
-
-1. ❌ **DILARANG menjalankan `php artisan serve` di SSH Hostinger.**  
-   *Alasan:* Server Hostinger sudah memiliki web server bawaan (LiteSpeed/Apache). `serve` memakan proses tak berujung dan menyebabkan server *refused/connection timed out*.
-2. ❌ **DILARANG menjalankan `npm run dev` atau `npm run build` di SSH Hostinger.**  
-   *Alasan:* Node.js build menghabiskan 100% CPU/RAM shared hosting. Seluruh build **WAJIB** dikerjakan di lokal.
-3. ❌ **DILARANG mengaktifkan "Cache Manager / Cache Otomatis" di hPanel Hostinger.**  
-   *Alasan:* Cache otomatis akan membypass PHP dan menyimpan respon halaman selama 30 menit. Ini membuat tabulasi suara (*leaderboard*) tidak real-time dan update kodingan tertahan.
+1. **DILARANG** `php artisan serve` di SSH Hostinger
+2. **DILARANG** `npm run dev` atau `npm run build` di SSH Hostinger
+3. **DILARANG** mengaktifkan "Cache Manager / Cache Otomatis" di hPanel
+4. **DILARANG** `git push --force` ke branch `hosting` atau `main`
+5. **DILARANG** `php artisan storage:link` — sudah dihandle `.htaccess`
 
 ---
 
-## 4. Cara Update di Hostinger (Untuk User)
+## 4. Cara Update di Hostinger
 
-Beri panduan ke user untuk memilih salah satu dari 2 cara update:
+### Cara A: Paling Praktis (1 Klik)
+1. Login hPanel → **Tingkat Lanjut (Advanced)** → **Git**
+2. Klik tombol **Tarik (Pull)**
 
-### Cara A: Paling Praktis (Lewat hPanel Git - Cukup 1 Klik)
-1. Buka browser ➔ login ke **hPanel Hostinger**.
-2. Masuk ke menu **Tingkat Lanjut (Advanced)** ➔ klik **Git**.
-3. Klik tombol **Tarik (Pull)**.
-
-### Cara B: Lewat Terminal SSH (Jika Perlu Migrasi Manual)
+### Cara B: SSH (Jika Perlu Migrasi Manual)
 ```bash
-cd ~/domains/sebaris.pojoktungu59.com/public_html
+cd ~/domains/sebarisproject.id/public_html
 git pull origin local
 cd backend
 php artisan migrate --force
@@ -83,4 +104,7 @@ php artisan config:cache
 php artisan route:cache
 ```
 
-*(Alternatif migrasi tanpa SSH: Buka browser ke endpoint `https://sebaris.id/api/deploy-migrate?key=sebaris-deploy-2026&seed=1`)*.
+### Cara C: Tanpa SSH (Via Browser)
+```
+https://sebarisproject.id/api/deploy-migrate?key=sebaris-deploy-2026&seed=1
+```

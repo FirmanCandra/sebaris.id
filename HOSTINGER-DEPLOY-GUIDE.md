@@ -1,73 +1,87 @@
-# 🚀 PANDUAN DEPLOY & ATURAN UPDATE HOSTINGER (SEBARIS.ID)
+# HOSTINGER DEPLOY GUIDE - Sebaris.id
 
-Dokumen ini adalah SOP (Standar Operasional Prosedur) resmi untuk melakukan update/deploy ke server Hostinger (`sebaris.pojoktungu59.com`) agar **tidak terjadi error 404, layar putih (blank), web tidak ter-update, atau server lemot/refused**.
-
----
-
-## 📌 1. Memahami Struktur Folder di Hostinger
-
-Di server Hostinger, repository ini di-clone langsung ke dalam folder:
-```
-~/domains/sebaris.pojoktungu59.com/public_html/
-```
-Artinya, **folder `public_html/` adalah ROOT direktori dari repository Git kita**.
-
-Sesuai aturan di file `.htaccess`:
-1. **Frontend (React)**: Web server Hostinger langsung menyajikan file dari:
-   - `index.html` &rarr; harus berada di **ROOT** (`public_html/index.html`)
-   - `assets/` &rarr; harus berada di **ROOT** (`public_html/assets/index-[hash].js` & `.css`)
-2. **Backend (Laravel)**: Semua panggilan `/api/...` otomatis diteruskan oleh `.htaccess` ke folder `public_html/backend/public/index.php`.
-
-> ⚠️ **MASALAH YANG TERJADI SEBELUMNYA:**  
-> Jika Anda hanya menjalankan `vite build`, hasilnya hanya tersimpan di dalam folder `frontend/dist/`. Web server Hostinger **TIDAK membaca** folder `frontend/dist/`, melainkan membaca root `index.html` dan `assets/`. Akibatnya web di hosting tidak berubah atau muncul error 404 aset JavaScript.
+Dokumen ini adalah SOP resmi untuk update/deploy ke server Hostinger production.
 
 ---
 
-## ✨ 2. Solusi Otomatis (Auto-Sync)
+## 1. Informasi Server Production (TERKINI)
 
-Kabar baiknya, sistem sudah dipasangi script otomatis di `frontend/scripts/sync-dist.js`.  
-Setiap kali Anda menjalankan:
+| Item | Nilai |
+|---|---|
+| **Domain** | `https://sebarisproject.id` |
+| **hPanel Path** | `~/domains/sebarisproject.id/public_html/` |
+| **DB Name** | `u267893077_sebaris` |
+| **DB User** | `u267893077_sebaris` |
+| **DB Host** | `127.0.0.1` |
+| **PHP Version** | 8.3 |
+| **Web Server** | LiteSpeed/Apache (Shared Hosting) |
+
+> **PENTING:** Domain lama `sebaris.pojoktungu59.com` sudah TIDAK digunakan. Semua referensi harus ke `sebarisproject.id`.
+
+---
+
+## 2. Memahami Struktur Folder di Hostinger
+
+Repository di-clone langsung ke:
+```
+~/domains/sebarisproject.id/public_html/
+```
+
+Folder `public_html/` adalah **ROOT direktori repository Git**.
+
+Sesuai `.htaccess` di root:
+1. **Frontend (React)**: Disajikan langsung dari root
+   - `index.html` → `public_html/index.html`
+   - `assets/` → `public_html/assets/index-[hash].js` & `.css`
+2. **Backend (Laravel)**: Request `/api/...` diteruskan ke `backend/public/index.php`
+3. **Storage (Upload)**: Request `/storage/...` diteruskan **langsung** ke `backend/storage/app/public/` (tanpa butuh symlink)
+
+### Kenapa Storage Tidak Butuh Symlink
+
+`.htaccess` sudah dikonfigurasi bypass symlink:
+```apache
+RewriteRule ^storage(/.*)?$ backend/storage/app/public$1 [L]
+```
+
+**JANGAN** mengubah ini menjadi `backend/public/storage` karena itu path symlink yang tidak tersedia di Hostinger Shared Hosting.
+
+---
+
+## 3. Solusi Otomatis (Auto-Sync)
+
+Script `frontend/scripts/sync-dist.js` sudah terpasang.
+
+Setiap `npm run build` otomatis:
+1. Compile React ke `frontend/dist/`
+2. Bersihkan bundle JS/CSS lama di root `assets/`
+3. Salin ke root (`index.html`, `assets/`, favicon, dll)
+
+---
+
+## 4. Alur Kerja Resmi: Laptop ke Hosting
+
+### LANGKAH 1: Di Laptop (Sebelum Push)
+
 ```bash
+cd frontend
 npm run build
+cd ..
+git add .
+git commit -m "feat: deskripsi perubahan"
+git push origin local && git push origin local:hosting && git push origin local:main
 ```
-Sistem akan **otomatis**:
-1. Meng-compile React ke `frontend/dist/`
-2. Membersihkan file bundle JS/CSS lama di root `assets/`
-3. Menyalin (`sync`) seluruh file terbaru langsung ke root (`index.html`, `assets/`, favicon, dll)
 
-**Anda tidak perlu lagi menyalin file secara manual!**
+Tunggu konfirmasi: `[Auto-Sync] Berhasil menyinkronkan frontend/dist ke root (public_html) untuk Hostinger!`
 
----
+### LANGKAH 2: Di Hostinger
 
-## 🛠️ 3. Alur Kerja Resmi: Dari Laptop ke Hosting (Step-by-Step)
+**Cara Paling Praktis (1 klik):**
+1. Login hPanel → menu **Tingkat Lanjut** → **Git**
+2. Klik tombol **Tarik (Pull)**
 
-### LANGKAH 1: Di Laptop / Komputer Lokal (Sebelum Push)
-
-Setiap kali selesai menambah fitur atau mengubah kode:
-
-1. Masuk ke folder frontend dan jalankan build:
-   ```bash
-   cd frontend
-   npm run build
-   cd ..
-   ```
-   *(Tunggu sampai muncul notifikasi: `✅ [Auto-Sync] Berhasil menyinkronkan frontend/dist ke root (public_html) untuk Hostinger!`)*
-
-2. Commit dan push ke branch **`local`** (selalu gunakan branch `local`):
-   ```bash
-   git add .
-   git commit -m "feat: deskripsi perubahan"
-   git push origin local
-   ```
-
----
-
-### LANGKAH 2: Di Server Hostinger (Saat Pull Update)
-
-Buka terminal SSH Hostinger Anda, lalu jalankan satu blok perintah ini sekaligus:
-
+**Cara SSH (Jika Perlu Migrasi):**
 ```bash
-cd ~/domains/sebaris.pojoktungu59.com/public_html
+cd ~/domains/sebarisproject.id/public_html
 git pull origin local
 cd backend
 php artisan migrate --force
@@ -76,44 +90,38 @@ php artisan config:cache
 php artisan route:cache
 ```
 
-Setelah selesai, buka website **https://sebaris.pojoktungu59.com/** dan tekan `Ctrl + F5` (Hard Refresh). Semua fitur terbaru langsung tampil aktif!
+**Cara tanpa SSH (via browser):**
+```
+https://sebarisproject.id/api/deploy-migrate?key=sebaris-deploy-2026&seed=1
+```
 
 ---
 
-## 🚫 4. PANTANGAN KERAS DI HOSTINGER (Biar Server Tidak Jebol/Refused)
+## 5. PANTANGAN KERAS di Hostinger
 
-Server Hostinger yang digunakan adalah tipe **Shared Hosting** dengan batas RAM dan CPU yang ketat (CloudLinux LVE).
-
-Ikuti aturan ketat ini:
-1. ❌ **JANGAN PERNAH menjalankan `php artisan serve` di SSH Hostinger!**  
-   *Alasan:* Hostinger sudah memiliki web server bawaan (LiteSpeed/Apache). Menjalankan `serve` akan memakan proses background yang tidak pernah berhenti dan membuat CPU melonjak hingga server refused.
-2. ❌ **JANGAN PERNAH menjalankan `npm run dev` atau `npm run build` di SSH Hostinger!**  
-   *Alasan:* Node.js build sangat berat dan langsung menghabiskan 100% CPU/RAM shared hosting. Build **WAJIB** dilakukan di laptop lokal.
-3. ❌ **JANGAN tinggalkan terminal SSH tanpa menghentikan proses (`Ctrl + C`)**.
+1. **DILARANG** menjalankan `php artisan serve` di SSH Hostinger
+2. **DILARANG** menjalankan `npm run dev` atau `npm run build` di SSH Hostinger
+3. **DILARANG** mengaktifkan "Cache Manager" di hPanel (membuat leaderboard tidak real-time)
+4. **DILARANG** `git push --force` ke branch `hosting` atau `main`
+5. **DILARANG** menjalankan `php artisan storage:link` di Hostinger (tidak diperlukan, sudah dihandle `.htaccess`)
 
 ---
 
-## 🆘 5. Troubleshooting (Jika Server Mengalami Masalah)
+## 6. Troubleshooting
 
-### A. Server Lemot / Refused / Load Server Tinggi (Diatas 2.0)
-Jika server terasa patah-patah atau menolak koneksi:
-1. Login ke **https://hpanel.hostinger.com/**
-2. Masuk ke menu **Hosting** &rarr; **Penggunaan Resource** (*Order / Resource Usage*).
-3. Scroll ke bawah, klik tombol ungu: **"Hentikan proses berjalan"** (*Stop running processes*).
-4. Klik **Konfirmasi**. Dalam 5 detik server akan langsung dingin dan normal kembali.
+### Server Lemot / Refused
+1. Login hPanel → **Hosting** → **Penggunaan Resource**
+2. Klik **"Hentikan proses berjalan"**
 
-### B. SSH Tidak Bisa Konek / Port 65002 Refused
-Jika SSH gagal konek karena firewall Hostinger membatasi IP Anda:
-1. Buka hPanel &rarr; menu **Tingkat Lanjut** (*Advanced*) &rarr; **Akses SSH** (*SSH Access*).
-2. Klik **Nonaktifkan**, tunggu 5 detik, lalu klik **Aktifkan** kembali.
-3. Atau sambungkan laptop ke Hotspot HP sementara untuk mendapatkan IP baru yang bersih dari blokir firewall.
+### SSH Tidak Bisa Konek
+1. hPanel → **Tingkat Lanjut** → **Akses SSH**
+2. Nonaktifkan, tunggu 5 detik, aktifkan kembali
+3. Atau ganti jaringan (hotspot) untuk IP baru
 
-### C. Deploy Tanpa Perlu Buka SSH Sama Sekali (Paling Praktis)
-Jika sedang malas membuka terminal SSH:
-1. Buka hPanel &rarr; menu **Tingkat Lanjut** &rarr; **Git**.
-2. Di baris repository `sebaris.id`, klik tombol **"Deploy"** atau **"Tarik" (Pull)**.
-3. Hostinger akan otomatis menarik commit terbaru dari GitHub ke dalam `public_html/`.
+### Foto Upload Tidak Tampil
+- Pastikan `.htaccess` storage rule mengarah ke `backend/storage/app/public$1` (bukan `backend/public/storage$1`)
+- File fisik upload disimpan Laravel di `backend/storage/app/public/[folder]/`
 
 ---
 
-*Panduan ini dibuat dan distandarisasi untuk kelancaran deployment Sebaris.id.*
+*SOP ini diperbarui per 2026-10-01 untuk domain production baru `sebarisproject.id`.*
