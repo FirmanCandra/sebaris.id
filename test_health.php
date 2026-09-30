@@ -6,8 +6,24 @@ $checks = [];
 // 1. Check PHP version
 $checks['php_version'] = PHP_VERSION;
 
-// 2. Check vendor/autoload.php
+// 2. Check vendor/autoload.php (with auto-extraction if vendor.zip is present)
 $vendorPath = __DIR__ . '/backend/vendor/autoload.php';
+$zipPath = __DIR__ . '/backend/vendor.zip';
+
+if (!file_exists($vendorPath) && file_exists($zipPath)) {
+    if (class_exists('ZipArchive')) {
+        $zip = new ZipArchive();
+        if ($zip->open($zipPath) === true) {
+            $zip->extractTo(__DIR__ . '/backend');
+            $zip->close();
+            $checks['vendor_auto_extracted'] = true;
+        } else {
+            $checks['vendor_auto_extract_error'] = 'Failed to open vendor.zip';
+        }
+    } else {
+        $checks['vendor_auto_extract_error'] = 'ZipArchive extension not loaded';
+    }
+}
 $checks['vendor_exists'] = file_exists($vendorPath);
 
 // 3. Check .env
