@@ -33,7 +33,7 @@ import {
   IconDownload,
   IconCheck,
 } from './components/Icons'
-import { resolveStorageUrl } from './api/client'
+import { resolveStorageUrl, downloadExport } from './api/client'
 
 function EventThumbnailCell({ item }) {
   const [imgError, setImgError] = useState(false)
@@ -430,19 +430,50 @@ const categories = {
 }
 
 function EventsAdminPage() {
+  const { token } = useAuth()
+  const [exportingId, setExportingId] = useState(null)
+
+  const handleExport = async (item) => {
+    setExportingId(item.id)
+    try {
+      const cleanName = item.name ? item.name.replace(/[^a-zA-Z0-9_-]/g, '_') : item.id
+      await downloadExport(
+        `/admin/events/${item.id}/export`,
+        `Laporan_Event_${cleanName}.csv`,
+        token
+      )
+    } catch (err) {
+      alert(err.message || 'Gagal mengekspor data event')
+    } finally {
+      setExportingId(null)
+    }
+  }
+
   return (
     <ResourcePage
       {...events}
       extraActions={(item) => (
-        <Link
-          to={`/admin/events/${item.id}`}
-          className="px-2.5 py-1 rounded-lg text-xs font-black text-white bg-[#70B325] hover:bg-[#5f991f] transition-all flex items-center gap-1.5 no-underline shadow-2xs cursor-pointer mr-1"
-          title="Buka dan kelola kategori serta finalis di event ini"
-        >
-          <IconLayers className="w-3.5 h-3.5" />
-          <span>Kelola Event</span>
-          <IconChevronRight className="w-3.5 h-3.5" />
-        </Link>
+        <div className="flex items-center gap-1.5 mr-1">
+          <button
+            type="button"
+            onClick={() => handleExport(item)}
+            disabled={exportingId === item.id}
+            className="px-2.5 py-1 rounded-lg text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-800 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
+            title="Ekspor seluruh rekap voting, revenue, finalis, dan audit log transaksi ke CSV/Excel"
+          >
+            <IconDownload className={`w-3.5 h-3.5 text-emerald-600 ${exportingId === item.id ? 'animate-bounce' : ''}`} />
+            <span>{exportingId === item.id ? 'Ekspor...' : 'Export CSV'}</span>
+          </button>
+          <Link
+            to={`/admin/events/${item.id}`}
+            className="px-2.5 py-1 rounded-lg text-xs font-black text-white bg-[#70B325] hover:bg-[#5f991f] transition-all flex items-center gap-1.5 no-underline shadow-2xs cursor-pointer"
+            title="Buka dan kelola kategori serta finalis di event ini"
+          >
+            <IconLayers className="w-3.5 h-3.5" />
+            <span>Kelola Event</span>
+            <IconChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       )}
     />
   )

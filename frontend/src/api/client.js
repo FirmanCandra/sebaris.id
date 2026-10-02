@@ -83,3 +83,44 @@ export async function api(path, { token, body, method = 'GET' } = {}) {
 
   return payload
 }
+
+export async function downloadExport(path, defaultFilename = 'laporan.csv', token) {
+  const headers = {}
+  if (token) headers.Authorization = `Bearer ${token}`
+
+  const response = await fetch(`${API_URL}${path}`, {
+    method: 'GET',
+    headers,
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    let msg = 'Gagal mengunduh file laporan'
+    try {
+      const parsed = JSON.parse(errorText)
+      if (parsed.message) msg = parsed.message
+    } catch {
+      if (errorText) msg = errorText
+    }
+    throw new Error(msg)
+  }
+
+  const blob = await response.blob()
+  let filename = defaultFilename
+  const disposition = response.headers.get('content-disposition')
+  if (disposition) {
+    const filenameMatch = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)["']?/i)
+    if (filenameMatch && filenameMatch[1]) {
+      filename = decodeURIComponent(filenameMatch[1].replace(/['"]/g, ''))
+    }
+  }
+
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  window.URL.revokeObjectURL(url)
+}

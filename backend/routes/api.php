@@ -171,6 +171,7 @@ Route::prefix('admin')->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index']);
         Route::post('categories/{category}/freeze', [CategoryController::class, 'toggleFreeze']);
         Route::get('categories/{category}/export', [VoteController::class, 'exportCsv']);
+        Route::get('events/{event}/export', [EventController::class, 'exportCsv']);
         Route::apiResource('events', EventController::class);
         Route::apiResource('categories', CategoryController::class);
         Route::apiResource('finalists', FinalistController::class);

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useMemo } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { api, ApiError, resolveStorageUrl } from '../api/client'
+import { api, ApiError, resolveStorageUrl, downloadExport } from '../api/client'
 import { useAuth } from '../auth/AuthProvider'
 import {
   IconPlus,
@@ -75,6 +75,44 @@ export default function EventWorkspacePage() {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false)
   const [eventValues, setEventValues] = useState({ name: '', thumbnail: '', start_date: '', end_date: '', status: 'active', theme_color: '#154228' })
   const [savingEvent, setSavingEvent] = useState(false)
+
+  // Export states and handlers
+  const [exportingEvent, setExportingEvent] = useState(false)
+  const [exportingCategoryId, setExportingCategoryId] = useState(null)
+
+  const handleExportEvent = async () => {
+    if (!eventId) return
+    setExportingEvent(true)
+    try {
+      const cleanName = eventData?.name ? eventData.name.replace(/[^a-zA-Z0-9_-]/g, '_') : eventId
+      await downloadExport(
+        `/admin/events/${eventId}/export`,
+        `Laporan_Event_${cleanName}.csv`,
+        token
+      )
+    } catch (err) {
+      alert(err.message || 'Gagal mengekspor data event')
+    } finally {
+      setExportingEvent(false)
+    }
+  }
+
+  const handleExportCategory = async (cat) => {
+    if (!cat?.id) return
+    setExportingCategoryId(cat.id)
+    try {
+      const cleanName = cat.name ? cat.name.replace(/[^a-zA-Z0-9_-]/g, '_') : cat.id
+      await downloadExport(
+        `/admin/categories/${cat.id}/export`,
+        `Laporan_Voting_${cleanName}.csv`,
+        token
+      )
+    } catch (err) {
+      alert(err.message || 'Gagal mengekspor data kategori')
+    } finally {
+      setExportingCategoryId(null)
+    }
+  }
 
   // Load Event and its categories
   const loadEvent = useCallback(async () => {
@@ -516,7 +554,17 @@ export default function EventWorkspacePage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-start md:self-center">
+          <div className="flex flex-wrap items-center gap-2 self-start md:self-center">
+            <button
+              type="button"
+              onClick={handleExportEvent}
+              disabled={exportingEvent}
+              className="px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-800 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+              title="Ekspor rekap voting, revenue, dan log transaksi event ini ke CSV/Excel"
+            >
+              <IconDownload className={`w-4 h-4 text-emerald-600 ${exportingEvent ? 'animate-bounce' : ''}`} />
+              <span>{exportingEvent ? 'Mengekspor...' : 'Export Data Event (CSV)'}</span>
+            </button>
             <button
               type="button"
               onClick={openEditEvent}
@@ -817,11 +865,12 @@ export default function EventWorkspacePage() {
                             {/* Secondary Action: CSV */}
                             <button
                               type="button"
-                              onClick={() => window.open(`/api/admin/categories/${cat.id}/export`, '_blank')}
-                              className="p-1.5 rounded-lg text-gray-500 hover:text-green-700 hover:bg-green-50 transition-colors cursor-pointer"
-                              title="Unduh laporan suara (CSV)"
+                              onClick={() => handleExportCategory(cat)}
+                              disabled={exportingCategoryId === cat.id}
+                              className="p-1.5 rounded-lg text-gray-500 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer disabled:opacity-50"
+                              title="Unduh laporan voting & audit transaksi (CSV)"
                             >
-                              <IconDownload className="w-3.5 h-3.5" />
+                              <IconDownload className={`w-3.5 h-3.5 ${exportingCategoryId === cat.id ? 'animate-bounce text-emerald-600' : ''}`} />
                             </button>
 
                             {/* Edit & Delete */}

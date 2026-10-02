@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { api } from '../api/client'
+import { api, downloadExport } from '../api/client'
 import { useAuth } from '../auth/AuthProvider'
 import {
   IconFlame,
@@ -11,25 +11,41 @@ import {
   IconClock,
   IconClose,
   IconFilter,
+  IconDownload,
 } from '../components/Icons'
 
-// ─── Tiny inline bar chart (no external lib) ──────────────────────────────────
+// ─── Inline bar chart with full height & hover tooltips ───────────────────────────
 function MiniBarChart({ data, valueKey, labelKey, color = '#70B325', formatValue = (v) => v }) {
   const max = Math.max(...data.map((d) => d[valueKey] || 0), 1)
   return (
-    <div className="flex items-end gap-0.5 h-14 w-full" aria-label="Grafik batang">
+    <div className="flex items-end gap-1 sm:gap-2 h-full w-full pt-6 pb-1" aria-label="Grafik batang tren">
       {data.map((point, i) => {
-        const pct = Math.round(((point[valueKey] || 0) / max) * 100)
+        const val = point[valueKey] || 0
+        const pct = Math.round((val / max) * 100)
         return (
           <div
             key={i}
-            className="flex-1 flex flex-col items-center justify-end gap-0.5 group relative"
-            title={`${point[labelKey]}: ${formatValue(point[valueKey] || 0)}`}
+            className="flex-1 h-full flex flex-col items-center justify-end group relative cursor-pointer"
           >
-            <div
-              className="w-full rounded-t-sm transition-all duration-300"
-              style={{ height: `${Math.max(pct, 2)}%`, backgroundColor: color, opacity: pct === 0 ? 0.2 : 0.85 }}
-            />
+            {/* Tooltip on hover */}
+            <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30 whitespace-nowrap">
+              <div className="bg-gray-900 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg flex items-center gap-1.5">
+                <span className="text-gray-300">{point.label || point[labelKey]}:</span>
+                <span style={{ color: color === '#70B325' ? '#D0FE15' : '#FDE047' }}>{formatValue(val)}</span>
+              </div>
+            </div>
+
+            {/* Track background with bar */}
+            <div className="w-full h-full rounded-t-sm flex items-end bg-gray-100/70 dark:bg-white/5 overflow-hidden">
+              <div
+                className="w-full rounded-t-sm transition-all duration-300 group-hover:brightness-110"
+                style={{
+                  height: val === 0 ? '4px' : `${Math.max(pct, 10)}%`,
+                  backgroundColor: color,
+                  opacity: val === 0 ? 0.35 : 0.95,
+                }}
+              />
+            </div>
           </div>
         )
       })}
@@ -68,9 +84,13 @@ function fill14Days(data, valueKey, labelKey) {
     const d = new Date()
     d.setDate(d.getDate() - i)
     const dateStr = d.toISOString().slice(0, 10)
-    const found = data.find((r) => r[labelKey] === dateStr)
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    const localDateStr = `${year}-${month}-${day}`
+    const found = data.find((r) => r[labelKey] === localDateStr || r[labelKey] === dateStr)
     result.push({
-      [labelKey]: dateStr,
+      [labelKey]: localDateStr,
       label: d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }),
       [valueKey]: found ? found[valueKey] : 0,
     })
@@ -117,6 +137,37 @@ export default function AdminDashboardPage() {
 
   // Active chart tab: 'votes' | 'revenue'
   const [chartTab, setChartTab] = useState('votes')
+  const [exportingDashboard, setExportingDashboard] = useState(false)
+
+  const handleExportDashboard = async () => {
+    if (selectedEventId) {
+      setExportingDashboard(true)
+      try {
+        await downloadExport(
+          `/admin/events/${selectedEventId}/export`,
+          `Laporan_Event_${selectedEventName ? selectedEventName.replace(/\s+/g, '_') : selectedEventId}.csv`,
+          token
+        )
+      } catch (err) {
+        alert(err.message || 'Gagal mengekspor data event')
+      } finally {
+        setExportingDashboard(false)
+      }
+    } else if (selectedCategoryId) {
+      setExportingDashboard(true)
+      try {
+        await downloadExport(
+          `/admin/categories/${selectedCategoryId}/export`,
+          `Laporan_Voting_${selectedCategoryName ? selectedCategoryName.replace(/\s+/g, '_') : selectedCategoryId}.csv`,
+          token
+        )
+      } catch (err) {
+        alert(err.message || 'Gagal mengekspor data kategori')
+      } finally {
+        setExportingDashboard(false)
+      }
+    }
+  }
 
   const loadDashboard = useCallback(async () => {
     setLoading(true)
@@ -322,6 +373,20 @@ export default function AdminDashboardPage() {
               </select>
             </div>
 
+            {/* Export CSV Button for Active Filter */}
+            {(selectedEventId || selectedCategoryId) && (
+              <button
+                type="button"
+                onClick={handleExportDashboard}
+                disabled={exportingDashboard}
+                className="h-10 px-3.5 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-1.5 hover:bg-emerald-100 transition-colors cursor-pointer disabled:opacity-50"
+                title={selectedEventId ? 'Ekspor seluruh data voting & revenue event ini ke CSV/Excel' : 'Ekspor data voting kategori ini ke CSV/Excel'}
+              >
+                <IconDownload className={`w-3.5 h-3.5 text-emerald-600 ${exportingDashboard ? 'animate-bounce' : ''}`} />
+                <span>{exportingDashboard ? 'Mengekspor...' : selectedEventId ? 'Export CSV Event' : 'Export CSV Kategori'}</span>
+              </button>
+            )}
+
             {/* Reset Filter Button */}
             {(selectedEventId || selectedCategoryId) && (
               <button
@@ -442,14 +507,14 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Bar chart */}
-          <div className="h-24 w-full mb-2">
+          <div className="h-28 w-full mb-2">
             {chartTab === 'votes' ? (
               <MiniBarChart
                 data={votesChart}
                 valueKey="total_votes"
                 labelKey="label"
                 color="#70B325"
-                formatValue={(v) => `${v} suara`}
+                formatValue={(v) => `${v.toLocaleString('id-ID')} suara`}
               />
             ) : (
               <MiniBarChart
