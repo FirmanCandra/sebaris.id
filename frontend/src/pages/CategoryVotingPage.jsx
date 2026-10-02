@@ -402,7 +402,7 @@ export default function CategoryVotingPage() {
       {/* =========================================================================
           TOP OFFICIAL EVENT HERO BANNER (CINEMATIC AMBIENT HORIZON)
           ========================================================================= */}
-      <section className="relative text-white border-b border-[#2C3529] overflow-hidden -mt-16 sm:-mt-20 pt-20 sm:pt-24 pb-8 sm:pb-12 bg-[#09130C]">
+      <section className="relative text-white border-b border-[#2C3529] overflow-hidden -mt-[4.75rem] sm:-mt-20 pt-[5.75rem] sm:pt-24 pb-8 sm:pb-12 bg-[#09130C]">
         {/* Luxury Dynamic Ambient Silk & Sparkle Backdrop */}
         <LuxuryAmbientBackdrop themeColor={activeThemeColor} posterSrc={posterSrc} />
 
