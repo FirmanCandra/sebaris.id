@@ -560,10 +560,10 @@ export default function EventWorkspacePage() {
               onClick={handleExportEvent}
               disabled={exportingEvent}
               className="px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-800 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
-              title="Ekspor rekap voting, revenue, dan log transaksi event ini ke CSV/Excel"
+              title="Ekspor rekap voting, revenue, dan log transaksi event ini ke Excel (.xlsx)"
             >
               <IconDownload className={`w-4 h-4 text-emerald-600 ${exportingEvent ? 'animate-bounce' : ''}`} />
-              <span>{exportingEvent ? 'Mengekspor...' : 'Export Data Event (CSV)'}</span>
+              <span>{exportingEvent ? 'Mengekspor...' : 'Export Data Event (.xlsx)'}</span>
             </button>
             <button
               type="button"
@@ -868,7 +868,7 @@ export default function EventWorkspacePage() {
                               onClick={() => handleExportCategory(cat)}
                               disabled={exportingCategoryId === cat.id}
                               className="p-1.5 rounded-lg text-gray-500 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer disabled:opacity-50"
-                              title="Unduh laporan voting & audit transaksi (CSV)"
+                              title="Unduh laporan voting & audit transaksi (.xlsx multi-sheet)"
                             >
                               <IconDownload className={`w-3.5 h-3.5 ${exportingCategoryId === cat.id ? 'animate-bounce text-emerald-600' : ''}`} />
                             </button>

@@ -264,84 +264,264 @@ class VoteController extends Controller
         ]);
     }
 
-    public function exportCsv(int $categoryId): StreamedResponse
+    // ─── Export kategori ke multi-sheet XLSX ─────────────────────────────────────
+    private const CAT_CLR_BG     = '1A2E0A';
+    private const CAT_CLR_BRAND  = '70B325';
+    private const CAT_CLR_DARK   = '4A7A18';
+    private const CAT_CLR_ROW    = 'F6FDEF';
+    private const CAT_CLR_BORDER = 'C7E6A8';
+    private const CAT_CLR_MINT   = 'F0FDF4';
+    private const CAT_CLR_AMBER  = 'FEF9EE';
+
+    private function catApplyHeader($sheet, string $range, string $bg, string $fg, int $size = 10): void
     {
-        $category = Category::query()->with('finalists')->findOrFail($categoryId);
+        $sheet->getStyle($range)->applyFromArray([
+            'font'      => ['bold' => true, 'size' => $size, 'color' => ['rgb' => $fg]],
+            'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => $bg]],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER, 'wrapText' => true],
+            'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb' => self::CAT_CLR_BORDER]]],
+        ]);
+    }
+
+    private function catApplyBorder($sheet, int $row, int $cols): void
+    {
+        $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($cols);
+        $sheet->getStyle("A{$row}:{$lastCol}{$row}")->applyFromArray([
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb' => self::CAT_CLR_BORDER]]],
+        ]);
+    }
+
+    public function exportXlsx(int $categoryId): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $category  = Category::query()->with('finalists')->findOrFail($categoryId);
         $finalists = $category->finalists()->orderByDesc('vote_count')->get();
-        $votes = Vote::query()
+        $votes     = Vote::query()
             ->whereIn('finalist_id', $finalists->pluck('id'))
             ->where('status', 'confirmed')
             ->with('finalist')
             ->latest()
             ->get();
 
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="Laporan_Voting_' . Str::slug($category->name) . '_' . date('Ymd_His') . '.csv"',
-            'Pragma' => 'no-cache',
-            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires' => '0',
+        $totalVotes       = (int) $votes->sum('vote_amount');
+        $totalRevenue     = (int) $votes->where('type', 'paid')->sum('total_price');
+        $paidVotes        = (int) $votes->where('type', 'paid')->sum('vote_amount');
+        $freeVotes        = (int) $votes->where('type', 'free')->sum('vote_amount');
+        $totalTx          = $votes->count();
+        $paidTx           = $votes->where('type', 'paid')->count();
+        $freeTx           = $votes->where('type', 'free')->count();
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet->getProperties()
+            ->setCreator('Sebaris.id')
+            ->setTitle('Laporan Kategori ' . $category->name)
+            ->setSubject('Rekap E-Voting Kategori — Sebaris.id');
+
+        // ── SHEET 1: Ringkasan Kategori ──────────────────────────────────────
+        $s1 = $spreadsheet->getActiveSheet();
+        $s1->setTitle('Ringkasan Kategori');
+        $s1->getColumnDimension('A')->setWidth(36);
+        $s1->getColumnDimension('B')->setWidth(32);
+
+        $s1->mergeCells('A1:B1');
+        $s1->setCellValue('A1', 'LAPORAN RESMI E-VOTING SEBARIS.ID');
+        $this->catApplyHeader($s1, 'A1:B1', self::CAT_CLR_BG, 'FFFFFF', 13);
+        $s1->getRowDimension(1)->setRowHeight(28);
+
+        $s1->mergeCells('A2:B2');
+        $s1->setCellValue('A2', $category->name);
+        $this->catApplyHeader($s1, 'A2:B2', self::CAT_CLR_BRAND, 'FFFFFF', 12);
+        $s1->getRowDimension(2)->setRowHeight(22);
+
+        $infoRows = [
+            ['Penyelenggara',            $category->organizer ?? '-'],
+            ['Periode Voting',           ($category->start_date?->toDateString() ?? '-') . ' s/d ' . ($category->end_date?->toDateString() ?? '-')],
+            ['Status Pembekuan (Freeze)', $category->freeze_leaderboard ? 'DIBEKUKAN' : 'TIDAK DIBEKUKAN'],
+            ['Total Finalis',            $finalists->count() . ' Kandidat'],
+            ['Tanggal Cetak',            now()->format('d/m/Y H:i:s') . ' WIB'],
         ];
 
-        $callback = function () use ($category, $finalists, $votes) {
-            $handle = fopen('php://output', 'w');
-            // Write UTF-8 BOM for clean Indonesian Excel display
-            fputs($handle, "\xEF\xBB\xBF");
-
-            // Header summary
-            fputcsv($handle, ['LAPORAN RESMI HASIL E-VOTING SEBARIS.ID']);
-            fputcsv($handle, ['Nama Ajang / Kategori', $category->name]);
-            fputcsv($handle, ['Penyelenggara', $category->organizer ?? '-']);
-            fputcsv($handle, ['Periode Voting', ($category->start_date?->toDateString() ?? '-') . ' s/d ' . ($category->end_date?->toDateString() ?? '-')]);
-            fputcsv($handle, ['Tanggal Unduh', date('d-m-Y H:i:s')]);
-            fputcsv($handle, ['Status Pembekuan (Freeze)', $category->freeze_leaderboard ? 'DIBEKUKAN' : 'TIDAK DIBEKUKAN']);
-            fputcsv($handle, []);
-
-            // Finalist summary table
-            fputcsv($handle, ['REKAP PEROLEHAN SUARA PER FINALIS']);
-            fputcsv($handle, ['Peringkat', 'Nama Finalis', 'Deskripsi / Asal', 'Total Suara Sah']);
-
-            $totalVotesAll = $finalists->sum('vote_count') ?: 1;
-            foreach ($finalists as $idx => $finalist) {
-                fputcsv($handle, [
-                    $idx + 1,
-                    $finalist->name,
-                    $finalist->description ?? '-',
-                    $finalist->vote_count,
-                ]);
-            }
-
-            fputcsv($handle, []);
-            fputcsv($handle, ['DETAIL TRANSAKSI & SUARA MASUK']);
-            fputcsv($handle, [
-                'ID Referensi',
-                'Tanggal & Waktu',
-                'Nama Pemilih',
-                'Kontak',
-                'Kandidat Pilihan',
-                'Tipe Vote',
-                'Jumlah Suara',
-                'Metode Pembayaran',
-                'Total Nominal (Rp)',
-                'Status',
+        $r = 4;
+        foreach ($infoRows as $i => [$label, $value]) {
+            $bg = $i % 2 === 0 ? 'FFFFFF' : self::CAT_CLR_ROW;
+            $s1->setCellValue("A{$r}", $label);
+            $s1->setCellValue("B{$r}", $value);
+            $s1->getStyle("A{$r}")->applyFromArray([
+                'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => self::CAT_CLR_DARK]],
+                'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => $bg]],
+                'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb' => self::CAT_CLR_BORDER]]],
             ]);
+            $s1->getStyle("B{$r}")->applyFromArray([
+                'font'  => ['size' => 10],
+                'fill'  => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => $bg]],
+                'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb' => self::CAT_CLR_BORDER]]],
+            ]);
+            $r++;
+        }
 
-            foreach ($votes as $vote) {
-                fputcsv($handle, [
-                    $vote->reference_id ?? 'SVT-' . $vote->id,
-                    $vote->created_at?->format('d-m-Y H:i:s'),
-                    $vote->voter_name,
-                    $vote->voter_contact,
-                    $vote->finalist?->name ?? '-',
-                    $vote->type === 'free' ? 'Gratis' : 'Berbayar',
-                    $vote->vote_amount,
-                    strtoupper($vote->payment_method ?? 'FREE'),
-                    $vote->total_price,
-                    strtoupper($vote->status),
+        $r++;
+        $s1->mergeCells("A{$r}:B{$r}");
+        $s1->setCellValue("A{$r}", 'RINGKASAN METRIK VOTING');
+        $this->catApplyHeader($s1, "A{$r}:B{$r}", self::CAT_CLR_DARK, 'FFFFFF');
+        $r++;
+
+        $metricRows = [
+            ['Total Suara Sah Masuk',      number_format($totalVotes, 0, ',', '.') . ' Suara'],
+            ['Total Revenue / Pendapatan', 'Rp ' . number_format($totalRevenue, 0, ',', '.')],
+            ['Total Transaksi Sukses',     number_format($totalTx, 0, ',', '.') . ' Transaksi'],
+            ['Suara Berbayar',             number_format($paidVotes, 0, ',', '.') . ' Suara'],
+            ['Suara Gratis (1×Vote)',      number_format($freeVotes, 0, ',', '.') . ' Suara'],
+            ['Transaksi Berbayar',         number_format($paidTx, 0, ',', '.') . ' Transaksi'],
+            ['Transaksi Gratis',           number_format($freeTx, 0, ',', '.') . ' Transaksi'],
+        ];
+
+        foreach ($metricRows as $i => [$label, $value]) {
+            $bg = $i % 2 === 0 ? self::CAT_CLR_MINT : 'FFFFFF';
+            $s1->setCellValue("A{$r}", $label);
+            $s1->setCellValue("B{$r}", $value);
+            $s1->getStyle("A{$r}:B{$r}")->applyFromArray([
+                'font'    => ['size' => 10, 'bold' => ($i < 3)],
+                'fill'    => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => $bg]],
+                'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb' => self::CAT_CLR_BORDER]]],
+            ]);
+            $r++;
+        }
+
+        // ── SHEET 2: Leaderboard Finalis ─────────────────────────────────────
+        $s2 = $spreadsheet->createSheet();
+        $s2->setTitle('Leaderboard Finalis');
+
+        foreach ([5, 38, 14, 16, 48] as $i => $w) {
+            $s2->getColumnDimensionByColumn($i + 1)->setWidth($w);
+        }
+
+        $s2->mergeCells('A1:E1');
+        $s2->setCellValue('A1', 'REKAP PEROLEHAN SUARA — ' . strtoupper($category->name));
+        $this->catApplyHeader($s2, 'A1:E1', self::CAT_CLR_BG, 'FFFFFF', 12);
+        $s2->getRowDimension(1)->setRowHeight(24);
+
+        $s2Headers = ['Rank', 'Nama Finalis', 'Total Suara', 'Porsi (%)', 'Biodata / Deskripsi'];
+        $col = 1;
+        foreach ($s2Headers as $h) {
+            $s2->getCellByColumnAndRow($col++, 2)->setValue($h);
+        }
+        $this->catApplyHeader($s2, 'A2:E2', self::CAT_CLR_BG, 'FFFFFF');
+        $s2->getRowDimension(2)->setRowHeight(26);
+
+        $catTotal = $finalists->sum('vote_count') ?: 1;
+        $r2 = 3;
+        foreach ($finalists as $fIdx => $finalist) {
+            $pct = round(($finalist->vote_count / $catTotal) * 100, 2);
+
+            $s2->getCellByColumnAndRow(1, $r2)->setValue($fIdx + 1);
+            $s2->getCellByColumnAndRow(2, $r2)->setValue($finalist->name);
+            $s2->getCellByColumnAndRow(3, $r2)->setValue($finalist->vote_count);
+            $s2->getCellByColumnAndRow(4, $r2)->setValue($pct / 100);
+            $s2->getCellByColumnAndRow(5, $r2)->setValue($finalist->description ?? '-');
+
+            $s2->getStyleByColumnAndRow(3, $r2)->getNumberFormat()->setFormatCode('#,##0');
+            $s2->getStyleByColumnAndRow(4, $r2)->getNumberFormat()->setFormatCode('0.00%');
+            $s2->getStyleByColumnAndRow(5, $r2)->getAlignment()->setWrapText(true);
+
+            if ($fIdx === 0) {
+                $s2->getStyle("A{$r2}:E{$r2}")->applyFromArray([
+                    'font' => ['bold' => true, 'color' => ['rgb' => '7A3F00']],
+                    'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FEF9C3']],
                 ]);
+            } elseif ($fIdx % 2 !== 0) {
+                $s2->getStyle("A{$r2}:E{$r2}")->getFill()
+                    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                    ->getStartColor()->setRGB(self::CAT_CLR_ROW);
             }
 
-            fclose($handle);
+            $this->catApplyBorder($s2, $r2, 5);
+            $s2->getStyleByColumnAndRow(1, $r2)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+            $r2++;
+        }
+        $s2->freezePane('A3');
+
+        // ── SHEET 3: Log Transaksi ────────────────────────────────────────────
+        $s3 = $spreadsheet->createSheet();
+        $s3->setTitle('Log Transaksi');
+
+        foreach ([24, 20, 34, 28, 28, 12, 12, 20, 16, 14] as $i => $w) {
+            $s3->getColumnDimensionByColumn($i + 1)->setWidth($w);
+        }
+
+        $s3->mergeCells('A1:J1');
+        $s3->setCellValue('A1', 'DETAIL AUDIT LOG TRANSAKSI & SUARA MASUK — ' . strtoupper($category->name));
+        $this->catApplyHeader($s3, 'A1:J1', self::CAT_CLR_BG, 'FFFFFF', 12);
+        $s3->getRowDimension(1)->setRowHeight(24);
+
+        $s3Headers = [
+            'ID Referensi', 'Waktu (WIB)', 'Finalis Dipilih',
+            'Nama Pemilih', 'Kontak', 'Tipe Vote',
+            'Jml Suara', 'Metode Bayar', 'Total Bayar (Rp)', 'Status',
+        ];
+        $col = 1;
+        foreach ($s3Headers as $h) {
+            $s3->getCellByColumnAndRow($col++, 2)->setValue($h);
+        }
+        $this->catApplyHeader($s3, 'A2:J2', self::CAT_CLR_BG, 'FFFFFF');
+        $s3->getRowDimension(2)->setRowHeight(26);
+
+        $r3 = 3;
+        foreach ($votes as $i => $vote) {
+            $isPaid = $vote->type !== 'free';
+
+            $s3->getCellByColumnAndRow(1, $r3)->setValue($vote->reference_id ?? 'SVT-' . $vote->id);
+            $s3->getCellByColumnAndRow(2, $r3)->setValue($vote->created_at?->format('d/m/Y H:i:s') ?? '-');
+            $s3->getCellByColumnAndRow(3, $r3)->setValue($vote->finalist?->name ?? '-');
+            $s3->getCellByColumnAndRow(4, $r3)->setValue($vote->voter_name ?? '-');
+            $s3->getCellByColumnAndRow(5, $r3)->setValue($vote->voter_contact ?? '-');
+            $s3->getCellByColumnAndRow(6, $r3)->setValue($isPaid ? 'Berbayar' : 'Gratis (1×)');
+            $s3->getCellByColumnAndRow(7, $r3)->setValue($vote->vote_amount);
+            $s3->getCellByColumnAndRow(8, $r3)->setValue(strtoupper($vote->payment_method ?? 'FREE'));
+            $s3->getCellByColumnAndRow(9, $r3)->setValue($vote->total_price);
+            $s3->getCellByColumnAndRow(10, $r3)->setValue(strtoupper($vote->status ?? 'CONFIRMED'));
+
+            $s3->getStyleByColumnAndRow(7, $r3)->getNumberFormat()->setFormatCode('#,##0');
+            $s3->getStyleByColumnAndRow(9, $r3)->getNumberFormat()->setFormatCode('"Rp "#,##0');
+
+            if ($i % 2 !== 0) {
+                $s3->getStyle("A{$r3}:J{$r3}")->getFill()
+                    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                    ->getStartColor()->setRGB($isPaid ? self::CAT_CLR_AMBER : self::CAT_CLR_MINT);
+            }
+
+            $this->catApplyBorder($s3, $r3, 10);
+
+            $s3->getStyleByColumnAndRow(6, $r3)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $s3->getStyleByColumnAndRow(7, $r3)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $s3->getStyleByColumnAndRow(10, $r3)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+            $r3++;
+        }
+
+        $lastRow3 = $r3 - 1;
+        if ($lastRow3 >= 3) {
+            $s3->setAutoFilter("A2:J{$lastRow3}");
+        }
+        $s3->freezePane('A3');
+
+        // ── Deliver ──────────────────────────────────────────────────────────
+        $spreadsheet->setActiveSheetIndex(0);
+
+        $filename = 'Laporan_Kategori_' . Str::slug($category->name) . '_' . date('Ymd_His') . '.xlsx';
+
+        $headers = [
+            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control'       => 'max-age=0, no-cache, no-store',
+            'Pragma'              => 'no-cache',
+            'Expires'             => '0',
+        ];
+
+        $callback = function () use ($spreadsheet) {
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer->setPreCalculateFormulas(true);
+            $writer->save('php://output');
+            $spreadsheet->disconnectWorksheets();
         };
 
         return response()->stream($callback, 200, $headers);
