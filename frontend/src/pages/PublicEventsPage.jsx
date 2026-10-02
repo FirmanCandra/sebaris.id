@@ -978,61 +978,74 @@ export default function PublicEventsPage() {
                   return (
                     <article
                       key={item.id}
-                      className="flex-shrink-0 w-[80vw] max-w-[290px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl overflow-hidden bg-white dark:bg-[#1A2018] border border-[#E5EADF] dark:border-[#2C3529] shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group opacity-90 hover:opacity-100"
+                      className="flex-shrink-0 w-[80vw] max-w-[290px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden relative border border-gray-200 dark:border-white/10 shadow-[0_8px_25px_-5px_rgba(0,0,0,0.15)] hover:shadow-[0_20px_40px_-8px_rgba(0,0,0,0.3)] transition-all duration-500 group hover:-translate-y-1.5 bg-[#121811] select-none flex flex-col justify-between"
                     >
-                      {/* Poster / Thumbnail with subtle grayscale (46%) */}
-                      <div className="relative h-[46%] w-full overflow-hidden bg-gray-100 dark:bg-black/30 flex items-center justify-center">
+                      {/* Full-Bleed Poster Photo with Archival Grayscale on idle */}
+                      <div className="absolute inset-0 w-full h-full bg-gray-900 overflow-hidden">
                         {item.thumbnail ? (
                           <img
                             src={resolveStorageUrl(item.thumbnail)}
                             alt={item.title}
-                            className="w-full h-full object-cover grayscale contrast-90 group-hover:grayscale-0 transition-all duration-500"
+                            className="w-full h-full object-cover object-center grayscale-[30%] contrast-95 group-hover:grayscale-0 group-hover:scale-106 transition-all duration-700 ease-out"
                             loading="lazy"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none'
                             }}
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gray-800 text-gray-400">
-                            <IconComp className="w-16 h-16 opacity-40" />
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-950 text-gray-400">
+                            <IconComp className="w-16 h-16 opacity-30" />
                           </div>
                         )}
+                        {/* Subtle top vignette for badge contrast */}
+                        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/50 to-transparent pointer-events-none" />
+                      </div>
 
-                        {/* Top Selesai Badge */}
-                        <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[10px] font-bold text-gray-300 shadow-xs">
-                          <IconLock className="w-3 h-3 text-gray-400" />
+                      {/* Top Badges */}
+                      <div className="relative z-10 p-3 sm:p-3.5 flex items-center justify-between pointer-events-none">
+                        {/* Selesai Badge */}
+                        <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-black/65 backdrop-blur-md border border-white/20 text-white font-extrabold text-[10px] sm:text-[11px] shadow-sm">
+                          <IconLock className="w-3.5 h-3.5 text-gray-300" />
                           <span>Selesai</span>
+                        </span>
+
+                        {/* End Date Pill */}
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black/65 backdrop-blur-md border border-white/20 text-gray-200 font-semibold text-[10px] sm:text-[11px] shadow-sm">
+                          {item.endDate}
                         </span>
                       </div>
 
-                      {/* Card Body (54%) */}
-                      <div className="h-[54%] p-3 sm:p-3.5 flex flex-col justify-between space-y-2 bg-white dark:bg-[#1A2018]">
+                      {/* Bottom Gradient Overlay & Card Info */}
+                      <div className="relative z-10 pt-20 sm:pt-28 pb-3.5 px-3.5 sm:pb-4 sm:px-4 bg-gradient-to-t from-black via-black/85 via-50% to-transparent flex flex-col justify-end space-y-2 sm:space-y-2.5">
                         <div className="space-y-1">
-                          <h3 className="font-extrabold text-xs sm:text-sm text-[#262A25] dark:text-white line-clamp-2 leading-tight">
+                          <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-[#A3E635] truncate flex items-center gap-1">
+                            <span className="truncate">{item.organizer}</span>
+                            <IconCheck className="w-3 h-3 text-[#A3E635] flex-shrink-0" />
+                          </p>
+                          <h3 className="font-extrabold text-sm sm:text-base lg:text-lg text-white leading-tight line-clamp-2 group-hover:text-[#A3E635] transition-colors">
                             <Link
                               to={`/voting/${item.slug || item.id}`}
-                              className="no-underline text-inherit hover:text-[#70B325]"
+                              className="no-underline text-inherit"
                             >
                               {item.title}
                             </Link>
                           </h3>
-                          <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
-                            {item.organizer}
-                          </p>
+                          {item.votes && (
+                            <p className="text-[11px] text-gray-300 font-medium truncate flex items-center gap-1">
+                              <span>{item.votes}</span>
+                            </p>
+                          )}
                         </div>
 
-                        <div className="pt-2 border-t border-gray-100 dark:border-white/10 flex items-center justify-between text-[11px]">
-                          <span className="text-gray-500 dark:text-gray-400 font-medium">
-                            {item.endDate}
-                          </span>
-                          <Link
-                            to={`/voting/${item.slug || item.id}`}
-                            className="text-[#70B325] dark:text-[#86C839] font-bold hover:underline flex items-center gap-0.5 no-underline"
-                          >
-                            <span>Hasil Akhir</span>
-                            <IconArrowUpRight className="w-3 h-3" />
-                          </Link>
-                        </div>
+                        {/* Action Button: Hasil Akhir */}
+                        <Link
+                          to={`/voting/${item.slug || item.id}`}
+                          className="w-full py-2 sm:py-2.5 px-3 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white backdrop-blur-md border border-white/20 font-black text-xs sm:text-sm rounded-xl text-center no-underline flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md active:scale-98 transition-all"
+                        >
+                          <IconTrophy className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Hasil Akhir</span>
+                          <IconChevronRight className="w-3.5 h-3.5 text-white/70" />
+                        </Link>
                       </div>
                     </article>
                   )

@@ -13,6 +13,8 @@ import {
   IconCalendar,
   IconUsers,
   IconZap,
+  IconTrophy,
+  IconArrowUpRight,
   IconList,
   IconGrid,
 } from '../components/Icons'
@@ -345,17 +347,15 @@ export default function EventsDirectoryPage() {
         {/* Directory Event Cards: Loading / Empty / Grid (2 cols mobile) / List */}
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
-            {[1, 2, 3, 4].map((n) => (
+            {[1, 2, 3, 4, 5, 6].map((n) => (
               <div
                 key={n}
-                className="rounded-2xl sm:rounded-3xl bg-white dark:bg-[#1A2018] border border-gray-200 dark:border-white/10 animate-pulse p-2.5 sm:p-4 flex flex-col justify-between space-y-3"
+                className="aspect-[3/4.2] sm:aspect-[3/4] rounded-2xl sm:rounded-3xl bg-gray-200 dark:bg-white/5 border border-gray-200 dark:border-white/10 animate-pulse p-2.5 sm:p-4 flex flex-col justify-end space-y-2"
               >
-                <div className="aspect-[4/5] sm:aspect-[16/10] w-full bg-gray-200 dark:bg-white/10 rounded-xl sm:rounded-2xl" />
-                <div className="space-y-1.5">
-                  <div className="h-4 sm:h-5 bg-gray-200 dark:bg-white/10 rounded-md w-3/4" />
-                  <div className="h-3 sm:h-3.5 bg-gray-100 dark:bg-white/5 rounded-md w-1/2" />
-                </div>
-                <div className="h-9 sm:h-11 bg-gray-100 dark:bg-white/5 rounded-xl w-full" />
+                <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-1/3" />
+                <div className="h-4 sm:h-5 bg-gray-300 dark:bg-white/15 rounded w-3/4" />
+                <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-1/2" />
+                <div className="h-8 sm:h-10 bg-gray-300 dark:bg-white/10 rounded-xl w-full mt-1 sm:mt-2" />
               </div>
             ))}
           </div>
@@ -383,7 +383,7 @@ export default function EventsDirectoryPage() {
             )}
           </div>
         ) : viewMode === 'grid' ? (
-          /* Grid View: 2 COLUMNS ON MOBILE, 2-3 on Desktop */
+          /* Grid View: 2 COLUMNS ON MOBILE, 2-3 on Desktop - Immersive Full-Bleed Poster Cards */
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
             {filteredItems.map((item) => {
               const FallbackIllustration = [BannerCampus, BannerSchool, BannerFestival, BannerPoster][
@@ -393,89 +393,101 @@ export default function EventsDirectoryPage() {
               return (
                 <article
                   key={item.id}
-                  className="group bg-white dark:bg-[#181F16] border border-gray-200/90 dark:border-white/10 rounded-2xl sm:rounded-3xl p-2 sm:p-4 shadow-xs hover:shadow-xl hover:border-[#70B325] dark:hover:border-[#70B325]/70 transition-all duration-300 flex flex-col justify-between"
+                  className="relative aspect-[3/4.2] sm:aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden border border-gray-200 dark:border-white/10 shadow-sm hover:shadow-2xl transition-all duration-500 group hover:-translate-y-1.5 bg-[#121811] select-none flex flex-col justify-between"
                 >
-                  <div className="space-y-2.5 sm:space-y-3.5">
-                    {/* Poster Thumbnail */}
-                    <div className="relative aspect-[4/5] sm:aspect-[16/10] w-full overflow-hidden rounded-xl sm:rounded-2xl bg-gray-100 dark:bg-black/50 shadow-inner">
-                      {item.thumbnail ? (
-                        <img
-                          src={resolveStorageUrl(item.thumbnail)}
-                          alt={item.title}
-                          className="w-full h-full object-cover object-center group-hover:scale-106 transition-transform duration-500 ease-out"
-                          loading="lazy"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none'
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center p-3 sm:p-4 bg-gradient-to-br from-emerald-950/40 to-black/60">
-                          <FallbackIllustration className="w-full h-full object-contain opacity-75 group-hover:scale-105 transition-transform duration-500" />
-                        </div>
-                      )}
-
-                      {/* Top Badges */}
-                      <div className="absolute top-2 left-2 right-2 sm:top-3 sm:left-3 sm:right-3 flex items-center justify-between pointer-events-none z-10">
-                        {item.isPast ? (
-                          <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-black/75 backdrop-blur-md border border-white/20 text-white font-extrabold text-[9px] sm:text-[11px] shadow-sm">
-                            <IconLock className="w-3 h-3 text-gray-300" />
-                            <span>SELESAI</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-emerald-950/90 backdrop-blur-md border border-emerald-500/50 text-emerald-300 font-extrabold text-[9px] sm:text-[11px] shadow-sm">
-                            <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-emerald-500"></span>
-                            </span>
-                            <span>LIVE</span>
-                          </span>
-                        )}
-
-                        <span className="inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-black/65 backdrop-blur-md border border-white/20 text-white text-[9px] sm:text-[11px] font-bold shadow-xs">
-                          <IconUsers className="w-3 h-3 flex-shrink-0" />
-                          <span>{item.finalistsCount} <span className="hidden sm:inline">Finalis</span></span>
-                        </span>
+                  {/* Full-Bleed Poster Photo */}
+                  <div className="absolute inset-0 w-full h-full bg-gray-900 overflow-hidden">
+                    {item.thumbnail ? (
+                      <img
+                        src={resolveStorageUrl(item.thumbnail)}
+                        alt={item.title}
+                        className={`w-full h-full object-cover object-center group-hover:scale-106 transition-all duration-700 ease-out ${
+                          item.isPast ? 'grayscale-[30%] contrast-95 group-hover:grayscale-0' : ''
+                        }`}
+                        loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center p-4 bg-gradient-to-br from-emerald-950/40 to-black/70">
+                        <FallbackIllustration className="w-full h-full object-contain opacity-60 group-hover:scale-105 transition-transform duration-500" />
                       </div>
-                    </div>
+                    )}
+                    {/* Subtle top vignette for badge contrast */}
+                    <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/50 to-transparent pointer-events-none" />
+                  </div>
 
-                    {/* Card Body */}
-                    <div className="space-y-1 sm:space-y-2 px-0.5 sm:px-1">
-                      <h3 className="font-extrabold text-xs sm:text-base lg:text-lg text-gray-900 dark:text-white line-clamp-2 leading-tight group-hover:text-[#70B325] dark:group-hover:text-[#8FE032] transition-colors min-h-[2rem] sm:min-h-[2.75rem] flex items-start">
+                  {/* Top Floating Badges */}
+                  <div className="relative z-10 p-2 sm:p-3.5 flex items-center justify-between pointer-events-none">
+                    {item.isPast ? (
+                      <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-black/65 backdrop-blur-md border border-white/20 text-white font-extrabold text-[9px] sm:text-[11px] shadow-sm">
+                        <IconLock className="w-3 h-3 text-gray-300" />
+                        <span>SELESAI</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-black/65 backdrop-blur-md border border-white/20 text-white font-extrabold text-[9px] sm:text-[11px] shadow-sm">
+                        <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-emerald-500"></span>
+                        </span>
+                        <span>LIVE</span>
+                      </span>
+                    )}
+
+                    <span className="inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-black/65 backdrop-blur-md border border-white/20 text-white text-[9px] sm:text-[11px] font-bold shadow-sm">
+                      <IconUsers className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                      <span>{item.finalistsCount} <span className="hidden sm:inline">Finalis</span></span>
+                    </span>
+                  </div>
+
+                  {/* Bottom Gradient Overlay & Card Info */}
+                  <div className="relative z-10 pt-16 sm:pt-28 pb-2.5 sm:pb-4 px-2.5 sm:px-4 bg-gradient-to-t from-black via-black/85 via-50% to-transparent flex flex-col justify-end space-y-1.5 sm:space-y-2.5">
+                    <div className="space-y-0.5 sm:space-y-1">
+                      <p className="text-[9px] sm:text-[11px] font-black uppercase tracking-wider text-[#A3E635] truncate flex items-center gap-1">
+                        <span className="truncate">{item.organizer}</span>
+                        <IconCheck className="w-3 h-3 text-[#A3E635] flex-shrink-0" />
+                      </p>
+                      <h3 className="font-extrabold text-xs sm:text-base lg:text-lg text-white leading-tight line-clamp-2 group-hover:text-[#A3E635] transition-colors">
                         <Link to={`/voting/${item.slug}`} className="no-underline text-inherit">
                           {item.title}
                         </Link>
                       </h3>
-
-                      <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 truncate">
-                        <span className="truncate">{item.organizer}</span>
-                        <IconCheck className="w-3 h-3 text-[#70B325] flex-shrink-0" />
-                      </p>
-
-                      {/* Meta Information */}
-                      <div className="pt-1.5 sm:pt-2 border-t border-gray-100 dark:border-white/10 flex items-center justify-between text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-300 font-medium pt-0.5">
                         <span className="inline-flex items-center gap-1 truncate">
                           <IconCalendar className="w-3 h-3 text-gray-400 flex-shrink-0" />
                           <span className="truncate">{item.dateLabel}</span>
                         </span>
                         {item.categoriesCount > 1 && (
-                          <span className="hidden sm:inline font-bold text-gray-700 dark:text-gray-300">
+                          <span className="hidden sm:inline font-bold text-gray-300">
                             {item.categoriesCount} Kategori
                           </span>
                         )}
                       </div>
                     </div>
-                  </div>
 
-                  {/* Primary CTA Button */}
-                  <div className="pt-2 sm:pt-3 px-0.5 sm:px-1">
-                    <Link
-                      to={`/voting/${item.slug}`}
-                      className="w-full py-1.5 sm:py-2.5 px-2 sm:px-4 bg-[#70B325] hover:bg-[#5F9A1E] text-white font-extrabold text-xs sm:text-sm rounded-xl text-center no-underline flex items-center justify-center gap-1 sm:gap-2 shadow-xs hover:shadow-md active:scale-98 transition-all cursor-pointer"
-                    >
-                      <IconZap className="w-3.5 h-3.5 flex-shrink-0" />
-                      <span className="truncate">{item.isPast ? 'Hasil Akhir' : 'Buka & Vote'}</span>
-                      <IconChevronRight className="w-3.5 h-3.5 flex-shrink-0 hidden sm:inline" />
-                    </Link>
+                    {/* CTA Button */}
+                    <div className="pt-0.5 sm:pt-1">
+                      {item.isPast ? (
+                        <Link
+                          to={`/voting/${item.slug}`}
+                          className="w-full py-1.5 sm:py-2.5 px-2 sm:px-4 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white backdrop-blur-md border border-white/20 font-black text-xs sm:text-sm rounded-xl text-center no-underline flex items-center justify-center gap-1 sm:gap-1.5 shadow-sm active:scale-98 transition-all"
+                        >
+                          <IconTrophy className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Hasil Akhir</span>
+                          <IconArrowUpRight className="w-3 h-3 text-white/70" />
+                        </Link>
+                      ) : (
+                        <Link
+                          to={`/voting/${item.slug}`}
+                          className="w-full py-1.5 sm:py-2.5 px-2 sm:px-4 bg-[#70B325] hover:bg-[#5F9A1E] dark:bg-[#CAF118] dark:hover:bg-[#DDFB38] text-white dark:text-[#142308] font-black text-xs sm:text-sm rounded-xl text-center no-underline flex items-center justify-center gap-1 sm:gap-1.5 shadow-md active:scale-98 transition-all"
+                        >
+                          <IconZap className="w-3.5 h-3.5 flex-shrink-0" />
+                          <span>Buka &amp; Vote</span>
+                          <IconChevronRight className="w-3.5 h-3.5 flex-shrink-0 hidden sm:inline" />
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 </article>
               )
