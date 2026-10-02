@@ -1078,8 +1078,8 @@ export default function EventWorkspacePage() {
       {isCategoryDrawerOpen && (
         <>
           <div onClick={() => setIsCategoryDrawerOpen(false)} className="drawer-backdrop animate-fadeIn" />
-          <div className="drawer-panel p-6 animate-slideLeft">
-            <div className="flex items-center justify-between pb-4 border-b border-[var(--neutral-border)]">
+          <div className="drawer-panel overflow-hidden animate-slideLeft">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--neutral-border)] flex-shrink-0">
               <div>
                 <h2 className="text-lg font-extrabold text-[var(--neutral-text-main)]">
                   {editingCategory ? 'Ubah Kategori Voting' : 'Tambah Kategori di Event Ini'}
@@ -1097,7 +1097,8 @@ export default function EventWorkspacePage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveCategory} className="flex-1 overflow-y-auto py-5 space-y-4">
+            <form onSubmit={handleSaveCategory} className="flex-1 overflow-y-auto px-6">
+              <div className="py-5 space-y-4">
               {/* Poster Thumbnail */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
@@ -1279,8 +1280,9 @@ export default function EventWorkspacePage() {
                 />
               </div>
 
-              {/* Actions */}
-              <div className="pt-5 border-t border-[var(--neutral-border)] flex items-center justify-end gap-3">
+              </div>
+              {/* Actions - sticky di bawah */}
+              <div className="sticky bottom-0 bg-[var(--neutral-surface)] py-4 border-t border-[var(--neutral-border)] flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setIsCategoryDrawerOpen(false)}
@@ -1307,8 +1309,8 @@ export default function EventWorkspacePage() {
       {isFinalistDrawerOpen && (
         <>
           <div onClick={() => setIsFinalistDrawerOpen(false)} className="drawer-backdrop animate-fadeIn" />
-          <div className="drawer-panel p-6 animate-slideLeft">
-            <div className="flex items-center justify-between pb-4 border-b border-[var(--neutral-border)]">
+          <div className="drawer-panel overflow-hidden animate-slideLeft">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--neutral-border)] flex-shrink-0">
               <div>
                 <h2 className="text-lg font-extrabold text-[var(--neutral-text-main)]">
                   {editingFinalist ? 'Ubah Data Finalis' : 'Daftarkan Finalis Baru'}
@@ -1326,7 +1328,8 @@ export default function EventWorkspacePage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveFinalist} className="flex-1 overflow-y-auto py-5 space-y-4">
+            <form onSubmit={handleSaveFinalist} className="flex-1 overflow-y-auto px-6">
+              <div className="py-5 space-y-4">
               {/* Photo */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-gray-700 dark:text-gray-300">
@@ -1400,8 +1403,9 @@ export default function EventWorkspacePage() {
                 />
               </div>
 
-              {/* Actions */}
-              <div className="pt-5 border-t border-[var(--neutral-border)] flex items-center justify-end gap-3">
+              </div>
+              {/* Actions - sticky di bawah */}
+              <div className="sticky bottom-0 bg-[var(--neutral-surface)] py-4 border-t border-[var(--neutral-border)] flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setIsFinalistDrawerOpen(false)}
@@ -1427,8 +1431,8 @@ export default function EventWorkspacePage() {
       {/* ====================================================================== */}
       {isEventModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-[var(--neutral-surface)] border border-[var(--neutral-border)] rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-scaleUp">
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--neutral-border)]">
+          <div className="bg-[var(--neutral-surface)] border border-[var(--neutral-border)] rounded-2xl w-full max-w-md shadow-2xl animate-scaleUp flex flex-col max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--neutral-border)] flex-shrink-0">
               <h3 className="font-extrabold text-base text-[var(--neutral-text-main)]">
                 Edit Data Event
               </h3>
@@ -1441,7 +1445,8 @@ export default function EventWorkspacePage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveEvent} className="space-y-4">
+            <form onSubmit={handleSaveEvent} className="flex-1 overflow-y-auto px-6">
+              <div className="py-5 space-y-4">
               <div className="space-y-1">
                 <label className="block text-xs font-bold text-gray-700 dark:text-gray-300">
                   Nama Event / Ajang *
@@ -1590,7 +1595,9 @@ export default function EventWorkspacePage() {
                 </select>
               </div>
 
-              <div className="pt-3 border-t border-[var(--neutral-border)] flex items-center justify-end gap-2">
+              </div>
+              {/* Actions - sticky di bawah */}
+              <div className="sticky bottom-0 bg-[var(--neutral-surface)] py-4 border-t border-[var(--neutral-border)] flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsEventModalOpen(false)}

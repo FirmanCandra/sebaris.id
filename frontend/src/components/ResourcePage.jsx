@@ -669,9 +669,9 @@ export default function ResourcePage({
       {isDrawerOpen && (
         <>
           <div onClick={closeDrawer} className="drawer-backdrop animate-fadeIn" />
-          <div className="drawer-panel p-6 animate-slideLeft">
-            {/* Drawer Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-[var(--neutral-border)]">
+          <div className="drawer-panel overflow-hidden animate-slideLeft">
+            {/* Drawer Header - fixed, tidak ikut scroll */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--neutral-border)] flex-shrink-0">
               <div>
                 <h2 className="text-lg font-extrabold text-[var(--neutral-text-main)]">
                   {editing ? `Ubah Data ${title}` : `Tambah ${title} Baru`}
@@ -690,28 +690,30 @@ export default function ResourcePage({
               </button>
             </div>
 
-            {/* Drawer Form */}
-            <form onSubmit={submit} className="flex-1 overflow-y-auto py-5 space-y-4">
-              {fields.map((field) => (
-                <div key={field.name}>
-                  <FormField
-                    field={field}
-                    value={values[field.name]}
-                    onChange={(name, value) =>
-                      setValues((current) => ({ ...current, [name]: value }))
-                    }
-                    options={optionValues}
-                  />
-                  {fieldErrors[field.name]?.[0] && (
-                    <small className="text-red-600 text-[11px] block mt-1">
-                      {fieldErrors[field.name][0]}
-                    </small>
-                  )}
-                </div>
-              ))}
+            {/* Drawer Form - scrollable area */}
+            <form onSubmit={submit} className="flex-1 overflow-y-auto px-6">
+              <div className="py-5 space-y-4">
+                {fields.map((field) => (
+                  <div key={field.name}>
+                    <FormField
+                      field={field}
+                      value={values[field.name]}
+                      onChange={(name, value) =>
+                        setValues((current) => ({ ...current, [name]: value }))
+                      }
+                      options={optionValues}
+                    />
+                    {fieldErrors[field.name]?.[0] && (
+                      <small className="text-red-600 text-[11px] block mt-1">
+                        {fieldErrors[field.name][0]}
+                      </small>
+                    )}
+                  </div>
+                ))}
+              </div>
 
-              {/* Form Action Buttons */}
-              <div className="pt-6 border-t border-[var(--neutral-border)] flex items-center justify-end gap-3">
+              {/* Form Action Buttons - sticky di bawah */}
+              <div className="sticky bottom-0 bg-[var(--neutral-surface)] py-4 border-t border-[var(--neutral-border)] flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={closeDrawer}
