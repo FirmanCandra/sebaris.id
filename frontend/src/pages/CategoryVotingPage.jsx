@@ -468,26 +468,6 @@ export default function CategoryVotingPage() {
                   </span>
                 </div>
 
-                {category?.tier && (
-                  <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border backdrop-blur-md ${category.tier === 'premier'
-                        ? 'bg-amber-400/20 border-amber-300/40 text-amber-200'
-                        : category.tier === 'sekunder'
-                          ? 'bg-slate-300/20 border-slate-300/40 text-slate-200'
-                          : 'bg-orange-400/20 border-orange-300/40 text-orange-200'
-                      }`}
-                  >
-                    {category.tier === 'premier' ? (
-                      <IconCrown className="w-3 h-3 text-amber-300" />
-                    ) : (
-                      <IconMedal className="w-3 h-3" />
-                    )}
-                    <span>
-                      {category.tier === 'premier' ? 'Premier' : category.tier === 'sekunder' ? 'Sekunder' : 'Tersier'}
-                    </span>
-                  </span>
-                )}
-
                 {category?.allow_free_vote !== false && !isVotingClosed && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#70B325]/20 border border-[#70B325]/40 text-[#D0FE15] text-[11px] font-bold backdrop-blur-md">
                     <IconZap className="w-3 h-3 text-[#D0FE15]" />
@@ -628,14 +608,11 @@ export default function CategoryVotingPage() {
                           key={sibling.id}
                           type="button"
                           onClick={() => handleCategorySwitch(sibling)}
-                          className={`min-h-[44px] px-2.5 py-2 rounded-xl text-xs font-black tracking-tight transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center leading-tight ${isCurrent
+                          className={`min-h-[44px] px-3 py-2 rounded-xl text-xs font-black tracking-tight transition-all flex items-center justify-center cursor-pointer text-center leading-tight ${isCurrent
                               ? 'bg-[#70B325] text-white shadow-xs font-black ring-1 ring-white/20'
                               : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/5'
                             }`}
                         >
-                          {sibling.tier === 'premier' && (
-                            <IconCrown className={`w-3.5 h-3.5 flex-shrink-0 ${isCurrent ? 'text-amber-200' : 'text-amber-500'}`} />
-                          )}
                           <span className="line-clamp-2">{sibling.name}</span>
                         </button>
                       )
@@ -660,14 +637,11 @@ export default function CategoryVotingPage() {
                             ref={isCurrent ? activePillRef : null}
                             type="button"
                             onClick={() => handleCategorySwitch(sibling)}
-                            className={`min-h-[42px] px-3.5 py-2 rounded-xl text-xs font-bold tracking-tight transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer flex-shrink-0 border ${isCurrent
+                            className={`min-h-[42px] px-3.5 py-2 rounded-xl text-xs font-bold tracking-tight transition-all whitespace-nowrap flex items-center cursor-pointer flex-shrink-0 border ${isCurrent
                                 ? 'bg-[#70B325] text-white border-[#70B325] shadow-xs font-black ring-2 ring-[#70B325]/30'
                                 : 'bg-gray-100/90 dark:bg-white/5 text-gray-700 dark:text-gray-300 border-gray-200/80 dark:border-white/10 hover:border-[#70B325]/50 hover:bg-[#70B325]/10 active:scale-97'
                               }`}
                           >
-                            {sibling.tier === 'premier' && (
-                              <IconCrown className={`w-3.5 h-3.5 flex-shrink-0 ${isCurrent ? 'text-amber-200' : 'text-amber-500'}`} />
-                            )}
                             <span className="truncate max-w-[190px]">{sibling.name}</span>
                           </button>
                         )
@@ -720,11 +694,7 @@ export default function CategoryVotingPage() {
                                   }`}
                               >
                                 <div className="flex items-center gap-2 min-w-0">
-                                  {sibling.tier === 'premier' ? (
-                                    <IconCrown className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-                                  ) : (
-                                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
-                                  )}
+                                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isCurrent ? 'bg-[#70B325]' : 'bg-gray-400'}`} />
                                   <span className="truncate">{sibling.name}</span>
                                 </div>
                                 {isCurrent && (
@@ -764,22 +734,7 @@ export default function CategoryVotingPage() {
                           : 'bg-gray-100/80 dark:bg-white/5 text-gray-700 dark:text-gray-300 border-gray-200/80 dark:border-white/10 hover:border-[#70B325]/50 hover:bg-[#70B325]/10 hover:text-gray-900 dark:hover:text-white'
                         }`}
                     >
-                      {sibling.tier === 'premier' ? (
-                        <IconCrown className={`w-3.5 h-3.5 ${isCurrent ? 'text-amber-200' : 'text-amber-500'}`} />
-                      ) : (
-                        <IconMedal className={`w-3.5 h-3.5 ${isCurrent ? 'text-white/70' : 'text-gray-400'}`} />
-                      )}
-                      <span className="truncate max-w-[240px] lg:max-w-md">{sibling.name}</span>
-                      {sibling.tier === 'premier' && (
-                        <span
-                          className={`text-[10px] uppercase font-black px-1.5 py-0.5 rounded-md border ${isCurrent
-                              ? 'bg-white/20 text-white border-white/40'
-                              : 'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300/80 dark:border-amber-700/60'
-                            }`}
-                        >
-                          Premier
-                        </span>
-                      )}
+                      <span className="truncate max-w-[280px] lg:max-w-md">{sibling.name}</span>
                     </button>
                   )
                 })}
