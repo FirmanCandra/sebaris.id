@@ -439,7 +439,7 @@ function EventsAdminPage() {
       const cleanName = item.name ? item.name.replace(/[^a-zA-Z0-9_-]/g, '_') : item.id
       await downloadExport(
         `/admin/events/${item.id}/export`,
-        `Laporan_Event_${cleanName}.csv`,
+        `Laporan_Event_${cleanName}.xlsx`,
         token
       )
     } catch (err) {
@@ -462,7 +462,7 @@ function EventsAdminPage() {
             title="Ekspor seluruh rekap voting, revenue, finalis, dan audit log transaksi ke CSV/Excel"
           >
             <IconDownload className={`w-3.5 h-3.5 text-emerald-600 ${exportingId === item.id ? 'animate-bounce' : ''}`} />
-            <span>{exportingId === item.id ? 'Ekspor...' : 'Export CSV'}</span>
+            <span>{exportingId === item.id ? 'Ekspor...' : 'Export (.xlsx)'}</span>
           </button>
           <Link
             to={`/admin/events/${item.id}`}

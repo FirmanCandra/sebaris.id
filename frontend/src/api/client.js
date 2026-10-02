@@ -84,11 +84,23 @@ export async function api(path, { token, body, method = 'GET' } = {}) {
   return payload
 }
 
-export async function downloadExport(path, defaultFilename = 'laporan.csv', token) {
-  const headers = {}
-  if (token) headers.Authorization = `Bearer ${token}`
+export async function downloadExport(path, defaultFilename = 'laporan.xlsx', token) {
+  const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('sebaris.admin.token') : null)
 
-  const response = await fetch(`${API_URL}${path}`, {
+  const headers = {
+    Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/json, */*',
+  }
+  if (activeToken) {
+    headers.Authorization = `Bearer ${activeToken}`
+  }
+
+  // Support both header & query param for environments where Apache FastCGI strips Authorization header
+  const separator = path.includes('?') ? '&' : '?'
+  const urlWithToken = activeToken
+    ? `${API_URL}${path}${separator}token=${encodeURIComponent(activeToken)}`
+    : `${API_URL}${path}`
+
+  const response = await fetch(urlWithToken, {
     method: 'GET',
     headers,
   })
@@ -100,7 +112,13 @@ export async function downloadExport(path, defaultFilename = 'laporan.csv', toke
       const parsed = JSON.parse(errorText)
       if (parsed.message) msg = parsed.message
     } catch {
-      if (errorText) msg = errorText
+      if (errorText && !errorText.trim().startsWith('<')) {
+        msg = errorText
+      } else if (response.status === 401 || response.status === 403) {
+        msg = 'Sesi login telah berakhir. Silakan login kembali.'
+      } else {
+        msg = `Kendala server (HTTP ${response.status}). Silakan coba beberapa saat lagi.`
+      }
     }
     throw new Error(msg)
   }

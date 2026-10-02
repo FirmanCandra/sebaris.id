@@ -145,7 +145,7 @@ export default function AdminDashboardPage() {
       try {
         await downloadExport(
           `/admin/events/${selectedEventId}/export`,
-          `Laporan_Event_${selectedEventName ? selectedEventName.replace(/\s+/g, '_') : selectedEventId}.csv`,
+          `Laporan_Event_${selectedEventName ? selectedEventName.replace(/\s+/g, '_') : selectedEventId}.xlsx`,
           token
         )
       } catch (err) {
@@ -158,7 +158,7 @@ export default function AdminDashboardPage() {
       try {
         await downloadExport(
           `/admin/categories/${selectedCategoryId}/export`,
-          `Laporan_Voting_${selectedCategoryName ? selectedCategoryName.replace(/\s+/g, '_') : selectedCategoryId}.csv`,
+          `Laporan_Voting_${selectedCategoryName ? selectedCategoryName.replace(/\s+/g, '_') : selectedCategoryId}.xlsx`,
           token
         )
       } catch (err) {
@@ -383,7 +383,7 @@ export default function AdminDashboardPage() {
                 title={selectedEventId ? 'Ekspor seluruh data voting & revenue event ini ke CSV/Excel' : 'Ekspor data voting kategori ini ke CSV/Excel'}
               >
                 <IconDownload className={`w-3.5 h-3.5 text-emerald-600 ${exportingDashboard ? 'animate-bounce' : ''}`} />
-                <span>{exportingDashboard ? 'Mengekspor...' : selectedEventId ? 'Export CSV Event' : 'Export CSV Kategori'}</span>
+                <span>{exportingDashboard ? 'Mengekspor...' : selectedEventId ? 'Export Excel Event (.xlsx)' : 'Export Excel Kategori (.xlsx)'}</span>
               </button>
             )}
 

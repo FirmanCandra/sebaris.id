@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->prependToGroup('api', \App\Http\Middleware\AllowBearerFromQuery::class);
+        $middleware->redirectGuestsTo(fn ($request) => ($request->is('api/*') || $request->expectsJson()) ? null : '/login');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
