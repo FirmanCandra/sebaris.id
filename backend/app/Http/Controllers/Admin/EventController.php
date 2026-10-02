@@ -51,8 +51,7 @@ class EventController extends Controller
     {
         $col = 1;
         foreach ($headers as $header) {
-            $cell = $sheet->getCellByColumnAndRow($col, $row);
-            $cell->setValue($header);
+            $sheet->setCellValue([$col, $row], $header);
             $col++;
         }
         $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers));
@@ -209,34 +208,34 @@ class EventController extends Controller
             $catPaid     = (int) $catVotes->where('type', 'paid')->sum('vote_amount');
             $catFree     = (int) $catVotes->where('type', 'free')->sum('vote_amount');
 
-            $sheet->getCellByColumnAndRow(1,  $r)->setValue($idx + 1);
-            $sheet->getCellByColumnAndRow(2,  $r)->setValue($cat->name);
-            $sheet->getCellByColumnAndRow(3,  $r)->setValue(strtoupper($cat->tier ?? 'PREMIER'));
-            $sheet->getCellByColumnAndRow(4,  $r)->setValue($cat->organizer ?? '-');
-            $sheet->getCellByColumnAndRow(5,  $r)->setValue($cat->price_per_vote ?? 1000);
-            $sheet->getCellByColumnAndRow(6,  $r)->setValue($cat->allow_free_vote ? 'Tersedia' : 'Tidak');
-            $sheet->getCellByColumnAndRow(7,  $r)->setValue($cat->finalists->count());
-            $sheet->getCellByColumnAndRow(8,  $r)->setValue($catTotal);
-            $sheet->getCellByColumnAndRow(9,  $r)->setValue($catPaid);
-            $sheet->getCellByColumnAndRow(10, $r)->setValue($catFree);
-            $sheet->getCellByColumnAndRow(11, $r)->setValue($catRevenue);
-            $sheet->getCellByColumnAndRow(12, $r)->setValue(strtoupper($cat->status ?? 'ACTIVE'));
+            $sheet->setCellValue([1,  $r], $idx + 1);
+            $sheet->setCellValue([2,  $r], $cat->name);
+            $sheet->setCellValue([3,  $r], strtoupper($cat->tier ?? 'PREMIER'));
+            $sheet->setCellValue([4,  $r], $cat->organizer ?? '-');
+            $sheet->setCellValue([5,  $r], $cat->price_per_vote ?? 1000);
+            $sheet->setCellValue([6,  $r], $cat->allow_free_vote ? 'Tersedia' : 'Tidak');
+            $sheet->setCellValue([7,  $r], $cat->finalists->count());
+            $sheet->setCellValue([8,  $r], $catTotal);
+            $sheet->setCellValue([9,  $r], $catPaid);
+            $sheet->setCellValue([10, $r], $catFree);
+            $sheet->setCellValue([11, $r], $catRevenue);
+            $sheet->setCellValue([12, $r], strtoupper($cat->status ?? 'ACTIVE'));
 
             // Number format
-            $sheet->getStyleByColumnAndRow(5, $r)->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle([5, $r])->getNumberFormat()->setFormatCode('#,##0');
             foreach ([8, 9, 10] as $c) {
-                $sheet->getStyleByColumnAndRow($c, $r)->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->getStyle([$c, $r])->getNumberFormat()->setFormatCode('#,##0');
             }
-            $sheet->getStyleByColumnAndRow(11, $r)->getNumberFormat()->setFormatCode('"Rp "#,##0');
+            $sheet->getStyle([11, $r])->getNumberFormat()->setFormatCode('"Rp "#,##0');
 
             $this->applyAlternateRow($sheet, $r, 12, $idx % 2 === 0);
             $this->applyRowBorder($sheet, $r, 12);
 
             // Alignment
-            $sheet->getStyleByColumnAndRow(1, $r)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyleByColumnAndRow(3, $r)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyleByColumnAndRow(6, $r)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyleByColumnAndRow(12, $r)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle([1, $r])->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle([3, $r])->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle([6, $r])->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle([12, $r])->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
             $r++;
         }
@@ -246,10 +245,10 @@ class EventController extends Controller
         if ($lastRow >= 3) {
             $colLetters = ['H', 'I', 'J', 'K'];
             $colNums    = [8, 9, 10, 11];
-            $sheet->getCellByColumnAndRow(2, $r)->setValue('TOTAL');
+            $sheet->setCellValue([2, $r], 'TOTAL');
             foreach ($colNums as $c) {
                 $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
-                $sheet->getCellByColumnAndRow($c, $r)->setValue("=SUM({$colLetter}3:{$colLetter}{$lastRow})");
+                $sheet->setCellValue([$c, $r], "=SUM({$colLetter}3:{$colLetter}{$lastRow})");
             }
             $sheet->getStyle("A{$r}:L{$r}")->applyFromArray([
                 'font' => ['bold' => true, 'size' => 10, 'color' => ['rgb' => self::CLR_HEADER_FG]],
@@ -257,9 +256,9 @@ class EventController extends Controller
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['rgb' => self::CLR_BRAND_DARK]]],
             ]);
             foreach ([8, 9, 10] as $c) {
-                $sheet->getStyleByColumnAndRow($c, $r)->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->getStyle([$c, $r])->getNumberFormat()->setFormatCode('#,##0');
             }
-            $sheet->getStyleByColumnAndRow(11, $r)->getNumberFormat()->setFormatCode('"Rp "#,##0');
+            $sheet->getStyle([11, $r])->getNumberFormat()->setFormatCode('"Rp "#,##0');
         }
 
         $sheet->setAutoFilter("A2:L{$lastRow}");
@@ -298,17 +297,17 @@ class EventController extends Controller
             foreach ($cat->finalists as $fIdx => $finalist) {
                 $pct = round(($finalist->vote_count / $catTotal) * 100, 2);
 
-                $sheet->getCellByColumnAndRow(1, $r)->setValue(++$row);
-                $sheet->getCellByColumnAndRow(2, $r)->setValue($cat->name);
-                $sheet->getCellByColumnAndRow(3, $r)->setValue(strtoupper($cat->tier ?? 'PREMIER'));
-                $sheet->getCellByColumnAndRow(4, $r)->setValue($fIdx + 1);
-                $sheet->getCellByColumnAndRow(5, $r)->setValue($finalist->name);
-                $sheet->getCellByColumnAndRow(6, $r)->setValue($finalist->vote_count);
-                $sheet->getCellByColumnAndRow(7, $r)->setValue($pct / 100);
-                $sheet->getCellByColumnAndRow(8, $r)->setValue($finalist->description ?? $finalist->bio ?? '-');
+                $sheet->setCellValue([1, $r], ++$row);
+                $sheet->setCellValue([2, $r], $cat->name);
+                $sheet->setCellValue([3, $r], strtoupper($cat->tier ?? 'PREMIER'));
+                $sheet->setCellValue([4, $r], $fIdx + 1);
+                $sheet->setCellValue([5, $r], $finalist->name);
+                $sheet->setCellValue([6, $r], $finalist->vote_count);
+                $sheet->setCellValue([7, $r], $pct / 100);
+                $sheet->setCellValue([8, $r], $finalist->description ?? $finalist->bio ?? '-');
 
-                $sheet->getStyleByColumnAndRow(6, $r)->getNumberFormat()->setFormatCode('#,##0');
-                $sheet->getStyleByColumnAndRow(7, $r)->getNumberFormat()->setFormatCode('0.00%');
+                $sheet->getStyle([6, $r])->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->getStyle([7, $r])->getNumberFormat()->setFormatCode('0.00%');
 
                 // Gold for #1 finalists
                 if ($fIdx === 0) {
@@ -323,9 +322,9 @@ class EventController extends Controller
                 $this->applyRowBorder($sheet, $r, 8);
 
                 foreach ([1, 3, 4] as $c) {
-                    $sheet->getStyleByColumnAndRow($c, $r)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $sheet->getStyle([$c, $r])->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
-                $sheet->getStyleByColumnAndRow(8, $r)->getAlignment()->setWrapText(true);
+                $sheet->getStyle([8, $r])->getAlignment()->setWrapText(true);
 
                 $r++;
             }
@@ -345,7 +344,8 @@ class EventController extends Controller
 
         $widths = [24, 20, 34, 34, 28, 28, 12, 12, 20, 16, 14];
         foreach ($widths as $i => $w) {
-            $sheet->getColumnDimensionByColumn($i + 1)->setWidth($w);
+            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1);
+            $sheet->getColumnDimension($colLetter)->setWidth($w);
         }
 
         $headers = [
@@ -366,24 +366,24 @@ class EventController extends Controller
         foreach ($votes as $i => $vote) {
             $isPaid = $vote->type !== 'free';
 
-            $sheet->getCellByColumnAndRow(1,  $r)->setValue($vote->reference_id ?? 'SVT-' . $vote->id);
-            $sheet->getCellByColumnAndRow(2,  $r)->setValue($vote->created_at?->format('d/m/Y H:i:s') ?? '-');
-            $sheet->getCellByColumnAndRow(3,  $r)->setValue($vote->finalist?->category?->name ?? '-');
-            $sheet->getCellByColumnAndRow(4,  $r)->setValue($vote->finalist?->name ?? '-');
-            $sheet->getCellByColumnAndRow(5,  $r)->setValue(
-                $vote->is_anonymous
-                    ? 'Anonim (' . ($vote->user?->name ?? $vote->voter_name) . ')'
-                    : ($vote->user?->name ?? $vote->voter_name)
-            );
-            $sheet->getCellByColumnAndRow(6,  $r)->setValue($vote->voter_contact ?? '-');
-            $sheet->getCellByColumnAndRow(7,  $r)->setValue($isPaid ? 'Berbayar' : 'Gratis (1×)');
-            $sheet->getCellByColumnAndRow(8,  $r)->setValue($vote->vote_amount);
-            $sheet->getCellByColumnAndRow(9,  $r)->setValue(strtoupper($vote->payment_method ?? 'FREE'));
-            $sheet->getCellByColumnAndRow(10, $r)->setValue($vote->total_price);
-            $sheet->getCellByColumnAndRow(11, $r)->setValue(strtoupper($vote->status ?? 'CONFIRMED'));
+            $voterDisplay = $vote->is_anonymous
+                ? 'Anonim (' . ($vote->user?->name ?? $vote->voter_name) . ')'
+                : ($vote->user?->name ?? $vote->voter_name);
 
-            $sheet->getStyleByColumnAndRow(8, $r)->getNumberFormat()->setFormatCode('#,##0');
-            $sheet->getStyleByColumnAndRow(10, $r)->getNumberFormat()->setFormatCode('"Rp "#,##0');
+            $sheet->setCellValue([1,  $r], $vote->reference_id ?? 'SVT-' . $vote->id);
+            $sheet->setCellValue([2,  $r], $vote->created_at?->format('d/m/Y H:i:s') ?? '-');
+            $sheet->setCellValue([3,  $r], $vote->finalist?->category?->name ?? '-');
+            $sheet->setCellValue([4,  $r], $vote->finalist?->name ?? '-');
+            $sheet->setCellValue([5,  $r], $voterDisplay);
+            $sheet->setCellValue([6,  $r], $vote->voter_contact ?? '-');
+            $sheet->setCellValue([7,  $r], $isPaid ? 'Berbayar' : 'Gratis (1×)');
+            $sheet->setCellValue([8,  $r], $vote->vote_amount);
+            $sheet->setCellValue([9,  $r], strtoupper($vote->payment_method ?? 'FREE'));
+            $sheet->setCellValue([10, $r], $vote->total_price);
+            $sheet->setCellValue([11, $r], strtoupper($vote->status ?? 'CONFIRMED'));
+
+            $sheet->getStyle([8,  $r])->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle([10, $r])->getNumberFormat()->setFormatCode('"Rp "#,##0');
 
             // Colour code: paid = light amber, free = light mint
             $rowBg = $isPaid ? self::CLR_PAID : self::CLR_REVENUE;
@@ -395,9 +395,9 @@ class EventController extends Controller
 
             $this->applyRowBorder($sheet, $r, 11);
 
-            $sheet->getStyleByColumnAndRow(7,  $r)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyleByColumnAndRow(8,  $r)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyleByColumnAndRow(11, $r)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle([7,  $r])->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle([8,  $r])->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle([11, $r])->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
             $r++;
         }

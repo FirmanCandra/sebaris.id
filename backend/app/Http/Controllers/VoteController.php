@@ -402,7 +402,7 @@ class VoteController extends Controller
         $s2Headers = ['Rank', 'Nama Finalis', 'Total Suara', 'Porsi (%)', 'Biodata / Deskripsi'];
         $col = 1;
         foreach ($s2Headers as $h) {
-            $s2->getCellByColumnAndRow($col++, 2)->setValue($h);
+            $s2->setCellValue([$col++, 2], $h);
         }
         $this->catApplyHeader($s2, 'A2:E2', self::CAT_CLR_BG, 'FFFFFF');
         $s2->getRowDimension(2)->setRowHeight(26);
@@ -412,15 +412,15 @@ class VoteController extends Controller
         foreach ($finalists as $fIdx => $finalist) {
             $pct = round(($finalist->vote_count / $catTotal) * 100, 2);
 
-            $s2->getCellByColumnAndRow(1, $r2)->setValue($fIdx + 1);
-            $s2->getCellByColumnAndRow(2, $r2)->setValue($finalist->name);
-            $s2->getCellByColumnAndRow(3, $r2)->setValue($finalist->vote_count);
-            $s2->getCellByColumnAndRow(4, $r2)->setValue($pct / 100);
-            $s2->getCellByColumnAndRow(5, $r2)->setValue($finalist->description ?? '-');
+            $s2->setCellValue([1, $r2], $fIdx + 1);
+            $s2->setCellValue([2, $r2], $finalist->name);
+            $s2->setCellValue([3, $r2], $finalist->vote_count);
+            $s2->setCellValue([4, $r2], $pct / 100);
+            $s2->setCellValue([5, $r2], $finalist->description ?? '-');
 
-            $s2->getStyleByColumnAndRow(3, $r2)->getNumberFormat()->setFormatCode('#,##0');
-            $s2->getStyleByColumnAndRow(4, $r2)->getNumberFormat()->setFormatCode('0.00%');
-            $s2->getStyleByColumnAndRow(5, $r2)->getAlignment()->setWrapText(true);
+            $s2->getStyle([3, $r2])->getNumberFormat()->setFormatCode('#,##0');
+            $s2->getStyle([4, $r2])->getNumberFormat()->setFormatCode('0.00%');
+            $s2->getStyle([5, $r2])->getAlignment()->setWrapText(true);
 
             if ($fIdx === 0) {
                 $s2->getStyle("A{$r2}:E{$r2}")->applyFromArray([
@@ -434,7 +434,7 @@ class VoteController extends Controller
             }
 
             $this->catApplyBorder($s2, $r2, 5);
-            $s2->getStyleByColumnAndRow(1, $r2)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $s2->getStyle([1, $r2])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
             $r2++;
         }
@@ -445,7 +445,8 @@ class VoteController extends Controller
         $s3->setTitle('Log Transaksi');
 
         foreach ([24, 20, 34, 28, 28, 12, 12, 20, 16, 14] as $i => $w) {
-            $s3->getColumnDimensionByColumn($i + 1)->setWidth($w);
+            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1);
+            $s3->getColumnDimension($colLetter)->setWidth($w);
         }
 
         $s3->mergeCells('A1:J1');
@@ -460,7 +461,7 @@ class VoteController extends Controller
         ];
         $col = 1;
         foreach ($s3Headers as $h) {
-            $s3->getCellByColumnAndRow($col++, 2)->setValue($h);
+            $s3->setCellValue([$col++, 2], $h);
         }
         $this->catApplyHeader($s3, 'A2:J2', self::CAT_CLR_BG, 'FFFFFF');
         $s3->getRowDimension(2)->setRowHeight(26);
@@ -469,19 +470,19 @@ class VoteController extends Controller
         foreach ($votes as $i => $vote) {
             $isPaid = $vote->type !== 'free';
 
-            $s3->getCellByColumnAndRow(1, $r3)->setValue($vote->reference_id ?? 'SVT-' . $vote->id);
-            $s3->getCellByColumnAndRow(2, $r3)->setValue($vote->created_at?->format('d/m/Y H:i:s') ?? '-');
-            $s3->getCellByColumnAndRow(3, $r3)->setValue($vote->finalist?->name ?? '-');
-            $s3->getCellByColumnAndRow(4, $r3)->setValue($vote->voter_name ?? '-');
-            $s3->getCellByColumnAndRow(5, $r3)->setValue($vote->voter_contact ?? '-');
-            $s3->getCellByColumnAndRow(6, $r3)->setValue($isPaid ? 'Berbayar' : 'Gratis (1×)');
-            $s3->getCellByColumnAndRow(7, $r3)->setValue($vote->vote_amount);
-            $s3->getCellByColumnAndRow(8, $r3)->setValue(strtoupper($vote->payment_method ?? 'FREE'));
-            $s3->getCellByColumnAndRow(9, $r3)->setValue($vote->total_price);
-            $s3->getCellByColumnAndRow(10, $r3)->setValue(strtoupper($vote->status ?? 'CONFIRMED'));
+            $s3->setCellValue([1, $r3], $vote->reference_id ?? 'SVT-' . $vote->id);
+            $s3->setCellValue([2, $r3], $vote->created_at?->format('d/m/Y H:i:s') ?? '-');
+            $s3->setCellValue([3, $r3], $vote->finalist?->name ?? '-');
+            $s3->setCellValue([4, $r3], $vote->voter_name ?? '-');
+            $s3->setCellValue([5, $r3], $vote->voter_contact ?? '-');
+            $s3->setCellValue([6, $r3], $isPaid ? 'Berbayar' : 'Gratis (1×)');
+            $s3->setCellValue([7, $r3], $vote->vote_amount);
+            $s3->setCellValue([8, $r3], strtoupper($vote->payment_method ?? 'FREE'));
+            $s3->setCellValue([9, $r3], $vote->total_price);
+            $s3->setCellValue([10, $r3], strtoupper($vote->status ?? 'CONFIRMED'));
 
-            $s3->getStyleByColumnAndRow(7, $r3)->getNumberFormat()->setFormatCode('#,##0');
-            $s3->getStyleByColumnAndRow(9, $r3)->getNumberFormat()->setFormatCode('"Rp "#,##0');
+            $s3->getStyle([7, $r3])->getNumberFormat()->setFormatCode('#,##0');
+            $s3->getStyle([9, $r3])->getNumberFormat()->setFormatCode('"Rp "#,##0');
 
             if ($i % 2 !== 0) {
                 $s3->getStyle("A{$r3}:J{$r3}")->getFill()
@@ -491,9 +492,9 @@ class VoteController extends Controller
 
             $this->catApplyBorder($s3, $r3, 10);
 
-            $s3->getStyleByColumnAndRow(6, $r3)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $s3->getStyleByColumnAndRow(7, $r3)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $s3->getStyleByColumnAndRow(10, $r3)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $s3->getStyle([6, $r3])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $s3->getStyle([7, $r3])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $s3->getStyle([10, $r3])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
             $r3++;
         }
