@@ -467,13 +467,6 @@ export default function CategoryVotingPage() {
                     {category?.organizer || category?.event?.name || 'Sebaris Official'}
                   </span>
                 </div>
-
-                {category?.allow_free_vote !== false && !isVotingClosed && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#70B325]/20 border border-[#70B325]/40 text-[#D0FE15] text-[11px] font-bold backdrop-blur-md">
-                    <IconZap className="w-3 h-3 text-[#D0FE15]" />
-                    <span>1x Vote Gratis</span>
-                  </span>
-                )}
               </div>
 
               {/* Main Category Title */}
@@ -489,7 +482,7 @@ export default function CategoryVotingPage() {
               )}
 
               {/* Metrics Ribbon */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-xs sm:text-sm">
+              <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-2 pt-1 text-xs sm:text-sm">
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-black/40 border border-white/10">
                   <span className="text-gray-400 font-medium">Total Suara:</span>
                   <span className="font-black text-[#D0FE15] text-sm sm:text-base">
@@ -515,6 +508,13 @@ export default function CategoryVotingPage() {
                     Rp {(category?.price_per_vote || 1000).toLocaleString('id-ID')}/vote
                   </span>
                 </div>
+
+                {category?.allow_free_vote !== false && !isVotingClosed && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#70B325]/25 border border-[#70B325]/50 text-[#D0FE15] text-xs sm:text-sm font-black backdrop-blur-md shadow-xs">
+                    <IconZap className="w-3.5 h-3.5 text-[#D0FE15] flex-shrink-0 animate-pulse" />
+                    <span>1x Vote Gratis</span>
+                  </div>
+                )}
               </div>
 
               {/* Quick Jump to Vote Button */}
