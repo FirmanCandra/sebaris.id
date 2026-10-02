@@ -7,7 +7,7 @@ Options -Indexes
 
     # 1. API dan Storage diteruskan ke Laravel
     RewriteRule ^api(/.*)?$ backend/public/index.php [L,QSA]
-    RewriteRule ^storage(/.*)?$ backend/public/storage$1 [L]
+    RewriteRule ^storage(/.*)?$ backend/storage/app/public$1 [L]
 
     # 2. Sajikan file fisik nyata langsung (js, css, gambar, dll)
     RewriteCond %{REQUEST_FILENAME} -f [OR]
