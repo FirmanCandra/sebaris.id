@@ -204,12 +204,15 @@ export default function CategoryVotingPage() {
     return () => window.clearInterval(interval)
   }, [loadData, loadMessages, selectedFinalistForVote, selectedFinalistForDetail, eReceiptData])
 
-  // Handle URL param: ?finalist=123 (direct candidate deep link, run once when finalists loaded)
+  // Handle URL param: ?finalist=<name-slug-or-id> (direct candidate deep link, run once when finalists loaded)
   useEffect(() => {
     if (deepLinkHandledRef.current) return
     const finalistParam = searchParams.get('finalist')
     if (finalistParam && finalists.length > 0) {
-      const found = finalists.find((f) => String(f.id) === String(finalistParam))
+      // Support both name slug (new) and numeric ID (legacy backward compat)
+      const found =
+        finalists.find((f) => finalistSlug(f.name) === finalistParam) ||
+        finalists.find((f) => String(f.id) === String(finalistParam))
       if (found) {
         deepLinkHandledRef.current = true
         setSelectedFinalistForVote(found)
@@ -349,15 +352,25 @@ export default function CategoryVotingPage() {
     setIsVotingExpired((prev) => (prev !== expired ? expired : prev))
   }, [])
 
+  // Convert finalist name to URL-friendly slug for share links
+  function finalistSlug(name) {
+    return (name || '')
+      .toLowerCase()
+      .replace(/&/g, 'dan')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+  }
+
   // Share candidate helpers
   function handleShareWhatsApp(finalist) {
-    const directUrl = `${window.location.origin}/categories/${category?.slug || categoryId}?finalist=${finalist.id}`
+    const directUrl = `${window.location.origin}/categories/${category?.slug || categoryId}?finalist=${finalistSlug(finalist.name)}`
     const text = `Halo! Yuk dukung kandidat *${finalist.name}* di ajang *${category?.name || 'Voting'}* melalui sebaris.id!\n\nKlik tautan ini untuk beri vote langsung:\n${directUrl}`
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
   }
 
   function handleCopyLink(finalist) {
-    const directUrl = `${window.location.origin}/categories/${category?.slug || categoryId}?finalist=${finalist.id}`
+    const directUrl = `${window.location.origin}/categories/${category?.slug || categoryId}?finalist=${finalistSlug(finalist.name)}`
     navigator.clipboard.writeText(directUrl)
     setCopiedId(finalist.id)
     setTimeout(() => setCopiedId(null), 2000)
