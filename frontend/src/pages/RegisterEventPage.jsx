@@ -7,7 +7,6 @@ import {
   IconCheck,
   IconClose,
   IconSearch,
-  IconTrophy,
   IconArrowRight,
   IconChevronRight,
   IconWhatsApp,
@@ -16,7 +15,6 @@ import {
   IconFileText,
   IconEye,
   IconChat,
-  IconZap,
   IconCoins,
   IconLayers,
   IconExternal,
@@ -205,36 +203,13 @@ export default function RegisterEventPage() {
 
       {/* Hero Section */}
       <section className="relative pt-6 sm:pt-10 pb-8 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center space-y-4">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EBF7E3] dark:bg-[#70B325]/15 border border-[#CADDB8] dark:border-[#70B325]/30 text-[#48781B] dark:text-[#8FE032] text-xs font-black tracking-wide uppercase">
-          <IconTrophy className="w-3.5 h-3.5" />
-          <span>Layanan Self-Service Panitia &amp; Event</span>
-        </div>
-
         <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[var(--neutral-text-main)] leading-tight">
-          Daftarkan Event E-Voting Anda di{' '}
-          <span className="text-[#70B325] dark:text-[#8FE032] underline decoration-wavy decoration-[#70B325]/40">
-            Sebaris.id
-          </span>
+          Daftarkan Event <span className="text-[#70B325] dark:text-[#8FE032]">E-Voting</span> Anda
         </h1>
 
         <p className="text-xs sm:text-base text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
-          Platform pemungutan suara digital terpercaya untuk pemilihan ketua BEM, ajang penghargaan, duta kampus, dan komunitas. Tabulasi real-time, QRIS otomatis, dan proteksi anti-kecurangan.
+          Solusi pemungutan suara digital profesional yang dipercaya untuk pemilihan organisasi, ajang penghargaan, duta kampus, dan komunitas. Menjamin integritas pemilihan yang transparan, bebas kecurangan, dengan tabulasi suara akurat dan dapat dipertanggungjawabkan secara penuh.
         </p>
-
-        {/* Feature indicators — icon SVG dari Icons.jsx, tanpa emoji */}
-        <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
-          {[
-            { icon: IconZap, text: 'Siap dalam 2-6 Jam' },
-            { icon: IconEye, text: 'Tabulasi Real-Time' },
-            { icon: IconShield, text: 'Proteksi 1 Akun 1 Suara' },
-            { icon: IconCoins, text: 'Terintegrasi QRIS' },
-          ].map(({ icon: Icon, text }) => (
-            <span key={text} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs font-semibold text-gray-600 dark:text-gray-300 shadow-2xs">
-              <Icon className="w-3.5 h-3.5 text-[#70B325] dark:text-[#8FE032] flex-shrink-0" />
-              {text}
-            </span>
-          ))}
-        </div>
 
         {/* Mode Switcher Tabs */}
         <div className="pt-6 flex justify-center">
