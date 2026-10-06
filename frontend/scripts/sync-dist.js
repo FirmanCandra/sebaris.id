@@ -13,12 +13,15 @@ if (!fs.existsSync(distDir)) {
   process.exit(1);
 }
 
-// 1. Hapus bundle JS dan CSS lama di root assets/ agar tidak menumpuk
-if (fs.existsSync(rootAssetsDir)) {
-  const files = fs.readdirSync(rootAssetsDir);
-  for (const file of files) {
-    if (file.startsWith('index-') && (file.endsWith('.js') || file.endsWith('.css'))) {
-      fs.unlinkSync(path.join(rootAssetsDir, file));
+// 1. Hapus bundle JS, CSS, dan asset lama di root assets/ yang sudah tidak ada di dist/assets
+if (fs.existsSync(rootAssetsDir) && fs.existsSync(path.join(distDir, 'assets'))) {
+  const distAssetFiles = new Set(fs.readdirSync(path.join(distDir, 'assets')));
+  const rootAssetFiles = fs.readdirSync(rootAssetsDir);
+  for (const file of rootAssetFiles) {
+    if (!distAssetFiles.has(file)) {
+      try {
+        fs.unlinkSync(path.join(rootAssetsDir, file));
+      } catch (e) {}
     }
   }
 }

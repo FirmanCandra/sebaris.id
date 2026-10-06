@@ -8,10 +8,9 @@ import SebarisLogo from '../components/SebarisLogo'
 import HeroBannerSkeleton from '../components/HeroBannerSkeleton'
 import HighlightCardsSkeleton from '../components/HighlightCardsSkeleton'
 import TopVotingSkeleton from '../components/TopVotingSkeleton'
-import heroBg from '../assets/hero-bg.jpg'
-import iconSectionHighlight from '../assets/icon-section-highlight.png'
-import iconSectionTopVoting from '../assets/icon-section-topvoting.png'
-import iconSectionPastEvents from '../assets/icon-section-pastevents.png'
+import iconSectionHighlight from '../assets/icon-section-highlight.webp'
+import iconSectionTopVoting from '../assets/icon-section-topvoting.webp'
+import iconSectionPastEvents from '../assets/icon-section-pastevents.webp'
 import {
   IconFlame,
   IconClock,
@@ -507,7 +506,7 @@ export default function PublicEventsPage() {
 
             {/* Mobile Counter Badge (Bottom Right, does NOT cover text/artwork in center or bottom) */}
             {heroBanners.length > 1 && (
-              <div className="sm:hidden absolute bottom-2.5 right-2.5 z-20 px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[11px] font-bold text-white shadow-xs tracking-wider pointer-events-none">
+              <div className="sm:hidden absolute bottom-2.5 right-2.5 z-20 px-2.5 py-0.5 rounded-full bg-black/75 border border-white/20 text-[11px] font-bold text-white shadow-xs tracking-wider pointer-events-none">
                 {currentBannerIndex + 1} / {heroBanners.length}
               </div>
             )}
@@ -650,7 +649,7 @@ export default function PublicEventsPage() {
                           </div>
 
                           {/* Top-Left Live Status Badge */}
-                          <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[10px] font-black uppercase text-white shadow-xs">
+                          <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/75 border border-white/20 text-[10px] font-black uppercase text-white shadow-xs">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#70B325] animate-ping" />
                             Live
                           </span>
@@ -676,7 +675,7 @@ export default function PublicEventsPage() {
                           {/* Top Image Banner (44%) */}
                           <div className="relative h-[44%] w-full overflow-hidden bg-gray-100 dark:bg-black/30 flex items-center justify-center">
                             <Banner />
-                            <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/95 dark:bg-black/80 backdrop-blur-xs border border-white/60 dark:border-white/15 text-[10px] font-black uppercase text-gray-900 dark:text-white shadow-xs">
+                            <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/95 dark:bg-black/90 border border-white/60 dark:border-white/15 text-[10px] font-black uppercase text-gray-900 dark:text-white shadow-xs">
                               <span className="w-1.5 h-1.5 rounded-full bg-[#70B325] animate-ping" />
                               Live
                             </span>
@@ -740,7 +739,7 @@ export default function PublicEventsPage() {
       {loadingChampions ? (
         <TopVotingSkeleton />
       ) : champions.length > 0 ? (
-        <section className="w-full relative overflow-hidden bg-gradient-to-br from-[#DDFB38] via-[#CAF118] to-[#B2E40B] dark:from-[#17240B] dark:via-[#1F330E] dark:to-[#15220A] transition-colors select-none">
+        <section className="w-full relative overflow-hidden content-auto bg-gradient-to-br from-[#DDFB38] via-[#CAF118] to-[#B2E40B] dark:from-[#17240B] dark:via-[#1F330E] dark:to-[#15220A] transition-colors select-none">
           {/* Top Wave Transition (Page background #F8FAF7 / #121612 into vibrant yellow-green) */}
           <div className="w-full overflow-hidden leading-none select-none pointer-events-none">
             <svg
@@ -842,13 +841,13 @@ export default function PublicEventsPage() {
                     {/* Top Badges */}
                     <div className="absolute top-3 inset-x-3 z-10 flex items-center justify-between pointer-events-none">
                       {/* Top-Left #1 Juara Badge */}
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-black text-[10px] sm:text-[11px] shadow-md tracking-tight backdrop-blur-xs">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-black text-[10px] sm:text-[11px] shadow-md tracking-tight">
                         <IconCrown className="w-3.5 h-3.5 text-amber-950" />
                         <span>#1 Top Vote</span>
                       </span>
 
                       {/* Top-Right Vote Percentage Pill */}
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white font-black text-[10px] sm:text-[11px] shadow-sm">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black/75 border border-white/20 text-white font-black text-[10px] sm:text-[11px] shadow-sm">
                         {percentage}%
                       </span>
                     </div>
@@ -901,7 +900,7 @@ export default function PublicEventsPage() {
       {/* =========================================================================
           3. KETIGA: EVENT / KATEGORI YANG SUDAH BERLALU
           ========================================================================= */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12 w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12 w-full content-auto">
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 sm:gap-4">
@@ -1004,13 +1003,13 @@ export default function PublicEventsPage() {
                       {/* Top Badges */}
                       <div className="relative z-10 p-3 sm:p-3.5 flex items-center justify-between pointer-events-none">
                         {/* Selesai Badge */}
-                        <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-black/65 backdrop-blur-md border border-white/20 text-white font-extrabold text-[10px] sm:text-[11px] shadow-sm">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-black/75 border border-white/20 text-white font-extrabold text-[10px] sm:text-[11px] shadow-sm">
                           <IconLock className="w-3.5 h-3.5 text-gray-300" />
                           <span>Selesai</span>
                         </span>
 
                         {/* End Date Pill */}
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black/65 backdrop-blur-md border border-white/20 text-gray-200 font-semibold text-[10px] sm:text-[11px] shadow-sm">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black/75 border border-white/20 text-gray-200 font-semibold text-[10px] sm:text-[11px] shadow-sm">
                           {item.endDate}
                         </span>
                       </div>
@@ -1040,7 +1039,7 @@ export default function PublicEventsPage() {
                         {/* Action Button: Hasil Akhir */}
                         <Link
                           to={`/voting/${item.slug || item.id}`}
-                          className="w-full py-2 sm:py-2.5 px-3 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white backdrop-blur-md border border-white/20 font-black text-xs sm:text-sm rounded-xl text-center no-underline flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md active:scale-98 transition-all"
+                          className="w-full py-2 sm:py-2.5 px-3 bg-white/20 hover:bg-white/30 active:bg-white/35 text-white border border-white/20 font-black text-xs sm:text-sm rounded-xl text-center no-underline flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md active:scale-98 transition-all"
                         >
                           <IconTrophy className="w-3.5 h-3.5 text-amber-400" />
                           <span>Hasil Akhir</span>

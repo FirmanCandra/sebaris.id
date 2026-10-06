@@ -1,22 +1,24 @@
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import { Link, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
 import GoogleOneTap from './components/GoogleOneTap'
 import LiveVoteTicker from './components/LiveVoteTicker'
 import ResourcePage from './components/ResourcePage'
 import AdminLayout from './layouts/AdminLayout'
-import AdminDashboardPage from './pages/AdminDashboardPage'
-import LoginPage from './pages/LoginPage'
 import PublicEventsPage from './pages/PublicEventsPage'
-import CategoryVotingPage from './pages/CategoryVotingPage'
-import NotFoundPage from './pages/NotFoundPage'
-import EmbedVotingPage from './pages/EmbedVotingPage'
-import AdminManagementPage from './pages/AdminManagementPage'
-import EventWorkspacePage from './pages/EventWorkspacePage'
-import RegisterEventPage from './pages/RegisterEventPage'
-import AdminProposalsPage from './pages/AdminProposalsPage'
-import AdminParticipantsPage from './pages/AdminParticipantsPage'
-import EventsDirectoryPage from './pages/EventsDirectoryPage'
+
+// Code Splitting (Lazy Loading) untuk rute non-beranda
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const CategoryVotingPage = lazy(() => import('./pages/CategoryVotingPage'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
+const EmbedVotingPage = lazy(() => import('./pages/EmbedVotingPage'))
+const AdminManagementPage = lazy(() => import('./pages/AdminManagementPage'))
+const EventWorkspacePage = lazy(() => import('./pages/EventWorkspacePage'))
+const RegisterEventPage = lazy(() => import('./pages/RegisterEventPage'))
+const AdminProposalsPage = lazy(() => import('./pages/AdminProposalsPage'))
+const AdminParticipantsPage = lazy(() => import('./pages/AdminParticipantsPage'))
+const EventsDirectoryPage = lazy(() => import('./pages/EventsDirectoryPage'))
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'))
 import EmbedCodeModal from './components/EmbedCodeModal'
 import VotePackagesModal from './components/VotePackagesModal'
 import AdjustVoteModal from './components/AdjustVoteModal'
@@ -729,29 +731,31 @@ export default function App() {
     <AuthProvider>
       <GoogleOneTap />
       <LiveVoteTicker />
-      <Routes>
-        <Route path="/" element={<PublicEventsPage />} />
-        <Route path="/events" element={<EventsDirectoryPage />} />
-        <Route path="/vote" element={<EventsDirectoryPage />} />
-        <Route path="/daftarkan-vote" element={<RegisterEventPage />} />
-        <Route path="/categories/:categoryId" element={<CategoryVotingPage />} />
-        <Route path="/voting/:categoryId" element={<CategoryVotingPage />} />
-        <Route path="/embed/voting/:categoryId" element={<EmbedVotingPage />} />
-        <Route path="/login" element={<LoginRoute />} />
-        <Route path="/admin" element={<ProtectedApp />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<AdminDashboardPage />} />
-          <Route path="proposals" element={<AdminProposalsPage />} />
-          <Route path="events" element={<EventsAdminPage />} />
-          <Route path="events/:eventId" element={<EventWorkspacePage />} />
-          <Route path="categories" element={<CategoriesAdminPage />} />
-          <Route path="finalists" element={<FinalistsAdminPage />} />
-          <Route path="participants" element={<AdminParticipantsPage />} />
-          <Route path="banners" element={<BannersAdminPage />} />
-          <Route path="admins" element={<AdminManagementPage />} />
-        </Route>
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+      <Suspense fallback={<div className="min-h-screen bg-[#F8FAF7] dark:bg-[#121612]" />}>
+        <Routes>
+          <Route path="/" element={<PublicEventsPage />} />
+          <Route path="/events" element={<EventsDirectoryPage />} />
+          <Route path="/vote" element={<EventsDirectoryPage />} />
+          <Route path="/daftarkan-vote" element={<RegisterEventPage />} />
+          <Route path="/categories/:categoryId" element={<CategoryVotingPage />} />
+          <Route path="/voting/:categoryId" element={<CategoryVotingPage />} />
+          <Route path="/embed/voting/:categoryId" element={<EmbedVotingPage />} />
+          <Route path="/login" element={<LoginRoute />} />
+          <Route path="/admin" element={<ProtectedApp />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboardPage />} />
+            <Route path="proposals" element={<AdminProposalsPage />} />
+            <Route path="events" element={<EventsAdminPage />} />
+            <Route path="events/:eventId" element={<EventWorkspacePage />} />
+            <Route path="categories" element={<CategoriesAdminPage />} />
+            <Route path="finalists" element={<FinalistsAdminPage />} />
+            <Route path="participants" element={<AdminParticipantsPage />} />
+            <Route path="banners" element={<BannersAdminPage />} />
+            <Route path="admins" element={<AdminManagementPage />} />
+          </Route>
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
     </AuthProvider>
   )
 }

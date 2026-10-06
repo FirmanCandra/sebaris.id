@@ -20,11 +20,18 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
   const isAdmin = Boolean(token)
   const isVoter = Boolean(user)
 
-  // Track window scroll
+  // Track window scroll with requestAnimationFrame throttle
   useEffect(() => {
+    let ticking = false
     function handleScroll() {
-      // Transition slightly stronger glass when scrolled past 40px
-      setIsScrolled(window.scrollY > 40)
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const nextScrolled = window.scrollY > 30
+          setIsScrolled((prev) => (prev !== nextScrolled ? nextScrolled : prev))
+          ticking = false
+        })
+        ticking = true
+      }
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
     handleScroll()
@@ -79,16 +86,16 @@ export default function PublicHeader({ searchQuery = '', onSearchChange, onOpenC
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full px-3 sm:px-6 lg:px-8 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] sm:pt-3.5 pointer-events-none transition-all duration-300">
+      <header className="sticky top-0 z-50 w-full px-3 sm:px-6 lg:px-8 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] sm:pt-3.5 pointer-events-none transition-all duration-200">
         <div
-          className={`max-w-7xl mx-auto pointer-events-auto h-16 sm:h-18 px-4 sm:px-8 rounded-full flex items-center justify-between gap-3 sm:gap-4 transition-all duration-300 backdrop-blur-xl backdrop-saturate-150 ios-isolate ${
+          className={`max-w-7xl mx-auto pointer-events-auto h-16 sm:h-18 px-4 sm:px-8 rounded-full flex items-center justify-between gap-3 sm:gap-4 transition-[background-color,border-color,box-shadow] duration-200 sm:backdrop-blur-md ios-isolate ${
             theme === 'dark'
               ? isScrolled
-                ? 'bg-[#131912]/92 border border-white/15 text-white shadow-2xl shadow-black/50'
-                : 'bg-[#131912]/80 border border-white/10 text-white shadow-xl shadow-black/30'
+                ? 'bg-[#131912] sm:bg-[#131912]/92 border border-white/15 text-white shadow-lg shadow-black/40'
+                : 'bg-[#131912]/95 sm:bg-[#131912]/85 border border-white/10 text-white shadow-md shadow-black/20'
               : isScrolled
-              ? 'bg-white/92 border border-white/90 text-gray-900 shadow-xl shadow-gray-900/10'
-              : 'bg-white/80 border border-white/80 text-gray-900 shadow-lg shadow-gray-900/5'
+              ? 'bg-white sm:bg-white/92 border border-gray-200/90 text-gray-900 shadow-md shadow-gray-900/5'
+              : 'bg-white/95 sm:bg-white/85 border border-gray-200/80 text-gray-900 shadow-xs'
           }`}
         >
           {/* 1. LOGO KIRI */}

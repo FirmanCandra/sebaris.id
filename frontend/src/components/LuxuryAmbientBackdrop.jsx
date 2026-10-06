@@ -99,13 +99,13 @@ export default function LuxuryAmbientBackdrop({ themeColor = '#154228', posterSr
 
       {/* 2. Dynamic Radial Color Blooms */}
       <div
-        className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none opacity-40 transition-all duration-700"
+        className="absolute -top-32 -left-32 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] rounded-full blur-[60px] sm:blur-[140px] pointer-events-none opacity-40 transition-all duration-700"
         style={{
           background: `radial-gradient(circle, ${colorStyles.rgbaPrimary(0.85)} 0%, transparent 70%)`,
         }}
       />
       <div
-        className="absolute top-10 right-0 w-[700px] h-[700px] rounded-full blur-[160px] pointer-events-none opacity-45 transition-all duration-700"
+        className="absolute top-10 right-0 w-[320px] sm:w-[700px] h-[320px] sm:h-[700px] rounded-full blur-[70px] sm:blur-[160px] pointer-events-none opacity-45 transition-all duration-700"
         style={{
           background: `radial-gradient(circle, ${colorStyles.rgbaPrimary(0.7)} 0%, transparent 75%)`,
         }}

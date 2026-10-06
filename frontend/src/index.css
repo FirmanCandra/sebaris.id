@@ -435,6 +435,23 @@ textarea:focus-visible {
   }
 }
 
+/* Mobile Performance: Bypass heavy GPU backdrop filters on narrow mobile viewports to guarantee 60fps fluid scrolling */
+@media (max-width: 640px) {
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl,
+  .backdrop-blur-lg,
+  .backdrop-blur-md {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* Off-screen section rendering optimization (renders only when near viewport) */
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 500px;
+}
+
 /* Safe area insets for notched iPhones & iPads */
 .pt-safe {
   padding-top: env(safe-area-inset-top, 0px);
