@@ -87,12 +87,12 @@ export default function LuxuryAmbientBackdrop({ themeColor = '#154228', posterSr
       className="absolute inset-0 overflow-hidden pointer-events-none select-none transition-colors duration-700"
       style={{ backgroundColor: colorStyles.darkBase }}
     >
-      {/* 1. Optional Soft Blurred Poster Artwork */}
+      {/* 1. Optional Soft Blurred Poster Artwork (Desktop only to prevent mobile GPU thermal throttling) */}
       {posterSrc && (
         <img
           src={posterSrc}
           alt=""
-          className="w-full h-full object-cover object-center filter blur-3xl scale-125 opacity-20 transform -translate-y-8 pointer-events-none"
+          className="hidden sm:block w-full h-full object-cover object-center filter blur-3xl scale-125 opacity-20 transform -translate-y-8 pointer-events-none"
           aria-hidden="true"
         />
       )}
@@ -180,8 +180,8 @@ export default function LuxuryAmbientBackdrop({ themeColor = '#154228', posterSr
         />
       </svg>
 
-      {/* 4. Luxury Sparkle Stars & Shimmering Flares positioned along wave crests */}
-      <div className="absolute inset-0 pointer-events-none">
+      {/* 4. Luxury Sparkle Stars & Shimmering Flares positioned along wave crests (Desktop only) */}
+      <div className="hidden sm:block absolute inset-0 pointer-events-none">
         {/* Sparkle 1: Near center crest */}
         <SparkleStar
           size={36}
@@ -220,8 +220,8 @@ export default function LuxuryAmbientBackdrop({ themeColor = '#154228', posterSr
         />
       </div>
 
-      {/* 5. Stardust / Diamond Dust Particle Scatter */}
-      <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
+      {/* 5. Stardust / Diamond Dust Particle Scatter (Desktop only) */}
+      <div className="hidden sm:block absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
 
       {/* 6. Dark Vignette / Gradient Scrim for 100% Crisp WCAG Typography Contrast */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/85 pointer-events-none" />

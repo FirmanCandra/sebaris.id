@@ -112,7 +112,7 @@ export default function LiveVoteTicker() {
     <div
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      className={`fixed bottom-4 sm:bottom-6 left-4 sm:left-6 z-40 max-w-[340px] sm:max-w-[380px] transition-all duration-400 ease-out select-none print:hidden ${
+      className={`hidden sm:block fixed bottom-4 sm:bottom-6 left-4 sm:left-6 z-40 max-w-[340px] sm:max-w-[380px] transition-all duration-400 ease-out select-none print:hidden ${
         visible
           ? 'opacity-100 translate-y-0 pointer-events-auto'
           : 'opacity-0 translate-y-3 pointer-events-none'

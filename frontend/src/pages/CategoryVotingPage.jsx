@@ -199,7 +199,7 @@ export default function CategoryVotingPage() {
     const interval = window.setInterval(() => {
       loadData(true)
       loadMessages(true)
-    }, 12000)
+    }, 25000)
 
     return () => window.clearInterval(interval)
   }, [loadData, loadMessages, selectedFinalistForVote, selectedFinalistForDetail, eReceiptData])
@@ -446,7 +446,7 @@ export default function CategoryVotingPage() {
                 )}
 
                 {/* Live Status Pill Overlay on Poster */}
-                <div className="absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur-md border border-white/20 text-[10px] font-black uppercase text-white shadow-xs">
+                <div className="absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/80 border border-white/20 text-[10px] font-black uppercase text-white shadow-xs">
                   <span className={`w-1.5 h-1.5 rounded-full ${isVotingClosed ? 'bg-gray-400' : 'bg-[#70B325] animate-ping'}`} />
                   <span>{isVotingClosed ? 'Closed' : 'Live'}</span>
                 </div>
@@ -458,7 +458,7 @@ export default function CategoryVotingPage() {
 
               {/* Official Organizer Badge with Verified Check */}
               <div className="flex flex-wrap items-center gap-2">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 dark:bg-black/40 backdrop-blur-md border border-white/15 text-xs text-white shadow-xs">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 dark:bg-black/60 border border-white/15 text-xs text-white shadow-xs">
                   <span className="w-4 h-4 rounded-full bg-[#70B325] flex items-center justify-center flex-shrink-0">
                     <IconCheck className="w-2.5 h-2.5 text-white stroke-[3]" />
                   </span>
@@ -510,7 +510,7 @@ export default function CategoryVotingPage() {
                 </div>
 
                 {category?.allow_free_vote !== false && !isVotingClosed && (
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#70B325]/25 border border-[#70B325]/50 text-[#D0FE15] text-xs sm:text-sm font-black backdrop-blur-md shadow-xs">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#70B325]/25 border border-[#70B325]/50 text-[#D0FE15] text-xs sm:text-sm font-black shadow-xs">
                     <IconZap className="w-3.5 h-3.5 text-[#D0FE15] flex-shrink-0 animate-pulse" />
                     <span>1x Vote Gratis</span>
                   </div>
@@ -535,7 +535,7 @@ export default function CategoryVotingPage() {
             {/* 3. RIGHT COUNTDOWN TIMER (4 cols on lg) */}
             <div className="lg:col-span-4 xl:col-span-4 w-full">
               {isVotingClosed ? (
-                <div className="bg-black/50 backdrop-blur-xl rounded-2xl p-5 border border-amber-400/40 text-center space-y-2.5 shadow-2xl">
+                <div className="bg-black/70 rounded-2xl p-5 border border-amber-400/40 text-center space-y-2.5 shadow-xl">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-xs font-black uppercase tracking-wider">
                     <IconTrophy className="w-4 h-4 text-amber-400" />
                     <span>Ajang Telah Berakhir</span>
@@ -554,7 +554,7 @@ export default function CategoryVotingPage() {
                   onExpire={handleExpire}
                 />
               ) : (
-                <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-5 border border-white/15 text-center space-y-2">
+                <div className="bg-black/70 rounded-2xl p-5 border border-white/15 text-center space-y-2">
                   <div className="inline-flex items-center gap-1.5 text-[#D0FE15] text-xs font-black uppercase">
                     <span className="w-2 h-2 rounded-full bg-[#D0FE15] animate-ping" />
                     Live Voting System
@@ -862,7 +862,7 @@ export default function CategoryVotingPage() {
                         {/* Spacer to keep center Rank 1 visually elevated */}
                         <div className="h-6 sm:h-10 w-full" />
 
-                        <div className="w-full rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#1A2018]/90 backdrop-blur-xl border border-slate-300 dark:border-slate-700/80 p-2 sm:p-4 lg:p-5 flex flex-col justify-between space-y-2 sm:space-y-3 shadow-md hover:shadow-lg transition-all scale-95 sm:scale-100">
+                        <div className="w-full rounded-xl sm:rounded-2xl bg-white dark:bg-[#1A2018] border border-slate-300 dark:border-slate-700/80 p-2 sm:p-4 lg:p-5 flex flex-col justify-between space-y-2 sm:space-y-3 shadow-md hover:shadow-lg transition-all scale-95 sm:scale-100">
                           {/* Photo with 4:5 aspect ratio */}
                           <div
                             onClick={() => setSelectedFinalistForDetail(topThreeFinalists[1])}
@@ -872,10 +872,12 @@ export default function CategoryVotingPage() {
                               src={resolveStorageUrl(topThreeFinalists[1].photo_url || topThreeFinalists[1].photo)}
                               alt={topThreeFinalists[1].name}
                               className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                              loading="lazy"
+                              decoding="async"
                               onError={(e) => { e.currentTarget.style.display = 'none' }}
                             />
                             <div className="absolute top-2 left-2">
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-xs text-white text-[10px] sm:text-xs font-bold border border-white/20">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/80 text-white text-[10px] sm:text-xs font-bold border border-white/20">
                                 <IconMedal className="w-3 h-3 text-slate-300" />
                                 <span>#2</span>
                               </span>
@@ -928,7 +930,7 @@ export default function CategoryVotingPage() {
                           <IconCrown className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-amber-400 drop-shadow-md" />
                         </div>
 
-                        <div className="w-full rounded-xl sm:rounded-2xl bg-white/90 dark:bg-[#1A2018] backdrop-blur-xl border-2 border-amber-400 dark:border-amber-400 p-2 sm:p-5 lg:p-6 flex flex-col justify-between space-y-2 sm:space-y-3 shadow-xl shadow-amber-500/15 transition-all scale-100 sm:scale-105">
+                        <div className="w-full rounded-xl sm:rounded-2xl bg-white dark:bg-[#1A2018] border-2 border-amber-400 dark:border-amber-400 p-2 sm:p-5 lg:p-6 flex flex-col justify-between space-y-2 sm:space-y-3 shadow-xl shadow-amber-500/15 transition-all scale-100 sm:scale-105">
                           {/* Photo with 4:5 aspect ratio */}
                           <div
                             onClick={() => setSelectedFinalistForDetail(topThreeFinalists[0])}
@@ -938,6 +940,8 @@ export default function CategoryVotingPage() {
                               src={resolveStorageUrl(topThreeFinalists[0].photo_url || topThreeFinalists[0].photo)}
                               alt={topThreeFinalists[0].name}
                               className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                              loading="lazy"
+                              decoding="async"
                               onError={(e) => { e.currentTarget.style.display = 'none' }}
                             />
                             <div className="absolute top-2 left-2">
@@ -992,7 +996,7 @@ export default function CategoryVotingPage() {
                         {/* Spacer to keep center Rank 1 visually elevated */}
                         <div className="h-6 sm:h-10 w-full" />
 
-                        <div className="w-full rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#1A2018]/90 backdrop-blur-xl border border-amber-800/40 dark:border-amber-700/60 p-2 sm:p-4 lg:p-5 flex flex-col justify-between space-y-2 sm:space-y-3 shadow-md hover:shadow-lg transition-all scale-95 sm:scale-100">
+                        <div className="w-full rounded-xl sm:rounded-2xl bg-white dark:bg-[#1A2018] border border-amber-800/40 dark:border-amber-700/60 p-2 sm:p-4 lg:p-5 flex flex-col justify-between space-y-2 sm:space-y-3 shadow-md hover:shadow-lg transition-all scale-95 sm:scale-100">
                           {/* Photo with 4:5 aspect ratio */}
                           <div
                             onClick={() => setSelectedFinalistForDetail(topThreeFinalists[2])}
@@ -1002,10 +1006,12 @@ export default function CategoryVotingPage() {
                               src={resolveStorageUrl(topThreeFinalists[2].photo_url || topThreeFinalists[2].photo)}
                               alt={topThreeFinalists[2].name}
                               className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                              loading="lazy"
+                              decoding="async"
                               onError={(e) => { e.currentTarget.style.display = 'none' }}
                             />
                             <div className="absolute top-2 left-2">
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-xs text-white text-[10px] sm:text-xs font-bold border border-white/20">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/80 text-white text-[10px] sm:text-xs font-bold border border-white/20">
                                 <IconMedal className="w-3 h-3 text-amber-400" />
                                 <span>#3</span>
                               </span>
@@ -1064,7 +1070,7 @@ export default function CategoryVotingPage() {
                     return (
                       <div
                         key={finalist.id}
-                        className="p-3 sm:p-4 rounded-xl bg-white/80 dark:bg-[#1A2018]/90 backdrop-blur-md border border-gray-200/70 dark:border-white/10 flex items-center justify-between gap-3 hover:border-[#70B325] transition-all shadow-2xs"
+                        className="p-3 sm:p-4 rounded-xl bg-white dark:bg-[#1A2018] border border-gray-200/70 dark:border-white/10 flex items-center justify-between gap-3 hover:border-[#70B325] transition-all shadow-2xs"
                       >
                         {/* Left: Rank Box, Photo, Name */}
                         <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
@@ -1131,7 +1137,7 @@ export default function CategoryVotingPage() {
         {/* ========================================================================= */}
         {/* SECTION 2: FINALIS (KREENCONNECT FULL ROSTER CARDS WITH 2-STAT BOX)       */}
         {/* ========================================================================= */}
-        <section id="card-finalis" className="scroll-mt-28 space-y-6">
+        <section id="card-finalis" className="scroll-mt-28 space-y-6 content-auto">
 
           {/* Section Header */}
           <div className="text-center space-y-2">
@@ -1294,12 +1300,12 @@ export default function CategoryVotingPage() {
                                 <IconMedal className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">JUARA</span> 3
                               </span>
                             ) : (
-                              <span className="inline-flex items-center px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-black/75 backdrop-blur-md text-white border border-white/20 text-[10px] sm:text-xs font-black shadow-sm">
+                              <span className="inline-flex items-center px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-black/80 text-white border border-white/20 text-[10px] sm:text-xs font-black shadow-sm">
                                 No. {String(globalRank).padStart(2, '0')}
                               </span>
                             )
                           ) : (
-                            <span className="inline-flex items-center px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-black/75 backdrop-blur-md text-white border border-white/20 text-[10px] sm:text-xs font-black shadow-sm">
+                            <span className="inline-flex items-center px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-black/80 text-white border border-white/20 text-[10px] sm:text-xs font-black shadow-sm">
                               No. {String(globalRank).padStart(2, '0')}
                             </span>
                           )}
@@ -1478,7 +1484,7 @@ export default function CategoryVotingPage() {
                           </div>
                         )}
                         <div className="absolute top-1 left-1 z-10">
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-black/80 backdrop-blur-xs text-white text-[9px] sm:text-[10px] font-black tracking-tight border border-white/20">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-black/80 text-white text-[9px] sm:text-[10px] font-black tracking-tight border border-white/20">
                             No. {String(globalRank).padStart(2, '0')}
                           </span>
                         </div>
@@ -1702,7 +1708,7 @@ export default function CategoryVotingPage() {
         {/* ========================================================================= */}
         {/* SECTION 3: DUKUNGAN (WALL OF SUPPORT / PESAN & DOA PENDUKUNG)             */}
         {/* ========================================================================= */}
-        <section id="card-dukungan" className="scroll-mt-28 space-y-6 pt-4">
+        <section id="card-dukungan" className="scroll-mt-28 space-y-6 pt-4 content-auto">
 
           {/* Section Header & Filter */}
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 dark:border-white/10 pb-4">
@@ -1811,7 +1817,7 @@ export default function CategoryVotingPage() {
         {/* ========================================================================= */}
         {/* SECTION 4: DESKRIPSI & REGULASI RESMI (KREENCONNECT EXACT CARD LAYOUT)    */}
         {/* ========================================================================= */}
-        <section id="card-tentang" className="scroll-mt-28 space-y-6 pt-4">
+        <section id="card-tentang" className="scroll-mt-28 space-y-6 pt-4 content-auto">
           <div className="border-b border-gray-200 dark:border-white/10 pb-4">
             <h2 className="text-2xl sm:text-3xl font-black text-[#262A25] dark:text-white tracking-tight">
               Deskripsi
