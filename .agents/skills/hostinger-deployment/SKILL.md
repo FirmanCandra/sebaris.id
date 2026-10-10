@@ -106,5 +106,6 @@ php artisan route:cache
 
 ### Cara C: Tanpa SSH (Via Browser)
 ```
-https://sebarisproject.id/api/deploy-migrate?key=sebaris-deploy-2026&seed=1
+https://sebarisproject.id/api/deploy-migrate?key=<DEPLOY_KEY>&seed=1
 ```
+*(Ganti `<DEPLOY_KEY>` dengan deploy key rahasia yang tercatat di `PRODUCTION-CONFIG.local.md`)*

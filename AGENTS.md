@@ -18,15 +18,16 @@ Pedoman perilaku dan alur kerja untuk AI Coding Agent di repositori Sebaris.id:
 
 ## 2. Informasi Production Server (TERKINI - 2026-10-01)
 
-| Item | Nilai |
-|---|---|
-| **Domain aktif** | `https://sebarisproject.id` |
-| **Folder server** | `~/domains/sebarisproject.id/public_html/` |
-| **DB Name** | `u267893077_sebaris` |
-| **DB User** | `u267893077_sebaris` |
-| **PHP** | 8.3 (Shared Hosting Hostinger) |
+| Item | Nilai | Keterangan |
+|---|---|---|
+| **Domain aktif** | `https://sebarisproject.id` | Domain live di Hostinger |
+| **Folder server** | `~/domains/sebarisproject.id/public_html/` | Root Git repository |
+| **DB Name / User** | `u267893077_sebaris` | Database production |
+| **DB Host / Port** | `127.0.0.1:3306` | MySQL |
+| **Google Client ID**| `807361118858-j9qvmtf21dn7gkl3je0v6g0njuuhcrg0.apps.googleusercontent.com` | Google OAuth2 |
+| **PHP** | 8.3 (Shared Hosting Hostinger) | LiteSpeed / Apache |
 
-> **Domain lama `sebaris.pojoktungu59.com` sudah NON-AKTIF.** Jika ada kode, konfigurasi, atau docs yang masih mereferensikan domain lama, itu harus diganti ke `sebarisproject.id`.
+> **CATATAN KEAMANAN & KREDENSIAL:** Seluruh kredensial rahasia (DB password, APP_KEY, deploy key) disimpan di `backend/.env` server dan file lokal `PRODUCTION-CONFIG.local.md` / `backend/.env.production` yang diproteksi `.gitignore` agar tidak pernah bocor ke repositori publik GitHub.
 
 ## 3. Aturan Hosting Hostinger
 - Sumber acuan lengkap: `HOSTINGER-DEPLOY-GUIDE.md` dan `.agents/skills/hostinger-deployment/SKILL.md`.

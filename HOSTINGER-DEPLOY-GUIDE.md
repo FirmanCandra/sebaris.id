@@ -6,17 +6,18 @@ Dokumen ini adalah SOP resmi untuk update/deploy ke server Hostinger production.
 
 ## 1. Informasi Server Production (TERKINI)
 
-| Item | Nilai |
-|---|---|
-| **Domain** | `https://sebarisproject.id` |
-| **hPanel Path** | `~/domains/sebarisproject.id/public_html/` |
-| **DB Name** | `u267893077_sebaris` |
-| **DB User** | `u267893077_sebaris` |
-| **DB Host** | `127.0.0.1` |
-| **PHP Version** | 8.3 |
+| Item | Nilai | Keterangan |
+|---|---|---|
+| **Domain Aktif** | `https://sebarisproject.id` | Domain live di Hostinger |
+| **hPanel Path** | `~/domains/sebarisproject.id/public_html/` | Root Git repository |
+| **DB Driver / Host** | `mysql` / `127.0.0.1:3306` | MySQL Shared Hosting |
+| **DB Name / User** | `u267893077_sebaris` | Database production |
+| **DB Password** | *Tersimpan aman di `.env` server & `PRODUCTION-CONFIG.local.md`* | Terproteksi `.gitignore` |
+| **PHP Version** | `8.3` | LiteSpeed / Apache |
+| **Google Client ID** | `807361118858-j9qvmtf21dn7gkl3je0v6g0njuuhcrg0.apps.googleusercontent.com` | Google OAuth2 |
 | **Web Server** | LiteSpeed/Apache (Shared Hosting) |
 
-> **PENTING:** Domain lama `sebaris.pojoktungu59.com` sudah TIDAK digunakan. Semua referensi harus ke `sebarisproject.id`.
+> **CATATAN KEAMANAN:** File kredensial lengkap produksi disimpan di `backend/.env` (server) serta file lokal `PRODUCTION-CONFIG.local.md` dan `backend/.env.production` yang dilindungi `.gitignore` agar tidak bocor ke repositori publik GitHub.
 
 ---
 
@@ -92,8 +93,9 @@ php artisan route:cache
 
 **Cara tanpa SSH (via browser):**
 ```
-https://sebarisproject.id/api/deploy-migrate?key=sebaris-deploy-2026&seed=1
+https://sebarisproject.id/api/deploy-migrate?key=<DEPLOY_KEY>&seed=1
 ```
+*(Ganti `<DEPLOY_KEY>` dengan secret key yang tercatat di `PRODUCTION-CONFIG.local.md`)*
 
 ---
 

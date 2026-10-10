@@ -1,0 +1,18 @@
+# Environment & Secrets (DILARANG PUSH KE GITHUB)
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Local Private Docs (DILARANG PUSH KE GITHUB)
+*.local.md
+*.secret.md
+login.md
+
+# Dependencies & Caches
+node_modules/
+vendor/
+.DS_Store
+Thumbs.db
