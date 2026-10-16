@@ -738,7 +738,7 @@ export default function PublicEventsPage() {
           ========================================================================= */}
       {loadingChampions ? (
         <TopVotingSkeleton />
-      ) : champions.length > 0 ? (
+      ) : (
         <section className="w-full relative overflow-hidden content-auto bg-gradient-to-br from-[#DDFB38] via-[#CAF118] to-[#B2E40B] dark:from-[#17240B] dark:via-[#1F330E] dark:to-[#15220A] transition-colors select-none">
           {/* Top Wave Transition (Page background #F8FAF7 / #121612 into vibrant yellow-green) */}
           <div className="w-full overflow-hidden leading-none select-none pointer-events-none">
@@ -785,101 +785,116 @@ export default function PublicEventsPage() {
               </div>
             </div>
 
-            <div className="relative group/slider">
-              {/* Left Nav Arrow Button */}
-              {champions.length > 2 && (
-                <button
-                  type="button"
-                  onClick={() => scrollSlider(championsSliderRef, 'left')}
-                  className="hidden sm:flex absolute -left-3.5 lg:-left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white dark:bg-[#1A2214] shadow-xl border border-[#173007]/15 dark:border-white/10 text-[#173007] dark:text-gray-100 items-center justify-center hover:bg-gray-50 dark:hover:bg-white/10 hover:scale-108 active:scale-95 transition-all cursor-pointer opacity-95 hover:opacity-100"
-                  aria-label="Geser ke kiri"
-                >
-                  <IconChevronLeft className="w-5 h-5" />
-                </button>
-              )}
-
-              {/* Right Nav Arrow Button */}
-              {champions.length > 2 && (
-                <button
-                  type="button"
-                  onClick={() => scrollSlider(championsSliderRef, 'right')}
-                  className="hidden sm:flex absolute -right-3.5 lg:-right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white dark:bg-[#1A2214] shadow-xl border border-[#173007]/15 dark:border-white/10 text-[#173007] dark:text-gray-100 items-center justify-center hover:bg-gray-50 dark:hover:bg-white/10 hover:scale-108 active:scale-95 transition-all cursor-pointer opacity-95 hover:opacity-100"
-                  aria-label="Geser ke kanan"
-                >
-                  <IconChevronRight className="w-5 h-5" />
-                </button>
-              )}
-
-              {/* Horizontal Snap Slider */}
-              <div
-                ref={championsSliderRef}
-                className="flex gap-4 sm:gap-5 overflow-x-auto scrollbar-none snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0 pb-3 pt-1"
-              >                {champions.map(({ category, finalist, totalVotes, percentage }) => (
-                  <article
-                    key={finalist.id}
-                    className="flex-shrink-0 w-[80vw] max-w-[290px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden relative border border-white/60 dark:border-white/10 shadow-[0_12px_30px_-5px_rgba(20,40,5,0.18)] hover:shadow-[0_20px_40px_-8px_rgba(20,40,5,0.28)] transition-all duration-500 group hover:-translate-y-2 bg-white dark:bg-[#1A2214]"
+            {champions.length > 0 ? (
+              <div className="relative group/slider">
+                {/* Left Nav Arrow Button */}
+                {champions.length > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => scrollSlider(championsSliderRef, 'left')}
+                    className="hidden sm:flex absolute -left-3.5 lg:-left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white dark:bg-[#1A2214] shadow-xl border border-[#173007]/15 dark:border-white/10 text-[#173007] dark:text-gray-100 items-center justify-center hover:bg-gray-50 dark:hover:bg-white/10 hover:scale-108 active:scale-95 transition-all cursor-pointer opacity-95 hover:opacity-100"
+                    aria-label="Geser ke kiri"
                   >
-                    {/* Full-Bleed Portrait Photo */}
-                    <div className="absolute inset-0 w-full h-full bg-gray-100 dark:bg-gray-900 overflow-hidden">
-                      {finalist.photo_url || finalist.photo ? (
-                        <img
-                          src={resolveStorageUrl(finalist.photo_url || finalist.photo)}
-                          alt={finalist.name}
-                          className="w-full h-full object-cover object-top group-hover:scale-108 transition-transform duration-700 ease-out"
-                          loading="lazy"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none'
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 text-amber-400 font-black text-4xl">
-                          {finalist.name.charAt(0)}
-                        </div>
-                      )}
-                    </div>
+                    <IconChevronLeft className="w-5 h-5" />
+                  </button>
+                )}
 
-                    {/* Top Badges */}
-                    <div className="absolute top-3 inset-x-3 z-10 flex items-center justify-between pointer-events-none">
-                      {/* Top-Left #1 Juara Badge */}
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-black text-[10px] sm:text-[11px] shadow-md tracking-tight">
-                        <IconCrown className="w-3.5 h-3.5 text-amber-950" />
-                        <span>#1 Top Vote</span>
-                      </span>
+                {/* Right Nav Arrow Button */}
+                {champions.length > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => scrollSlider(championsSliderRef, 'right')}
+                    className="hidden sm:flex absolute -right-3.5 lg:-right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white dark:bg-[#1A2214] shadow-xl border border-[#173007]/15 dark:border-white/10 text-[#173007] dark:text-gray-100 items-center justify-center hover:bg-gray-50 dark:hover:bg-white/10 hover:scale-108 active:scale-95 transition-all cursor-pointer opacity-95 hover:opacity-100"
+                    aria-label="Geser ke kanan"
+                  >
+                    <IconChevronRight className="w-5 h-5" />
+                  </button>
+                )}
 
-                      {/* Top-Right Vote Percentage Pill */}
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black/75 border border-white/20 text-white font-black text-[10px] sm:text-[11px] shadow-sm">
-                        {percentage}%
-                      </span>
-                    </div>
-
-                    {/* Bottom White Gradient Overlay */}
-                    <div className="absolute inset-x-0 bottom-0 z-10 pt-24 pb-3.5 px-3.5 sm:pb-4 sm:px-4 bg-gradient-to-t from-white via-white/95 via-45% to-transparent dark:from-[#1A2214] dark:via-[#1A2214]/95 dark:via-45% dark:to-transparent flex flex-col justify-end space-y-1.5 sm:space-y-2">
-                      <div className="space-y-0.5 sm:space-y-1">
-                        <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-[#4D7C0F] dark:text-[#A3E635] truncate">
-                          {category.name}
-                        </p>
-                        <h3 className="font-black text-sm sm:text-base lg:text-lg text-[#182611] dark:text-white leading-tight truncate group-hover:text-[#4D7C0F] dark:group-hover:text-[#A3E635] transition-colors">
-                          {finalist.name}
-                        </h3>
-                        <p className="text-[11px] sm:text-xs font-semibold text-gray-500 dark:text-gray-300 flex items-center gap-1">
-                          <span>{finalist.vote_count.toLocaleString('id-ID')} suara</span>
-                        </p>
+                {/* Horizontal Snap Slider */}
+                <div
+                  ref={championsSliderRef}
+                  className="flex gap-4 sm:gap-5 overflow-x-auto scrollbar-none snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0 pb-3 pt-1"
+                >
+                  {champions.map(({ category, finalist, totalVotes, percentage }) => (
+                    <article
+                      key={finalist.id}
+                      className="flex-shrink-0 w-[80vw] max-w-[290px] sm:w-[calc(50%-10px)] sm:max-w-none md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] snap-start aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden relative border border-white/60 dark:border-white/10 shadow-[0_12px_30px_-5px_rgba(20,40,5,0.18)] hover:shadow-[0_20px_40px_-8px_rgba(20,40,5,0.28)] transition-all duration-500 group hover:-translate-y-2 bg-white dark:bg-[#1A2214]"
+                    >
+                      {/* Full-Bleed Portrait Photo */}
+                      <div className="absolute inset-0 w-full h-full bg-gray-100 dark:bg-gray-900 overflow-hidden">
+                        {finalist.photo_url || finalist.photo ? (
+                          <img
+                            src={resolveStorageUrl(finalist.photo_url || finalist.photo)}
+                            alt={finalist.name}
+                            className="w-full h-full object-cover object-top group-hover:scale-108 transition-transform duration-700 ease-out"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 text-amber-400 font-black text-4xl">
+                            {finalist.name.charAt(0)}
+                          </div>
+                        )}
                       </div>
 
-                      {/* Fast Vote Button */}
-                      <Link
-                        to={`/voting/${category.slug || category.id}?finalist=${finalist.id}`}
-                        className="w-full py-2 sm:py-2.5 bg-[#173007] hover:bg-[#23450B] text-[#D2FF0F] dark:bg-[#D2FF0F] dark:hover:bg-[#C2EE08] dark:text-[#173007] font-black text-xs rounded-xl sm:rounded-2xl text-center no-underline flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md active:scale-98 transition-all"
-                      >
-                        <IconZap className="w-3.5 h-3.5" />
-                        <span>Dukung Juara 1</span>
-                      </Link>
-                    </div>
-                  </article>
-                ))}
-              </div>
+                      {/* Top Badges */}
+                      <div className="absolute top-3 inset-x-3 z-10 flex items-center justify-between pointer-events-none">
+                        {/* Top-Left #1 Juara Badge */}
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-black text-[10px] sm:text-[11px] shadow-md tracking-tight">
+                          <IconCrown className="w-3.5 h-3.5 text-amber-950" />
+                          <span>#1 Top Vote</span>
+                        </span>
 
-            </div>
+                        {/* Top-Right Vote Percentage Pill */}
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black/75 border border-white/20 text-white font-black text-[10px] sm:text-[11px] shadow-sm">
+                          {percentage}%
+                        </span>
+                      </div>
+
+                      {/* Bottom White Gradient Overlay */}
+                      <div className="absolute inset-x-0 bottom-0 z-10 pt-24 pb-3.5 px-3.5 sm:pb-4 sm:px-4 bg-gradient-to-t from-white via-white/95 via-45% to-transparent dark:from-[#1A2214] dark:via-[#1A2214]/95 dark:via-45% dark:to-transparent flex flex-col justify-end space-y-1.5 sm:space-y-2">
+                        <div className="space-y-0.5 sm:space-y-1">
+                          <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-[#4D7C0F] dark:text-[#A3E635] truncate">
+                            {category.name}
+                          </p>
+                          <h3 className="font-black text-sm sm:text-base lg:text-lg text-[#182611] dark:text-white leading-tight truncate group-hover:text-[#4D7C0F] dark:group-hover:text-[#A3E635] transition-colors">
+                            {finalist.name}
+                          </h3>
+                          <p className="text-[11px] sm:text-xs font-semibold text-gray-500 dark:text-gray-300 flex items-center gap-1">
+                            <span>{finalist.vote_count.toLocaleString('id-ID')} suara</span>
+                          </p>
+                        </div>
+
+                        {/* Fast Vote Button */}
+                        <Link
+                          to={`/voting/${category.slug || category.id}?finalist=${finalist.id}`}
+                          className="w-full py-2 sm:py-2.5 bg-[#173007] hover:bg-[#23450B] text-[#D2FF0F] dark:bg-[#D2FF0F] dark:hover:bg-[#C2EE08] dark:text-[#173007] font-black text-xs rounded-xl sm:rounded-2xl text-center no-underline flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md active:scale-98 transition-all"
+                        >
+                          <IconZap className="w-3.5 h-3.5" />
+                          <span>Dukung Juara 1</span>
+                        </Link>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              /* Empty state: Tetap tampil dengan visual harmonis khas Top Voting */
+              <div className="rounded-3xl border border-[#173007]/15 dark:border-white/10 p-8 sm:p-12 text-center bg-white/40 dark:bg-black/25 backdrop-blur-md shadow-xs">
+                <div className="w-12 h-12 rounded-2xl bg-[#173007]/10 dark:bg-white/10 text-[#173007] dark:text-[#D2FF0F] flex items-center justify-center mx-auto mb-3 shadow-xs">
+                  <IconCrown className="w-6 h-6" />
+                </div>
+                <p className="text-base font-bold text-[#173007] dark:text-white">
+                  Belum Ada Kandidat Teratas
+                </p>
+                <p className="text-xs text-[#24420D]/80 dark:text-gray-300 mt-1 max-w-md mx-auto">
+                  Peringkat perolehan suara tertinggi akan otomatis ditampilkan di sini setelah ajang pemilihan aktif menerima suara.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Bottom Wave Transition */}
@@ -895,7 +910,7 @@ export default function PublicEventsPage() {
             </svg>
           </div>
         </section>
-      ) : null}
+      )}
 
       {/* =========================================================================
           3. KETIGA: EVENT / KATEGORI YANG SUDAH BERLALU
