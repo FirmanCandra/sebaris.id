@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\FinalistRequest;
 use App\Http\Resources\FinalistResource;
 use App\Models\Finalist;
+use App\Models\Vote;
 use App\Services\ImageOptimizer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -86,18 +88,28 @@ class FinalistController extends Controller
 
     public function destroy(Finalist $finalist): Response
     {
-        if ($finalist->photo) {
-            Storage::disk('public')->delete($finalist->photo);
-        }
-
-        foreach ($finalist->extra_photos ?? [] as $path) {
-            Storage::disk('public')->delete($path);
-        }
-
         $categoryId = $finalist->category_id;
-        $finalist->delete();
+
+        DB::transaction(function () use ($finalist) {
+            // 1. Hapus semua vote terkait finalis ini
+            Vote::where('finalist_id', $finalist->id)->delete();
+
+            // 2. Hapus file foto dari storage
+            if ($finalist->photo) {
+                Storage::disk('public')->delete($finalist->photo);
+            }
+
+            foreach ($finalist->extra_photos ?? [] as $path) {
+                Storage::disk('public')->delete($path);
+            }
+
+            // 3. Hapus finalis
+            $finalist->delete();
+        });
+
         Cache::forget("public.finalists.{$categoryId}");
         Cache::forget('public.categories');
+        Cache::forget('public.categories.all');
 
         return response()->noContent();
     }

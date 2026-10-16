@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CategoryRequest;
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
+use App\Models\Finalist;
+use App\Models\Vote;
 use App\Services\ImageOptimizer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
@@ -88,13 +91,41 @@ class CategoryController extends Controller
 
     public function destroy(Category $category): Response
     {
-        if ($category->thumbnail) {
-            Storage::disk('public')->delete($category->thumbnail);
-        }
+        DB::transaction(function () use ($category) {
+            $finalists = $category->finalists()->get();
+            $finalistIds = $finalists->pluck('id');
 
-        $category->delete();
+            // 1. Hapus semua vote yang mereferensikan finalis kategori ini
+            if ($finalistIds->isNotEmpty()) {
+                Vote::whereIn('finalist_id', $finalistIds)->delete();
+            }
+
+            // 2. Hapus file foto finalis dari storage
+            foreach ($finalists as $finalist) {
+                if ($finalist->photo) {
+                    Storage::disk('public')->delete($finalist->photo);
+                }
+                foreach ($finalist->extra_photos ?? [] as $extraPhoto) {
+                    Storage::disk('public')->delete($extraPhoto);
+                }
+            }
+
+            // 3. Hapus thumbnail kategori
+            if ($category->thumbnail) {
+                Storage::disk('public')->delete($category->thumbnail);
+            }
+
+            // 4. Hapus finalis dan kategori
+            if ($finalistIds->isNotEmpty()) {
+                Finalist::whereIn('id', $finalistIds)->delete();
+            }
+            $category->delete();
+        });
+
+        Cache::forget('public.events');
         Cache::forget('public.categories.all');
         Cache::forget('public.categories');
+        Cache::forget("public.finalists.{$category->id}");
 
         return response()->noContent();
     }

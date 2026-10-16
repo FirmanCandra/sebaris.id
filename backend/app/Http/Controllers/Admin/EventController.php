@@ -5,10 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\EventRequest;
 use App\Http\Resources\EventResource;
+use App\Models\Category;
 use App\Models\Event;
+use App\Models\EventRegistration;
+use App\Models\Finalist;
 use App\Models\Vote;
 use App\Services\ImageOptimizer;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -567,8 +571,62 @@ class EventController extends Controller
 
     public function destroy(Event $event): Response
     {
-        if ($event->thumbnail) Storage::disk('public')->delete($event->thumbnail);
-        $event->delete();
+        DB::transaction(function () use ($event) {
+            // Ambil semua kategori di bawah event ini
+            $categories = $event->categories()->get();
+            $categoryIds = $categories->pluck('id');
+
+            // Ambil semua finalis di bawah kategori tersebut
+            $finalists = Finalist::whereIn('category_id', $categoryIds)->get();
+            $finalistIds = $finalists->pluck('id');
+
+            // 1. Hapus semua data voting yang mereferensikan finalis pada event ini
+            if ($finalistIds->isNotEmpty()) {
+                Vote::whereIn('finalist_id', $finalistIds)->delete();
+            }
+
+            // 2. Bersihkan file foto finalis dari storage
+            foreach ($finalists as $finalist) {
+                if ($finalist->photo) {
+                    Storage::disk('public')->delete($finalist->photo);
+                }
+                foreach ($finalist->extra_photos ?? [] as $extraPhoto) {
+                    Storage::disk('public')->delete($extraPhoto);
+                }
+            }
+
+            // 3. Bersihkan foto thumbnail kategori dari storage
+            foreach ($categories as $category) {
+                if ($category->thumbnail) {
+                    Storage::disk('public')->delete($category->thumbnail);
+                }
+            }
+
+            // 4. Hapus record finalis & kategori
+            if ($finalistIds->isNotEmpty()) {
+                Finalist::whereIn('id', $finalistIds)->delete();
+            }
+            if ($categoryIds->isNotEmpty()) {
+                Category::whereIn('id', $categoryIds)->delete();
+            }
+
+            // 5. Bersihkan relasi proposal registrasi jika ada
+            EventRegistration::where('created_event_id', $event->id)->update(['created_event_id' => null]);
+
+            // 6. Hapus foto thumbnail event dari storage
+            if ($event->thumbnail) {
+                Storage::disk('public')->delete($event->thumbnail);
+            }
+
+            // 7. Hapus event induk
+            $event->delete();
+        });
+
+        // 8. Bersihkan cache publik agar UI langsung ter-update
+        Cache::forget('public.events');
+        Cache::forget('public.categories.all');
+        Cache::forget('public.categories');
+
         return response()->noContent();
     }
 }
