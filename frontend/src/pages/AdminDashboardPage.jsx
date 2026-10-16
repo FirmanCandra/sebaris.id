@@ -762,7 +762,7 @@ export default function AdminDashboardPage() {
               <IconUsers className="w-8 h-8 mx-auto opacity-30" />
               <p className="text-sm font-bold text-gray-500">Belum ada voter</p>
               <p className="text-xs">
-                {voterSearch || voterCategoryId
+                {voterSearch || selectedCategoryId || selectedEventId
                   ? 'Tidak ada hasil yang cocok dengan filter yang dipilih.'
                   : 'Voter akan muncul di sini setelah ada vote yang terverifikasi.'}
               </p>
