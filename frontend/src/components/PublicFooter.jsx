@@ -103,6 +103,12 @@ export default function PublicFooter({ onOpenCheckVote }) {
                   Masuk / Daftar Akun
                 </Link>
               </li>
+              <li>
+                <Link to="/promo" className="inline-flex items-center gap-1.5 hover:text-[#173007] dark:hover:text-white transition-colors">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-[#D0FE15] animate-ping" />
+                  <span>Promo Motion Reel</span>
+                </Link>
+              </li>
             </ul>
           </div>
 

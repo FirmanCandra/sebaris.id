@@ -19,6 +19,7 @@ const AdminProposalsPage = lazy(() => import('./pages/AdminProposalsPage'))
 const AdminParticipantsPage = lazy(() => import('./pages/AdminParticipantsPage'))
 const EventsDirectoryPage = lazy(() => import('./pages/EventsDirectoryPage'))
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'))
+const PromoMotionPage = lazy(() => import('./pages/PromoMotionPage'))
 import EmbedCodeModal from './components/EmbedCodeModal'
 import VotePackagesModal from './components/VotePackagesModal'
 import AdjustVoteModal from './components/AdjustVoteModal'
@@ -737,6 +738,8 @@ export default function App() {
           <Route path="/events" element={<EventsDirectoryPage />} />
           <Route path="/vote" element={<EventsDirectoryPage />} />
           <Route path="/daftarkan-vote" element={<RegisterEventPage />} />
+          <Route path="/promo" element={<PromoMotionPage />} />
+          <Route path="/showcase" element={<PromoMotionPage />} />
           <Route path="/categories/:categoryId" element={<CategoryVotingPage />} />
           <Route path="/voting/:categoryId" element={<CategoryVotingPage />} />
           <Route path="/embed/voting/:categoryId" element={<EmbedVotingPage />} />

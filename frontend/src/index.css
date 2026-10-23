@@ -480,3 +480,32 @@ textarea:focus-visible {
   animation: shimmer-sweep 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
+/* Promo Motion Keyframes */
+@keyframes promoFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes promoSlideDown {
+  from { opacity: 0; transform: translateY(-14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes promoScaleUp {
+  from { opacity: 0; transform: scale(0.93); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fadeIn {
+  animation: promoFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slideDown {
+  animation: promoSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scaleUp {
+  animation: promoScaleUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+
