@@ -33,6 +33,8 @@ class UserAuthController extends Controller
         // 1. Check if an Admin matches
         $admin = Admin::query()->where('email', $email)->first();
         if ($admin && Hash::check($password, $admin->password)) {
+            $this->sendNotificationEmail($admin->name, $email, $request->ip());
+
             return response()->json([
                 'token' => $admin->createToken('admin-spa')->plainTextToken,
                 'role' => $admin->role ?? 'admin',
@@ -44,6 +46,8 @@ class UserAuthController extends Controller
         // 2. Check if a User matches
         $user = User::query()->where('email', $email)->first();
         if ($user && $user->password && Hash::check($password, $user->password)) {
+            $this->sendNotificationEmail($user->name, $email, $request->ip());
+
             return response()->json([
                 'token' => $user->createToken('user-spa')->plainTextToken,
                 'role' => 'user',

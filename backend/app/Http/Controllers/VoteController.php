@@ -111,12 +111,13 @@ class VoteController extends Controller
                 $finalist->increment('vote_count', 1);
                 Cache::forget("public.finalists.{$category->id}");
 
-                // Send confirmation email if voter_contact is an email address
-                if (filter_var($contact, FILTER_VALIDATE_EMAIL)) {
+                // Send confirmation email if voter_contact is an email address or user has email
+                $targetEmail = filter_var($contact, FILTER_VALIDATE_EMAIL) ? $contact : ($user?->email ?? null);
+                if ($targetEmail && filter_var($targetEmail, FILTER_VALIDATE_EMAIL)) {
                     try {
-                        Mail::to($contact)->later(now()->addSeconds(3), new VoteConfirmationMail($vote->load('finalist.category')));
-                    } catch (\Throwable) {
-                        // Non-blocking: email failure must not fail the vote
+                        Mail::to($targetEmail)->send(new VoteConfirmationMail($vote->load('finalist.category')));
+                    } catch (\Throwable $mailErr) {
+                        \Illuminate\Support\Facades\Log::warning("Gagal mengirim email konfirmasi vote gratis ke {$targetEmail}: " . $mailErr->getMessage());
                     }
                 }
 
@@ -212,13 +213,14 @@ class VoteController extends Controller
         });
 
         // Send confirmation email after payment confirmed
-        $freshVote = $vote->fresh(['finalist.category']);
+        $freshVote = $vote->fresh(['finalist.category', 'user']);
         $contact = $freshVote->voter_contact ?? '';
-        if (filter_var($contact, FILTER_VALIDATE_EMAIL)) {
+        $targetEmail = filter_var($contact, FILTER_VALIDATE_EMAIL) ? $contact : ($freshVote->user?->email ?? null);
+        if ($targetEmail && filter_var($targetEmail, FILTER_VALIDATE_EMAIL)) {
             try {
-                Mail::to($contact)->later(now()->addSeconds(3), new VoteConfirmationMail($freshVote));
-            } catch (\Throwable) {
-                // Non-blocking
+                Mail::to($targetEmail)->send(new VoteConfirmationMail($freshVote));
+            } catch (\Throwable $mailErr) {
+                \Illuminate\Support\Facades\Log::warning("Gagal mengirim email konfirmasi pembayaran ke {$targetEmail}: " . $mailErr->getMessage());
             }
         }
 
