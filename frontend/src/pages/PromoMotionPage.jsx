@@ -103,6 +103,7 @@ const SCENES = [
 ]
 
 export default function PromoMotionPage() {
+  const [activeTab, setActiveTab] = useState('mp4') // 'mp4' | 'interactive'
   const [currentScene, setCurrentScene] = useState(0)
   const [isPlaying, setIsPlaying] = useState(true)
   const [soundEnabled, setSoundEnabled] = useState(true)
@@ -230,93 +231,114 @@ export default function PromoMotionPage() {
           </div>
         </Link>
 
-        {/* View Mode & Audio Controls */}
-        <div className="flex items-center gap-2 bg-[#121611]/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
-          {/* View mode toggle */}
-          <button
-            onClick={() => {
-              triggerSound('click')
-              setViewMode((m) => (m === 'mobile' ? 'desktop' : 'mobile'))
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all bg-white/5 hover:bg-white/10 text-gray-300"
-            title="Ubah Rasio Layar untuk Rekaman (Mobile 9:16 vs Widescreen 16:9)"
-          >
-            {viewMode === 'mobile' ? (
-              <>
-                <svg className="w-3.5 h-3.5 text-[#D0FE15]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <rect x="5" y="2" width="14" height="20" rx="3" strokeWidth="2" />
-                  <path d="M12 18h.01" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-                <span>Format Reels (9:16)</span>
-              </>
-            ) : (
-              <>
-                <svg className="w-3.5 h-3.5 text-[#D0FE15]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <rect x="2" y="3" width="20" height="14" rx="2" strokeWidth="2" />
-                  <path d="M8 21h8m-4-4v4" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-                <span>Widescreen (16:9)</span>
-              </>
-            )}
-          </button>
+        {/* Tab & Format Controls */}
+        <div className="flex items-center gap-2 bg-[#121611]/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg flex-wrap sm:flex-nowrap">
+          {/* Active Mode Switcher */}
+          <div className="flex items-center bg-black/50 p-0.5 rounded-full border border-white/10 text-xs font-bold">
+            <button
+              onClick={() => {
+                triggerSound('click')
+                setActiveTab('mp4')
+              }}
+              className={`px-3 py-1 rounded-full transition-all flex items-center gap-1.5 ${
+                activeTab === 'mp4'
+                  ? 'bg-[#70B325] text-black font-extrabold shadow-[0_0_12px_rgba(112,179,37,0.4)]'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <span>🎬</span>
+              <span>Video MP4</span>
+            </button>
+            <button
+              onClick={() => {
+                triggerSound('click')
+                setActiveTab('interactive')
+              }}
+              className={`px-3 py-1 rounded-full transition-all flex items-center gap-1.5 ${
+                activeTab === 'interactive'
+                  ? 'bg-[#70B325] text-black font-extrabold shadow-[0_0_12px_rgba(112,179,37,0.4)]'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <span>⚡</span>
+              <span>Interaktif</span>
+            </button>
+          </div>
 
-          {/* Sound Toggle */}
-          <button
-            onClick={() => {
-              setSoundEnabled(!soundEnabled)
-              if (!soundEnabled) playSound('chime')
-            }}
-            className={`p-1.5 rounded-full transition-colors ${
-              soundEnabled ? 'text-[#D0FE15] bg-[#70B325]/20' : 'text-gray-500 hover:text-gray-300'
-            }`}
-            title={soundEnabled ? 'Suara Aktif (SFX Nyala)' : 'Suara Mati'}
+          {/* Download Direct MP4 Link */}
+          <a
+            href="/sebaris_promo_motion.mp4"
+            download="Sebaris_Official_Promo_1080x1920.mp4"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-[#D0FE15] text-black hover:bg-white transition-all shadow-[0_0_14px_rgba(208,254,21,0.35)] no-underline"
+            title="Unduh File Video Asli Full HD MP4 (1080x1920, 20 Detik)"
           >
-            {soundEnabled ? (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-              </svg>
-            )}
-          </button>
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span>Unduh MP4</span>
+          </a>
+
+          {/* Sound Toggle (for Interactive Mode) */}
+          {activeTab === 'interactive' && (
+            <button
+              onClick={() => {
+                setSoundEnabled(!soundEnabled)
+                if (!soundEnabled) playSound('chime')
+              }}
+              className={`p-1.5 rounded-full transition-colors ${
+                soundEnabled ? 'text-[#D0FE15] bg-[#70B325]/20' : 'text-gray-500 hover:text-gray-300'
+              }`}
+              title={soundEnabled ? 'Suara Aktif (SFX Nyala)' : 'Suara Mati'}
+            >
+              {soundEnabled ? (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                </svg>
+              )}
+            </button>
+          )}
         </div>
       </header>
 
-      {/* STORY PROGRESS BAR (LIKE INSTAGRAM REELS / TIKTOK) */}
-      <div className="w-full max-w-4xl grid grid-cols-6 gap-1.5 py-1 z-20">
-        {SCENES.map((scene, idx) => (
-          <button
-            key={scene.id}
-            onClick={() => handleSelectScene(idx)}
-            className="group flex flex-col text-left cursor-pointer"
-          >
-            <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-              <div
-                className={`h-full transition-all duration-75 rounded-full ${
-                  idx === currentScene
-                    ? 'bg-[#D0FE15] shadow-[0_0_8px_#D0FE15]'
-                    : idx < currentScene
-                    ? 'bg-[#70B325]'
-                    : 'bg-transparent'
-                }`}
-                style={{
-                  width: idx === currentScene ? `${progress}%` : idx < currentScene ? '100%' : '0%',
-                }}
-              />
-            </div>
-            <span
-              className={`hidden sm:inline text-[10px] font-bold mt-1.5 truncate transition-colors ${
-                idx === currentScene ? 'text-[#D0FE15]' : 'text-gray-500 group-hover:text-gray-300'
-              }`}
+      {/* STORY PROGRESS BAR (WHEN INTERACTIVE MODE ACTIVE) */}
+      {activeTab === 'interactive' && (
+        <div className="w-full max-w-4xl grid grid-cols-6 gap-1.5 py-1 z-20">
+          {SCENES.map((scene, idx) => (
+            <button
+              key={scene.id}
+              onClick={() => handleSelectScene(idx)}
+              className="group flex flex-col text-left cursor-pointer"
             >
-              0{scene.id}. {scene.label}
-            </span>
-          </button>
-        ))}
-      </div>
+              <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-75 rounded-full ${
+                    idx === currentScene
+                      ? 'bg-[#D0FE15] shadow-[0_0_8px_#D0FE15]'
+                      : idx < currentScene
+                      ? 'bg-[#70B325]'
+                      : 'bg-transparent'
+                  }`}
+                  style={{
+                    width: idx === currentScene ? `${progress}%` : idx < currentScene ? '100%' : '0%',
+                  }}
+                />
+              </div>
+              <span
+                className={`hidden sm:inline text-[10px] font-bold mt-1.5 truncate transition-colors ${
+                  idx === currentScene ? 'text-[#D0FE15]' : 'text-gray-500 group-hover:text-gray-300'
+                }`}
+              >
+                0{scene.id}. {scene.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* MAIN MOTION STAGE CONTAINER */}
       <main className="flex-1 w-full flex items-center justify-center my-auto py-2 z-10">
@@ -336,7 +358,23 @@ export default function PromoMotionPage() {
           )}
 
           {/* INNER SCREEN STAGE */}
-          <div className="w-full h-full rounded-[38px] bg-gradient-to-b from-[#0F140E] to-[#070906] border border-white/5 overflow-hidden relative flex flex-col justify-between p-5 sm:p-6 text-white shadow-inner">
+          {activeTab === 'mp4' ? (
+            <div className="w-full h-full rounded-[38px] bg-black overflow-hidden relative flex flex-col items-center justify-center border border-white/10">
+              <video
+                src="/sebaris_promo_motion.mp4"
+                controls
+                autoPlay
+                loop
+                playsInline
+                className="w-full h-full object-cover rounded-[36px]"
+              />
+              <div className="absolute bottom-4 left-4 right-4 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex items-center justify-between text-[10px] text-gray-300 pointer-events-none">
+                <span className="text-[#D0FE15] font-bold">1080x1920 Full HD</span>
+                <span>30 FPS • 20 Detik • 100% Asli</span>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full h-full rounded-[38px] bg-gradient-to-b from-[#0F140E] to-[#070906] border border-white/5 overflow-hidden relative flex flex-col justify-between p-5 sm:p-6 text-white shadow-inner">
             {/* Top Scene Label */}
             <div className="flex items-center justify-between z-20 pt-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-black/50 border border-white/15 text-[#D0FE15] backdrop-blur-md">
@@ -684,75 +722,96 @@ export default function PromoMotionPage() {
               <span className="text-[#D0FE15] font-bold">Platform E-Voting #1</span>
             </div>
           </div>
+          )}
         </div>
       </main>
 
-      {/* BOTTOM CONTROLLER BAR (PLAY/PAUSE, NEXT/PREV, SPEED) */}
+      {/* BOTTOM CONTROLLER BAR */}
       <footer className="w-full max-w-xl bg-[#121611]/90 backdrop-blur-md rounded-2xl p-2.5 border border-white/10 shadow-2xl flex items-center justify-between gap-2 z-20 mt-2">
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={handlePrev}
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 transition-colors"
-            title="Scene Sebelumnya"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          <button
-            onClick={() => {
-              triggerSound('click')
-              setIsPlaying(!isPlaying)
-            }}
-            className="px-4 py-2 rounded-xl bg-[#70B325] text-black font-extrabold text-xs flex items-center gap-1.5 shadow-md hover:bg-[#D0FE15] transition-colors"
-          >
-            {isPlaying ? (
-              <>
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+        {activeTab === 'interactive' ? (
+          <>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={handlePrev}
+                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 transition-colors"
+                title="Scene Sebelumnya"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                 </svg>
-                <span>Jeda (Pause)</span>
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
+              </button>
+
+              <button
+                onClick={() => {
+                  triggerSound('click')
+                  setIsPlaying(!isPlaying)
+                }}
+                className="px-4 py-2 rounded-xl bg-[#70B325] text-black font-extrabold text-xs flex items-center gap-1.5 shadow-md hover:bg-[#D0FE15] transition-colors"
+              >
+                {isPlaying ? (
+                  <>
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                    </svg>
+                    <span>Jeda (Pause)</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                    <span>Putar (Play)</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleNext}
+                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 transition-colors"
+                title="Scene Selanjutnya"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                 </svg>
-                <span>Putar (Play)</span>
-              </>
-            )}
-          </button>
+              </button>
+            </div>
 
-          <button
-            onClick={handleNext}
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 transition-colors"
-            title="Scene Selanjutnya"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Speed Controls */}
-        <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5 text-[11px] font-bold">
-          <span className="text-gray-500 px-1 text-[10px]">Speed:</span>
-          {[0.8, 1, 1.25].map((s) => (
-            <button
-              key={s}
-              onClick={() => {
-                triggerSound('click')
-                setSpeed(s)
-              }}
-              className={`px-2 py-0.5 rounded-lg transition-colors ${
-                speed === s ? 'bg-[#70B325] text-black font-black' : 'text-gray-400 hover:text-white'
-              }`}
+            {/* Speed Controls */}
+            <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5 text-[11px] font-bold">
+              <span className="text-gray-500 px-1 text-[10px]">Speed:</span>
+              {[0.8, 1, 1.25].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => {
+                    triggerSound('click')
+                    setSpeed(s)
+                  }}
+                  className={`px-2 py-0.5 rounded-lg transition-colors ${
+                    speed === s ? 'bg-[#70B325] text-black font-black' : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {s}x
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center justify-between w-full px-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#D0FE15] animate-ping" />
+              <span className="text-xs font-bold text-gray-200">
+                Official Motion Clip <span className="text-[#D0FE15]">(1080x1920 Full HD)</span>
+              </span>
+            </div>
+            <a
+              href="/sebaris_promo_motion.mp4"
+              download="Sebaris_Official_Promo_1080x1920.mp4"
+              className="text-xs font-black text-black bg-[#D0FE15] hover:bg-white px-3 py-1.5 rounded-xl transition-all shadow-md no-underline flex items-center gap-1"
             >
-              {s}x
-            </button>
-          ))}
-        </div>
+              <span>⬇ Simpan Video</span>
+            </a>
+          </div>
+        )}
 
         {/* Back to Home Link */}
         <Link
